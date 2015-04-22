@@ -53,12 +53,12 @@ def chat(msg="Whaaat?!"):
     mc = Minecraft.create()
     mc.postToChat(msg)
 
-	
+
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         global KEEP_RUNNING
         self.data = self.request.recv(1024)
-		# firt 2 bytes are length info, from Java's writeUTF
+        # firt 2 bytes are length info, from Java's writeUTF
         args = self.data[2:].decode('utf-8').split()
         cmd = args[0]
         if cmd == "list":
@@ -78,7 +78,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         threading.Thread(target=mc_functions.get(cmd, chat), args=tuple(args[1:]), kwargs={}).start()
         self.request.sendall("ok".encode('utf-8'))
 
-		
+
 if __name__ == "__main__":
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
     def server_serve():

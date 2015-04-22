@@ -49,6 +49,6 @@ class Connection:
         """Sends and receive data"""
         self.send(*data)
         return self.receive()
-	
+
     def close(self):
         self.socket.close()
