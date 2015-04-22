@@ -76,7 +76,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             KEEP_RUNNING = False
             return
         threading.Thread(target=mc_functions.get(cmd, chat), args=tuple(args[1:]), kwargs={}).start()
-        self.request.sendall("fuck you".encode('utf-8'))
+        self.request.sendall("ok".encode('utf-8'))
 
 		
 if __name__ == "__main__":
