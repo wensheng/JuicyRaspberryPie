@@ -11,6 +11,10 @@ http://dev.bukkit.org/bukkit-plugins/raspberryjuice/
 
 Most code of JuicyRaspberryPie are from RaspberryJuice, I just changed Java code a little bit and added a Python command server.
 
+youtube demo:
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=qhDLa2muivY&t=15m" target="_blank"><img src="http://img.youtube.com/vi/qhDLa2muivY/0.jpg" alt="youtube" width="240" height="180" border="10" /></a>
+
 ## Pre-requisites:
 
 1. Spigot or CraftBukkit 1.8.3 is installed
