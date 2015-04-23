@@ -154,7 +154,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 			DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
 			BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 			String cmdLine = String.join(" ", args);
-			toPyServer.writeUTF(cmdLine.toLowerCase());
+			toPyServer.writeUTF(cmdLine);
 			//if(player instanceof Player){
 			//    logger.info(player.getName() + ": send to py server: " + args[0]);
 			//}
