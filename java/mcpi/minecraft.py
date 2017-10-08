@@ -30,7 +30,7 @@ from util import flatten
 def intFloor(*args):
     return [int(math.floor(x)) for x in flatten(args)]
 
-class CmdPositioner:
+class CmdPositioner(object):
     """Methods for setting and getting positions"""
     def __init__(self, connection, packagePrefix):
         self.conn = connection

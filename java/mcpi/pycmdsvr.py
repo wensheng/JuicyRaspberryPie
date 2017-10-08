@@ -29,24 +29,28 @@ KEEP_RUNNING = True
 def keep_running():
     return KEEP_RUNNING
 
-# command registry
-mc_functions = {}
-
-pp_files = glob.glob(os.path.join(plugin_dir, "pplugins", "*.py"))
-# import all files and put minecraft function into the mc_functions dict
-for pp_file in pp_files:
-    basename = os.path.basename(pp_file)
-    if basename != "__init__.py":
-        try:
-            module = importlib.import_module("pplugins." + basename[:-3])
-            for item in dir(module):
-                if isinstance(module.__dict__[item], types.FunctionType):
-                    docs = module.__dict__[item].__doc__
-                    if docs and docs.startswith("_mcp"):
-                        print("registering command:", module.__dict__[item].__name__)
-                        mc_functions[item] = module.__dict__[item]
-        except (NameError, ImportError) as e:
-            print(e)
+def register_commands():
+    global mc_functions
+    mc_functions = {}
+    pp_files = glob.glob(os.path.join(plugin_dir, "pplugins", "*.py"))
+    # import all files and put minecraft function into the mc_functions dict
+    for pp_file in pp_files:
+        basename = os.path.basename(pp_file)
+        if basename != "__init__.py":
+            try:
+                name = "pplugins." + basename[:-3]
+                if name in sys.modules:
+                    module = importlib.reload(sys.modules[name])
+                else:
+                    module = importlib.import_module(name)
+                for item in dir(module):
+                    if isinstance(module.__dict__[item], types.FunctionType):
+                        docs = module.__dict__[item].__doc__
+                        if docs and docs.startswith("_mcp"):
+                            print("registering command:", module.__dict__[item].__name__)
+                            mc_functions[item] = module.__dict__[item]
+            except (NameError, ImportError) as e:
+                print(e)
 
 
 def chat(msg="Whaaat?!"):
@@ -71,6 +75,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             self.request.sendall(s.encode('utf-8'))
             threading.Thread(target=chat, args=(s,), kwargs={}).start()
             return
+        if cmd == "update":
+            register_commands()
+            s = 'found commands: ' + " ".join(mc_functions)
+            self.request.sendall(s.encode('utf-8'))
+            threading.Thread(target=chat, args=(s,), kwargs={}).start()
+            return
         if cmd == "BYE":
             print("got shutdown request, signing off")
             KEEP_RUNNING = False
@@ -78,6 +88,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         threading.Thread(target=mc_functions.get(cmd, chat), args=tuple(args[1:]), kwargs={}).start()
         self.request.sendall("ok".encode('utf-8'))
 
+
+register_commands()
 
 if __name__ == "__main__":
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
