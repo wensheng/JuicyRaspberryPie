@@ -4,6 +4,8 @@ import re
 
 from pplugins import blocks
 
+from mcpi.minecraft import Minecraft
+
 def block_by_name(name):
     try:
         return int(name)
@@ -25,9 +27,25 @@ def playerPos(player):
     return x, y, z
 
 @contextmanager
-def exc_chat(mc):
+def exc_chat(mc=None):
+    if mc is None:
+        mc = Minecraft.create()
     try:
-        yield
+        yield mc
     except:
         for line in re.split(r'\n',format_exc())[:-1]:
             mc.postToChat(line)
+
+MARK_FILE = '/tmp/markpos.txt'
+
+def mark_pos(x, y, z):
+    with open(MARK_FILE,'w') as fout:
+        print('{},{},{}'.format(x, y, z), file=fout)
+
+def marked_pos():
+    with open(MARK_FILE) as fin:
+        for l in fin.readlines():
+            break
+    l = l.rstrip()
+    x, y, z = re.split(r',', l)
+    return int(x), int(y), int(z)
