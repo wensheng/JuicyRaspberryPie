@@ -203,12 +203,13 @@ def gb(size=5):
                     mc.setBlock(bx, by, bz, b[ib])
                     ib += 1
 
-def line(steps=100, block=blocks.WOOL):
+def line(steps=100, block=blocks.WOOL, sphere=0):
     "_mcp: straight line from player"
     mc = Minecraft.create()
     with exc_chat(mc):
         block = block_by_name(block)
         steps = int(steps)
+        sphere = int(sphere)
         d = mc.player.getDirection()
         dx = float(getattr(d,'x'))
         dy = float(getattr(d,'y'))
@@ -220,5 +221,27 @@ def line(steps=100, block=blocks.WOOL):
             j = int(y) + int(dy * n)
             k = int(z) + int(dz * n)
             mc.setBlock(i, j, k, block)
+            if sphere > 0:
+                for sx, sy, sz, s in _sphere(i, j, k, sphere):
+                    if s < sphere:
+                        mc.setBlock(sx, sy, sz, block)
 
-
+def flood(size=10, block=blocks.WATER):
+    "_mcp: flood surrounding area"
+    with exc_chat() as mc:
+        size = int(size)
+        block = block_by_name(block)        
+        x, y, z = playerPos(mc.player)
+        heights = []
+        for i in range(x-size, x+size):
+            mc.postToChat('flood: scanning ({})...'.format(len(heights)))
+            for k in range(z-size, z+size):
+                j = mc.getHeight(i, k)
+                heights.append(j)
+        mc.postToChat('flood: flooding')
+        n = 0
+        for i in range(x-size, x+size):
+            for k in range(z-size, z+size):
+                j = heights[n]
+                mc.setBlock(i, j+1, k, block)
+                n += 1

@@ -1,5 +1,5 @@
 from pplugins import blocks
-from pplugins.utils import exc_chat, playerPos
+from pplugins.utils import exc_chat, playerPos, mark_pos, marked_pos
 
 from mcpi.minecraft import Minecraft
 
@@ -88,4 +88,22 @@ def ray(steps=100):
             mc.getBlock(i, j, k)
             mc.setBlock(i, j, k, blocks.AIR)
 
+def mark():
+    "_mcp: mark position for later teleport"
+    with exc_chat() as mc:
+        x, y, z = playerPos(mc.player)
+        mark_pos(x, y, z)
+        mc.postToChat('marked {},{},{}'.format(x, y, z))
 
+def tpmark():
+    "_mcp: teleport to marked location"
+    with exc_chat() as mc:
+        x, y, z = marked_pos()
+        mc.player.setTilePos(x, y, z)
+        mc.postToChat('teleported to mark')
+
+def tporigin():
+    "_mcp: teleport to 0,0,0"
+    with exc_chat() as mc:
+        mc.player.setTilePos(0, 0, 0)
+        mc.postToChat('teleported to origin')
