@@ -1,5 +1,6 @@
 from pplugins import blocks
 from pplugins.utils import exc_chat, playerPos, mark_pos, marked_pos
+from pplugins.placemarks import Placemarks
 
 from mcpi.minecraft import Minecraft
 
@@ -14,7 +15,7 @@ def attempt():
         mc.postToChat('x={} z={}'.format(pos.x, pos.z))
         time.sleep(1)
     
-def tp(far=200):
+def tprand(far=200):
     "_mcp: random teleport"
     mc = Minecraft.create()
     far = int(far)
@@ -88,20 +89,35 @@ def ray(steps=100):
             mc.getBlock(i, j, k)
             mc.setBlock(i, j, k, blocks.AIR)
 
-def mark():
+def mark(name='mark'):
     "_mcp: mark position for later teleport"
     with exc_chat() as mc:
         x, y, z = playerPos(mc.player)
-        mark_pos(x, y, z)
-        mc.postToChat('marked {},{},{}'.format(x, y, z))
+        Placemarks().add(name, [x,y,z]).save()
+        mc.postToChat('marked {},{},{} as {}'.format(x, y, z, name))
 
-def tpmark():
+def tp(name='mark'):
     "_mcp: teleport to marked location"
     with exc_chat() as mc:
-        x, y, z = marked_pos()
-        mc.player.setTilePos(x, y, z)
-        mc.postToChat('teleported to mark')
+        try:
+            x, y, z = Placemarks().location[name]
+            mc.player.setTilePos(x, y, z)
+            mc.postToChat('teleported to {}'.format(name))
+        except KeyError:
+            mc.postToChat('no marked location called {}'.format(name))
 
+def tplist():
+    "_mcp: list teleport locations by name"
+    with exc_chat() as mc:
+        msg = ' '.join(sorted(Placemarks().location))
+        mc.postToChat('locations: {}'.format(msg))
+
+def tpxyz(x=0,y=0,z=0):
+    "_mcp: teleport to x,y,z"
+    with exc_chat() as mc:
+        x, y, z = int(x), int(y), int(z)
+        mc.player.setTilePos(x, y, z)
+        
 def tporigin():
     "_mcp: teleport to 0,0,0"
     with exc_chat() as mc:
