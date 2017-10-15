@@ -159,7 +159,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 			//    logger.info(player.getName() + ": send to py server: " + args[0]);
 			//}
 			cmdString = fromPyServer.readLine();
-			logger.info("the py server send back " + cmdString);
+			logger.info("the py server sent back " + cmdString);
 			toPyServer.close();
 			fromPyServer.close();
 			socket.close();

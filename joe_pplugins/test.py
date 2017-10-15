@@ -98,8 +98,7 @@ def dome(r=10, block=blocks.STONE):
         block = block_by_name(block)
         for x, y, z, s in _sphere(r=r):
             if s <= r + 1 and s >= r - 1:
-                if y >= pos.y:
-                    mc.setBlock(x, y, z, block)
+                mc.addBlock(x, y, z, block)
 
 import random
 import time

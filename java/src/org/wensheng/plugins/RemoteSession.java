@@ -57,7 +57,7 @@ public class RemoteSession {
 		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 		this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 		startThreads();
-		plugin.getLogger().info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
+		plugin.getLogger().fine("Opened connection to" + socket.getRemoteSocketAddress() + ".");
 	}
 
 	protected void startThreads() {
@@ -127,7 +127,7 @@ public class RemoteSession {
 			
 			// get the world
 			World world = origin.getWorld();
-			
+
 			// world.getBlock
 			if (c.equals("world.getBlock")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
@@ -148,7 +148,10 @@ public class RemoteSession {
 			} else if (c.equals("world.setBlock")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
 				updateBlock(world, loc, Integer.parseInt(args[3]), (args.length > 4? Byte.parseByte(args[4]) : (byte) 0));
-				
+			// world.addBlock
+			} else if (c.equals("world.addBlock")) {
+				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+				addBlock(world, loc, Integer.parseInt(args[3]), (args.length > 4? Byte.parseByte(args[4]) : (byte) 0));
 			// world.setBlocks
 			} else if (c.equals("world.setBlocks")) {
 				Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
@@ -187,7 +190,6 @@ public class RemoteSession {
 				}
 				chatMessage = chatMessage.substring(0, chatMessage.length() - 1);
 				server.broadcastMessage(chatMessage);
-				
 			// events.clear
 			} else if (c.equals("events.clear")) {
 				interactEventQueue.clear();
@@ -466,6 +468,13 @@ public class RemoteSession {
 			thisBlock.setTypeIdAndData(blockType, blockData, true);
 		}
 	}
+
+	private void addBlock(World world, Location loc, int blockType, byte blockData) {
+	    // updates a block only if it's currently set to air
+	    if (world.getBlockTypeIdAt(loc) == 0) { //air
+		updateBlock(world, loc, blockType, blockData);
+	    }
+	}
 	
 	// gets the current player
 	public Player getCurrentPlayer(String name) {
@@ -552,7 +561,7 @@ public class RemoteSession {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		plugin.getLogger().info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
+		plugin.getLogger().fine("Closed connection to" + socket.getRemoteSocketAddress() + ".");
 	}
 
 	public void kick(String reason) {
@@ -567,7 +576,7 @@ public class RemoteSession {
 	/** socket listening thread */
 	private class InputThread implements Runnable {
 		public void run() {
-			plugin.getLogger().info("Starting input thread");
+			plugin.getLogger().fine("Starting input thread");
 			while (running) {
 				try {
 					String newLine = in.readLine();
@@ -598,7 +607,7 @@ public class RemoteSession {
 
 	private class OutputThread implements Runnable {
 		public void run() {
-			plugin.getLogger().info("Starting output thread!");
+			plugin.getLogger().fine("Starting output thread");
 			while (running) {
 				try {
 					String line;

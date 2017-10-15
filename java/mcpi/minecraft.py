@@ -167,6 +167,10 @@ class Minecraft:
         """Set block (x,y,z,id,[data])"""
         self.conn.send("world.setBlock", intFloor(args))
 
+    def addBlock(self, *args):
+        """Set block (x,y,z,id,[data]) only if it is currently air"""
+        self.conn.send("world.addBlock", intFloor(args))
+                       
     def setBlocks(self, *args):
         """Set a cuboid of blocks (x0,y0,z0,x1,y1,z1,id,[data])"""
         self.conn.send("world.setBlocks", intFloor(args))
