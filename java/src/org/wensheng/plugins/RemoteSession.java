@@ -159,7 +159,13 @@ public class RemoteSession {
                 int blockType = Integer.parseInt(args[6]);
                 byte data = args.length > 7? Byte.parseByte(args[7]) : (byte) 0;
                 setCuboid(loc1, loc2, blockType, data);
-                
+
+	    // world.createExplosion
+	    } else if (c.equals("world.createExplosion")) {
+		Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+		int power = args.length > 3 ? Integer.parseInt(args[3]) : 4;
+		world.createExplosion(loc, (float) power); // TNT strength
+		
             // world.getPlayerIds
             } else if (c.equals("world.getPlayerIds")) {
                 StringBuilder bdr = new StringBuilder();

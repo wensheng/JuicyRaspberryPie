@@ -179,6 +179,9 @@ class Minecraft:
         """Get the height of the world (x,z) => int"""
         return int(self.conn.sendReceive("world.getHeight", intFloor(args)))
 
+    def createExplosion(self, *args):
+        self.conn.send("world.createExplosion", intFloor(args))
+        
     def getPlayerEntityIds(self):
         """Get the entity ids of the connected players => [id:int]"""
         ids = self.conn.sendReceive("world.getPlayerIds")
