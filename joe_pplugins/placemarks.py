@@ -11,7 +11,7 @@ import os
 """
 
 class Placemarks():
-    def __init__(self, pm_file='/tmp/mc_placemarks.json'):
+    def __init__(self, pm_file='/home/vagrant/pplugins/mc_placemarks.json'):
         self._pm_file = pm_file
         self.location = {}
         if not os.path.exists(self._pm_file):
