@@ -30,7 +30,7 @@ from util import flatten
 def intFloor(*args):
     return [int(math.floor(x)) for x in flatten(args)]
 
-class CmdPositioner:
+class CmdPositioner(object):
     """Methods for setting and getting positions"""
     def __init__(self, connection, packagePrefix):
         self.conn = connection
@@ -167,6 +167,10 @@ class Minecraft:
         """Set block (x,y,z,id,[data])"""
         self.conn.send("world.setBlock", intFloor(args))
 
+    def addBlock(self, *args):
+        """Set block (x,y,z,id,[data]) only if it is currently air"""
+        self.conn.send("world.addBlock", intFloor(args))
+                       
     def setBlocks(self, *args):
         """Set a cuboid of blocks (x0,y0,z0,x1,y1,z1,id,[data])"""
         self.conn.send("world.setBlocks", intFloor(args))
@@ -175,6 +179,9 @@ class Minecraft:
         """Get the height of the world (x,z) => int"""
         return int(self.conn.sendReceive("world.getHeight", intFloor(args)))
 
+    def createExplosion(self, *args):
+        self.conn.send("world.createExplosion", intFloor(args))
+        
     def getPlayerEntityIds(self):
         """Get the entity ids of the connected players => [id:int]"""
         ids = self.conn.sendReceive("world.getPlayerIds")
