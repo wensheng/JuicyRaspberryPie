@@ -149,7 +149,7 @@ def maze(size=10,blktype=1,data=0):
     data = int(data)
     mc = Minecraft.create()
     pos = mc.player.getTilePos()
-    px, py, pz = pos.x-(size/2), pos.y, pos.z-(size/2)
+    px, py, pz = pos.x-size, pos.y, pos.z-size
     W = gen_maze(size)
     size = W.shape[0]
     for x in range(size):
