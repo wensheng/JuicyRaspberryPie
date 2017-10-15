@@ -225,6 +225,17 @@ def line(steps=100, block=blocks.WOOL, sphere=0):
                     if s < sphere:
                         mc.setBlock(sx, sy, sz, block)
 
+def embed(size=5, block=blocks.GLASS):
+    "_mcp: encase area in blocks but leave existing ones intact"
+    with exc_chat() as mc:
+        size = int(size)
+        block = block_by_name(block)
+        x, y, z = playerPos(mc.player)        
+        for i in range(x-size, x+size):
+            for j in range(y-size, y+size):
+                for k in range(z-size, z+size):
+                    mc.addBlock(i, j, k, block)
+                    
 def flood(size=10, block=blocks.WATER):
     "_mcp: flood surrounding area"
     with exc_chat() as mc:
