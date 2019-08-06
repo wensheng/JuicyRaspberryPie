@@ -33,10 +33,10 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 	public final Logger logger = Logger.getLogger("Minecraft");
 	public static final Set<Material> blockBreakDetectionTools = EnumSet.of(
 			Material.DIAMOND_SWORD,
-			Material.GOLD_SWORD, 
+			Material.GOLDEN_SWORD,
 			Material.IRON_SWORD, 
 			Material.STONE_SWORD, 
-			Material.WOOD_SWORD);
+			Material.WOODEN_SWORD);
 
 	public ServerListenerThread serverThread;
 
@@ -188,7 +188,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 	@EventHandler(ignoreCancelled=true)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-		ItemStack currentTool = event.getPlayer().getItemInHand();
+		ItemStack currentTool = event.getPlayer().getInventory().getItemInMainHand();
 		if (currentTool == null || !blockBreakDetectionTools.contains(currentTool.getType())) {
 			return;
 		}

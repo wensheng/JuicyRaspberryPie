@@ -5,10 +5,13 @@ import java.net.*;
 import java.util.*;
 
 import org.bukkit.*;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.*;
 import org.bukkit.block.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.material.Directional;
+import org.bukkit.material.SimpleAttachableMaterialData;
 
 public class RemoteSession {
 
@@ -131,7 +134,8 @@ public class RemoteSession {
 			// world.getBlock
 			if (c.equals("world.getBlock")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-				send(world.getBlockTypeIdAt(loc));
+				//send(world.getBlockTypeIdAt(loc));
+				send(world.getBlockAt(loc).getType());
 				
 			// world.getBlocks
 			} else if (c.equals("world.getBlocks")) {
@@ -142,20 +146,24 @@ public class RemoteSession {
 			// world.getBlockWithData
 			} else if (c.equals("world.getBlockWithData")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-				send(world.getBlockTypeIdAt(loc) + "," + world.getBlockAt(loc).getData());
-				
+				//send(world.getBlockTypeIdAt(loc) + "," + world.getBlockAt(loc).getData());
+				Block block = world.getBlockAt(loc);
+				send(block.getType() + "," + block.getBlockData());
 			// world.setBlock
 			} else if (c.equals("world.setBlock")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-				updateBlock(world, loc, Integer.parseInt(args[3]), (args.length > 4? Byte.parseByte(args[4]) : (byte) 0));
-				
+				Material material = Material.matchMaterial(args[3]);
+				int facing = args.length > 4? Integer.parseInt(args[4]): 0;
+				BlockFace blockFace = BlockFace.values()[facing];
+				updateBlock(world, loc, material, blockFace);
 			// world.setBlocks
 			} else if (c.equals("world.setBlocks")) {
 				Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
 				Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
-				int blockType = Integer.parseInt(args[6]);
-				byte data = args.length > 7? Byte.parseByte(args[7]) : (byte) 0;
-				setCuboid(loc1, loc2, blockType, data);
+				Material blockType = Material.matchMaterial(args[6]);
+				int facing = args.length > 7? Integer.parseInt(args[7]): 0;
+				BlockFace blockFace = BlockFace.values()[facing];
+				setCuboid(loc1, loc2, blockType, blockFace);
 				
 			// world.getPlayerIds
 			} else if (c.equals("world.getPlayerIds")) {
@@ -406,7 +414,7 @@ public class RemoteSession {
 	}
 
 	// create a cuboid of lots of blocks 
-	private void setCuboid(Location pos1, Location pos2, int blockType, byte data) {
+	private void setCuboid(Location pos1, Location pos2, Material blockType, BlockFace blockFace) {
 		int minX, maxX, minY, maxY, minZ, maxZ;
 		World world = pos1.getWorld();
 		minX = pos1.getBlockX() < pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
@@ -419,7 +427,7 @@ public class RemoteSession {
 		for (int x = minX; x <= maxX; ++x) {
 			for (int z = minZ; z <= maxZ; ++z) {
 				for (int y = minY; y <= maxY; ++y) {
-					updateBlock(world, x, y, z, blockType, data);
+					updateBlock(world, x, y, z, blockType, blockFace);
 				}
 			}
 		}
@@ -441,7 +449,8 @@ public class RemoteSession {
 		for (int y = minY; y <= maxY; ++y) {
 			 for (int x = minX; x <= maxX; ++x) {
 				 for (int z = minZ; z <= maxZ; ++z) {
-					blockData.append(new Integer(world.getBlockTypeIdAt(x, y, z)).toString() + ",");
+					//blockData.append(new Integer(world.getBlockTypeIdAt(x, y, z)).toString() + ",");
+					 blockData.append(world.getBlockAt(x, y, z).getType() + ",");
 				}
 			}
 		}
@@ -450,21 +459,17 @@ public class RemoteSession {
 	}
 
 	// updates a block
-	private void updateBlock(World world, Location loc, int blockType, byte blockData) {
-		Block thisBlock = world.getBlockAt(loc);
-		updateBlock(thisBlock, blockType, blockData);
+	private void updateBlock(World world, Location loc, Material blockType, BlockFace blockFace) {
+		Block block = world.getBlockAt(loc);
+		block.setType(blockType);
+		BlockData blockData = block.getBlockData();
+		((Directional) blockData).setFacingDirection(blockFace);
+		block.setBlockData(blockData);
 	}
 	
-	private void updateBlock(World world, int x, int y, int z, int blockType, byte blockData) {
-		Block thisBlock = world.getBlockAt(x,y,z);
-		updateBlock(thisBlock, blockType, blockData);
-	}
-	
-	private void updateBlock(Block thisBlock, int blockType, byte blockData) {
-		// check to see if the block is different - otherwise leave it 
-		if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
-			thisBlock.setTypeIdAndData(blockType, blockData, true);
-		}
+	private void updateBlock(World world, int x, int y, int z, Material blockType, BlockFace blockFace) {
+		Location loc = new Location(origin.getWorld(), x, y, z);
+		updateBlock(world, loc, blockType, blockFace);
 	}
 	
 	// gets the current player
