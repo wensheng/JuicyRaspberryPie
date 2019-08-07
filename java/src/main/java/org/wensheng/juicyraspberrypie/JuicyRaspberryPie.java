@@ -55,6 +55,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 			this.saveResource("mcpi/block.py", false);
 			this.saveResource("mcpi/connection.py", false);
 			this.saveResource("mcpi/event.py", false);
+			this.saveResource("mcpi/entity.py", false);
 			this.saveResource("mcpi/minecraft.py", false);
 			this.saveResource("mcpi/pycmdsvr.py", false);
 			this.saveResource("mcpi/util.py", false);
@@ -64,6 +65,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 		if(!ppluginsFolder.exists()){
 		    ppluginsFolder.mkdir();
 			this.saveResource("pplugins/README.txt", false);
+			this.saveResource("pplugins/examples.py", false);
 		}
 	}
 	
