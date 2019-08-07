@@ -1,1 +1,1 @@
-put spigot-1.8.3.jar here or link source to here
+put spigot-x.x.x.jar here or link source to here

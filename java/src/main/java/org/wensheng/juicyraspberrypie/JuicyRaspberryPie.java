@@ -1,4 +1,4 @@
-package org.wensheng.plugins;
+package org.wensheng.juicyraspberrypie;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -45,10 +45,13 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 	public Player hostPlayer = null;
 	
 	private void save_resources(){
-		File py_init_file = new File(getDataFolder(), "__init__.py");
+		File py_init_file = new File(getDataFolder(), "config.yml");
 		if(!py_init_file.exists()){
-			this.saveResource("__init__.py", false);
-			this.saveResource("mcpi/__init__.py", false);
+			this.saveResource("config.yml", false);
+        }
+        File mcpiFolder = new File(getDataFolder(), "mcpi");
+		if(!mcpiFolder.exists()){
+            mcpiFolder.mkdir();
 			this.saveResource("mcpi/block.py", false);
 			this.saveResource("mcpi/connection.py", false);
 			this.saveResource("mcpi/event.py", false);
@@ -56,7 +59,10 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 			this.saveResource("mcpi/pycmdsvr.py", false);
 			this.saveResource("mcpi/util.py", false);
 			this.saveResource("mcpi/vec3.py", false);
-			this.saveResource("pplugins/__init__.py", false);
+        }
+        File ppluginsFolder = new File(getDataFolder(), "pplugins");
+		if(!ppluginsFolder.exists()){
+		    ppluginsFolder.mkdir();
 			this.saveResource("pplugins/README.txt", false);
 		}
 	}

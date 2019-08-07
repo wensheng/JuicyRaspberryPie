@@ -1,4 +1,4 @@
-package org.wensheng.plugins;
+package org.wensheng.juicyraspberrypie;
 
 import java.io.*;
 import java.net.*;
