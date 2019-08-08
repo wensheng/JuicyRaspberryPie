@@ -4,5 +4,6 @@ java/target/
 java/lib/*.jar
 !mcsvr/clean.py
 !mcsvr/start-server-linux.sh
+!mcsvr/start-server-win.bat
 !mcsvr/build-linux.sh
 mcsvr/*
