@@ -1,4 +1,5 @@
 import math
+
 from connection import Connection
 from vec3 import Vec3
 from event import BlockEvent, ChatEvent
@@ -257,6 +258,17 @@ class Minecraft:
     def create(address = "localhost", port = 4711):
         return Minecraft(Connection(address, port))
 
+
+def mcpy(func):
+    # these will be created as global variable in module, so not good idea
+    # func.__globals__['mc'] = Minecraft.create()
+    # func.__globals__['pos'] = func.__globals__['mc'].player.getTilePos()
+    # func.__globals__['direction'] = func.__globals__['mc'].player.getDirection()
+    func.__doc__ = ("_mcp:" + func.__doc__) if func.__doc__ else "_mcp "
+    return func
+
+
+mc = Minecraft.create()
 
 if __name__ == "__main__":
     mc = Minecraft.create()

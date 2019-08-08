@@ -19,7 +19,7 @@ import importlib
 
 plugin_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, plugin_dir)
-from mcpi.minecraft import Minecraft
+from mcpi.minecraft import mc
 
 HOST = 'localhost'
 # TODO: read port from config.yml
@@ -54,7 +54,6 @@ def register_commands():
 
 
 def chat(msg="Whaaat?!"):
-    mc = Minecraft.create()
     mc.postToChat(msg)
 
 

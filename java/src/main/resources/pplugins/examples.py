@@ -1,11 +1,11 @@
 import time
 from math import (pi, sin)
-from mcpi.minecraft import Minecraft
+from mcpi.minecraft import mc, mcpy
 
 
+@mcpy
 def cube(size=5, typeName='SANDSTONE'):
-    "_mcp: create a cube"
-    mc = Minecraft.create()
+    "create a cube"
     pos = mc.player.getTilePos()
     s = int(size)
     mc.setBlocks(pos.x + 1, pos.y, pos.z,
@@ -17,7 +17,6 @@ def flatten(size=50):
     change one layer of blocks below me to sandstone,
     clear everything above.
     """
-    mc = Minecraft.create()
     pos = mc.player.getTilePos()
     s = int(size)
     mc.setBlocks(pos.x - s, pos.y - 1, pos.z - s,
@@ -30,7 +29,6 @@ def falling_block():
     """_mcp
     A gold block is falling from the sky
     """
-    mc = Minecraft.create()
     pos = mc.player.getTilePos()
     y = pos.y + 40
     for i in range(40):
@@ -49,7 +47,6 @@ def rainbow():
     The code is from:
     http://dev.bukkit.org/bukkit-plugins/raspberryjuice/
     """
-    mc = Minecraft.create()
     pos = mc.player.getTilePos()
     colors = [14, 1, 4, 5, 3, 11, 10]
     height = 60

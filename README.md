@@ -1,33 +1,35 @@
 # JuicyRaspberryPie
-Programming Minecraft with Python.
+Programming Minecraft with Python!
 
-JuicyRaspberryPie is *RaspberryJuice* with a Python command server
+JuicyRaspberryPie implements MinecraftPi modding API for Bukkit server.
 
-RaspberryJuice is a Bukkit (a Minecraft server mod) plugin that implements the Minecraft Pi API.
+An integrated Python command server is added to make Python programming much easier.
 
-https://github.com/zhuowei/RaspberryJuice
+JuicyRaspberryPie is based on [*RaspberryJuice*](https://github.com/zhuowei/RaspberryJuice)
 
-http://dev.bukkit.org/bukkit-plugins/raspberryjuice/
-
-Most code of JuicyRaspberryPie are from RaspberryJuice, I just changed Java code a little bit and added a Python command server.
-
-youtube demo:
+youtube demo (note this video is somewhat outdated, for example cube command should be "/p cube 5 gold_block", it now use block name instead of ID):
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=qhDLa2muivY&t=15m" target="_blank"><img src="http://img.youtube.com/vi/qhDLa2muivY/0.jpg" alt="youtube" width="240" height="180" border="10" /></a>
 
 ## Pre-requisites:
 
-1. Spigot or CraftBukkit 1.8.3 is installed
+1. Spigot or CraftBukkit server is installed.  Download Spigot from https://getbukkit.org/download/spigot
 2. Python 3 is installed
 
 ## How to use
-Download [JuicyRaspberryPie.jar](https://github.com/wensheng/JuicyRaspberryPie/raw/master/jars/JuicyRaspberryPie.jar) and put it in plugins folder.  Start/Restart the Spigot/CraftBukkit server once and stop. A **JuicyRaspberryPie** folder should be created.
 
-Inside the **JuicyRaspberryPie** folder, change config.yml to point pyexe and pypath to the correction location on your system.  If you use Windows and you installed python3 into "C:\Python34", you don't need to do anything.  If you use Linux, or if you use a Mac (and you installed python3 with "brew install python3"), then your pyexe would be "python3" and your pypath would mostly likely be "/usr/local/bin".
+1. Download juicyraspberrypie-1.x.x.jar from [releases](https://github.com/wensheng/JuicyRaspberryPie/releases) and put it in plugins folder.  Start the Spigot/CraftBukkit server. A **juicyraspberrypie** folder should be created.
+2. Inside the **juicyraspberrypie** folder, change config.yml to point pyexe and pypath to the correction location on your system.  See config.yml below.
+3. Put your Python files in **pplugins** folder and you're ready to do.  Your Python functions just need to have doctrings that starts with "_mcpy", or decorated with "@mcpy", see pplugins/README.txt for details.
 
-Put your Python files in **pplugins** folder and you're ready to do.  Your Python functions just need to have doctrings that starts with "_mcp", see pplugins/README.txt for details.
+## config.yml
+
+1. On Linux, the default should be fine. 
+2. On Windows, your "pyexe" should be "python.exe", and your pypath should be ""C:\\Users\\yourusername\\Anaconda3" or "C:\\Python37" depending on where you installed Python.  Note the two backslashes!
+3. If you use Mac and you installed python3 with "brew install python3", then your pyexe would be "python3" and your pypath would mostly likely be "/usr/local/bin".
 
 ## How to develop
-Clone this repo, copy spigot-1.8.3.jar to the lib folder, import JuicyRaspberryPie/java as root directory into Eclipse.
 
-I only used JDK 1.8, 1.7 will not work. (or will if you change the code a little bit, the only Java 8 feature I use is "String.join")
+You need maven and jdk8.
+
+In java folder, do "./buld.sh 1.14.4", "1.14.4" is the Bukkit version number, specify whatever version you need.
