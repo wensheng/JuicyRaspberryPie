@@ -162,13 +162,13 @@ public class RemoteSession {
             } else if (c.equals("world.setBlocks")) {
                 Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
-                Material blockType = Material.matchMaterial(args[6]);
+                Material material = Material.matchMaterial(args[6]);
                 if(material == null){
                     material = Material.valueOf("SANDSTONE");
                 }
                 int facing = args.length > 7? Integer.parseInt(args[7]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
-                setCuboid(loc1, loc2, blockType, blockFace);
+                setCuboid(loc1, loc2, material, blockFace);
                 
             // world.getPlayerIds
             } else if (c.equals("world.getPlayerIds")) {
