@@ -92,6 +92,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 register_commands()
 
 if __name__ == "__main__":
+    socketserver.TCPServer.allow_reuse_address = True
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
     def server_serve():
         while keep_running():

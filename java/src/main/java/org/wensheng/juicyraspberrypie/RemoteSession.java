@@ -115,12 +115,9 @@ public class RemoteSession {
     }
 
     protected void handleLine(String line) {
-        //System.out.println(line);
         String methodName = line.substring(0, line.indexOf("("));
         //split string into args, handles , inside " i.e. ","
         String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",");
-        //System.out.println(methodName + ":" + Arrays.toString(args));
-        plugin.getLogger().info(methodName + ":" + Arrays.toString(args));
         handleCommand(methodName, args);
     }
 
@@ -136,8 +133,8 @@ public class RemoteSession {
             // world.getBlock
             if (c.equals("world.getBlock")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-                //send(world.getBlockTypeIdAt(loc));
-                send(world.getBlockAt(loc).getType());
+                //send(world.getBlockAt(loc).getType());
+                send(world.getBlockAt(loc).getType().name());
                 
             // world.getBlocks
             } else if (c.equals("world.getBlocks")) {
@@ -148,13 +145,16 @@ public class RemoteSession {
             // world.getBlockWithData
             } else if (c.equals("world.getBlockWithData")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-                //send(world.getBlockTypeIdAt(loc) + "," + world.getBlockAt(loc).getData());
                 Block block = world.getBlockAt(loc);
-                send(block.getType() + "," + block.getBlockData());
+                //send(block.getType() + "," + block.getBlockData());
+                send(block.getType().name() + "," + block.getBlockData());
             // world.setBlock
             } else if (c.equals("world.setBlock")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Material material = Material.matchMaterial(args[3]);
+                if(material == null){
+                    material = Material.valueOf("SANDSTONE");
+                }
                 int facing = args.length > 4? Integer.parseInt(args[4]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 updateBlock(world, loc, material, blockFace);
@@ -163,6 +163,9 @@ public class RemoteSession {
                 Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
                 Material blockType = Material.matchMaterial(args[6]);
+                if(material == null){
+                    material = Material.valueOf("SANDSTONE");
+                }
                 int facing = args.length > 7? Integer.parseInt(args[7]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 setCuboid(loc1, loc2, blockType, blockFace);
@@ -472,10 +475,7 @@ public class RemoteSession {
     }
     
     private void updateBlock(World world, int x, int y, int z, Material blockType, BlockFace blockFace) {
-        Location loc = new Location(origin.getWorld(), x, y, z);
-        //Location loc = new Location(world, x, y, z);
-        //plugin.getLogger().info("Material:" + blockType.toString() + " at x:" + loc.getX() + " y:" + loc.getY() + " z:" + loc.getZ());
-        plugin.getLogger().info("Material:" + blockType.toString());
+        Location loc = new Location(world, x, y, z);
         updateBlock(world, loc, blockType, blockFace);
     }
     

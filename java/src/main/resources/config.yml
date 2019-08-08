@@ -1,4 +1,5 @@
 port: 4711
+start_pyserver: true
 pysvr_port: 32123
 pyexe: "python3"
 pypath: "/usr/bin"
