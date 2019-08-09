@@ -190,6 +190,54 @@ public class RemoteSession {
                     send("Fail");
                 }
                 
+            // world.setSign
+            } else if (c.equals("world.setSign")) {
+                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Block thisBlock = world.getBlockAt(loc);
+                // in 1.14
+                //ACACIA BIRCH OAK DARK_OAK JUNGLE SPRUCE LEGACY +_SIGN +_WALL_SIGN
+                // in 1.13
+                // SIGN WALL_SIGN, LEGACY 
+                Material material = Material.matchMaterial(args[3]);
+                if(material == null){
+                    material = Material.LEGACY_SIGN;
+                }
+                thisBlock.setType(material);
+
+                int facing = args.length > 4? Integer.parseInt(args[4]): 0;
+                BlockFace blockFace = BlockFace.values()[facing];
+                BlockData blockData = thisBlock.getBlockData();
+                if(blockData instanceof org.bukkit.block.data.type.WallSign){
+                    org.bukkit.block.data.type.WallSign s = (org.bukkit.block.data.type.WallSign) thisBlock.getBlockData();
+                    s.setFacing(blockFace);
+                    thisBlock.setBlockData(s);
+                }else{
+                    org.bukkit.block.data.type.Sign s = (org.bukkit.block.data.type.Sign) thisBlock.getBlockData();
+                    s.setRotation(blockFace);
+                    thisBlock.setBlockData(s);
+                }
+
+                BlockState signState = thisBlock.getState();
+                if (signState instanceof Sign) {
+                    Sign sign = (Sign) signState;
+                    for (int i = 5; i - 5 < 4 && i < args.length; i++) {
+                        sign.setLine(i - 5, args[i]);
+                    }
+                    sign.update();
+                }
+
+            } else if (c.equals("world.spawnEntity")) {
+                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                 EntityType entityType;
+                 try{
+                     entityType = EntityType.valueOf(args[3].toUpperCase());
+                 }catch(Exception exc){
+                     entityType = EntityType.valueOf("COW");
+                 }finally{
+                 }
+                 Entity entity = world.spawnEntity(loc, entityType);
+                 send(entity.getEntityId());
+
             // chat.post
             } else if (c.equals("chat.post")) {
                 //create chat message from args as it was split by ,
@@ -381,7 +429,7 @@ public class RemoteSession {
                 }
                 
                 // entity.getRotation
-                } else if (c.equals("entity.getRotation")) {
+            } else if (c.equals("entity.getRotation")) {
                     //get entity based on id
                     //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
                     Player entity = plugin.getEntity(Integer.parseInt(args[0]));
@@ -393,7 +441,7 @@ public class RemoteSession {
                     }
                     
                 // entity.getPitch
-                } else if (c.equals("entity.getPitch")) {
+            } else if (c.equals("entity.getPitch")) {
                     //get entity based on id
                     //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
                     Player entity = plugin.getEntity(Integer.parseInt(args[0]));

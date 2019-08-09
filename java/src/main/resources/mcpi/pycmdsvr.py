@@ -4,7 +4,7 @@
 listen on localhost port 32123. 
 When it start, it scan the "pplugins" directory for any python files and try
 to load them as modules, in these modules, it search for any functions whose 
-docstring starts with "_mcp" and register them as commands.
+docstring starts with "_mcpy" and register them as commands.
 When the server receive a command, if it matches one in the registry, it will
 be executed. If not, it will execute a dummy command.
 """
@@ -46,7 +46,7 @@ def register_commands():
                 for item in dir(module):
                     if isinstance(module.__dict__[item], types.FunctionType):
                         docs = module.__dict__[item].__doc__
-                        if docs and docs.startswith("_mcp"):
+                        if docs and docs.startswith("_mcpy"):
                             print("registering command:", module.__dict__[item].__name__)
                             mc_functions[item] = module.__dict__[item]
             except (NameError, ImportError) as e:

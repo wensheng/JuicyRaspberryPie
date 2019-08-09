@@ -201,22 +201,22 @@ class Minecraft:
         self.conn.send(b"world.setBlocks", *args)
 
     def setSign(self, *args):
-        """Set a sign (x,y,z,id,data,[line1,line2,line3,line4])
-        
-        Wall signs (id=68) require data for facing direction 2=north, 3=south, 4=west, 5=east
-        Standing signs (id=63) require data for facing rotation (0-15) 0=south, 4=west, 8=north, 12=east
-        @author: Tim Cummings https://www.triptera.com.au/wordpress/"""
-        lines = []
-        flatargs = []
-        for arg in flatten(args):
-            flatargs.append(arg)
-        for flatarg in flatargs[5:]:
-            lines.append(flatarg.replace(",",";").replace(")","]").replace("(","["))
-        self.conn.send(b"world.setSign",intFloor(flatargs[0:5]) + lines)
+        """Set a sign (x,y,z,sign_type,direction,[line1,line2,line3,line4])
+        Wallsigns require args[4]:facing direction, 2=north, 3=south, 4=west, 5=east
+        Standing signs require args[4]:facing rotation, (0-15) 0=south, 4=west, 8=north, 12=east
+        """
+        args2 = intFloor(args[:3]) 
+        args2.append(args[3])
+        args2.append(int(args[4]))
+
+        lines = "".join(args[5:])[1:-1].split(",")
+        args2 += lines
+
+        self.conn.send(b"world.setSign", args2)
 
     def spawnEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
-        return int(self.conn.sendReceive(b"world.spawnEntity", intFloor(args)))
+        return int(self.conn.sendReceive(b"world.spawnEntity", *args))
 
     def getHeight(self, *args):
         """Get the height of the world (x,z) => int"""
@@ -264,7 +264,7 @@ def mcpy(func):
     # func.__globals__['mc'] = Minecraft.create()
     # func.__globals__['pos'] = func.__globals__['mc'].player.getTilePos()
     # func.__globals__['direction'] = func.__globals__['mc'].player.getDirection()
-    func.__doc__ = ("_mcp:" + func.__doc__) if func.__doc__ else "_mcp "
+    func.__doc__ = ("_mcpy :" + func.__doc__) if func.__doc__ else "_mcpy "
     return func
 
 

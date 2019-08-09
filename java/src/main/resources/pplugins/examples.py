@@ -13,7 +13,7 @@ def cube(size=5, typeName='SANDSTONE'):
     
 
 def flatten(size=50):
-    """_mcp: flatten world around me.
+    """_mcpy: flatten world around me.
     change one layer of blocks below me to sandstone,
     clear everything above.
     """
@@ -26,7 +26,7 @@ def flatten(size=50):
 
 
 def falling_block():
-    """_mcp
+    """_mcpy
     A gold block is falling from the sky
     """
     pos = mc.player.getTilePos()
@@ -42,17 +42,15 @@ def falling_block():
 
     
 def rainbow():
-    """_mcp
+    """_mcpy
     create a rainbow.
-    The code is from:
-    http://dev.bukkit.org/bukkit-plugins/raspberryjuice/
+    The code is from: http://dev.bukkit.org/bukkit-plugins/raspberryjuice/
     """
     pos = mc.player.getTilePos()
-    colors = [14, 1, 4, 5, 3, 11, 10]
+    colors = ['RED_WOOL', 'ORANGE_WOOL', 'YELLOW_WOOL', 'LIME_WOOL', 'LIGHT_BLUE_WOOL', 'BLUE_WOOL', 'PURPLE_WOOL']
     height = 60
-    mc.setBlocks(pos.x-64,0,0,pos.x+64,height + len(colors),0,0)
+    mc.setBlocks(pos.x-64,0,0,pos.x+64,height + len(colors),0,'AIR')
     for x in range(0, 128):
         for colourindex in range(0, len(colors)):
             y = sin((x / 128.0) * pi) * height + colourindex
-            mc.setBlock(pos.x+x - 64, pos.y+y, pos.z,
-                35, colors[len(colors) - 1 - colourindex])
+            mc.setBlock(pos.x+x - 64, pos.y+y, pos.z, colors[len(colors) - 1 - colourindex])
