@@ -1,7 +1,7 @@
 __pycache__/
-java/bin/
-java/target/
-java/lib/*.jar
+bukkit/bin/
+bukkit/target/
+bukkit/lib/*.jar
 !mcsvr/clean.py
 !mcsvr/start-server-linux.sh
 !mcsvr/start-server-win.bat
