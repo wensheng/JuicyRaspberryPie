@@ -7,3 +7,15 @@ bukkit/lib/*.jar
 !mcsvr/start-server-win.bat
 !mcsvr/build-linux.sh
 mcsvr/*
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+# gradle
+build
+.gradle
+# other
+eclipse
+run

@@ -1,7 +1,7 @@
 # JuicyRaspberryPie
 Programming Minecraft with Python!
 
-JuicyRaspberryPie implements MinecraftPi modding API for Bukkit server.
+JuicyRaspberryPie implements MinecraftPi modding API for Bukkit server or Minecraft Forge mod .
 
 An integrated Python command server is added to make Python programming much easier.
 
@@ -30,8 +30,14 @@ youtube demo (note this video is somewhat outdated, for example cube command sho
 
 ## How to develop
 
+**Bukkit Server**
+
 You need maven and jdk8.
 
-In java folder, do "./buld.sh 1.14.4", "1.14.4" is the Bukkit version number, specify whatever version you need.
+In bukkit folder, do "./buld.sh 1.14.4", "1.14.4" is the Bukkit version number, specify whatever version you need.
 
 Tip: set "allow-nether=false" in server.properties, set "allow-end: false" in bukkit.yml, so server starts up quickly.
+
+**Forge Mod**
+
+Import forge folder import IntelliJ.
