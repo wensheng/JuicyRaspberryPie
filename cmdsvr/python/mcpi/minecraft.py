@@ -3,7 +3,6 @@ import math
 from .connection import Connection
 from .vec3 import Vec3
 from .event import BlockEvent, ChatEvent
-from .entity import Entity
 from .util import flatten
 
 """ Minecraft PI low level api v0.1_1
@@ -248,13 +247,6 @@ class Minecraft:
     def setting(self, setting, status):
         """Set a world setting (setting, status). keys: world_immutable, nametags_visible"""
         self.conn.send(b"world.setting", setting, 1 if bool(status) else 0)
-
-    def getEntityTypes(self):
-        """Return a list of Entity objects representing all the entity types in Minecraft"""  
-        s = self.conn.sendReceive(b"world.getEntityTypes")
-        types = [t for t in s.split("|") if t]
-        return [Entity(int(e[:e.find(",")]), e[e.find(",") + 1:]) for e in types]
-
 
     @staticmethod
     def create(address="localhost", port=4712, debug=False):
