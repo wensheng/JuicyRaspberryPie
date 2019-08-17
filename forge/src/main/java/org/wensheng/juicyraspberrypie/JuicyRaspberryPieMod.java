@@ -14,6 +14,7 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,6 +97,8 @@ public class JuicyRaspberryPieMod
             e.printStackTrace();
             LOGGER.warn("Could not start socket server thread");
         }
+        // mods location, should be %appdata%/.minecraft/mods
+        //LOGGER.info("MODSDIR=" + FMLPaths.MODSDIR.get().resolve(""));
     }
 
     @SubscribeEvent

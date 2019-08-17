@@ -42,4 +42,4 @@ Tip: set "allow-nether=false" in server.properties, set "allow-end: false" in bu
 
 Import forge folder import IntelliJ.
 
-![juicy](images/juicy.png)
+![juicy](misc/images/juicy.png)
