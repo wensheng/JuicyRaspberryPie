@@ -12,10 +12,11 @@ class Connection:
     """Connection to a Minecraft Pi game"""
     RequestFailed = "Fail"
 
-    def __init__(self, address, port):
+    def __init__(self, address, port, debug=False):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((address, port))
         self.lastSent = ""
+        self.debug = debug
 
     def drain(self):
         """Drains the socket of incoming data"""
@@ -24,9 +25,10 @@ class Connection:
             if not readable:
                 break
             data = self.socket.recv(1500)
-            e =  "Drained Data: <%s>\n"%data.strip()
-            e += "Last Message: <%s>\n"%self.lastSent.strip()
-            sys.stderr.write(e)
+            if self.debug:
+                e =  "Drained Data: <%s>\n"%data.strip()
+                e += "Last Message: <%s>\n"%self.lastSent.strip()
+                sys.stderr.write(e)
 
     def send(self, f, *data):
         """

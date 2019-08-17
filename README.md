@@ -36,7 +36,10 @@ You need maven and jdk8.
 
 In bukkit folder, do "./buld.sh 1.14.4", "1.14.4" is the Bukkit version number, specify whatever version you need.
 
-Tip: set "allow-nether=false" in server.properties, set "allow-end: false" in bukkit.yml, so server starts up quickly.
+Tips: 
+
+1. set "allow-nether=false" in server.properties, set "allow-end: false" in bukkit.yml, so server starts up quickly.
+2. in %appdata%/.minecraft/options.txt change "pauseOnLostFocus"  to false so minecraft doesn't pause when you do interactive programming
 
 **Forge Mod**
 

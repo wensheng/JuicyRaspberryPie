@@ -4,7 +4,6 @@ from .connection import Connection
 from .vec3 import Vec3
 from .event import BlockEvent, ChatEvent
 from .entity import Entity
-from .block import Block
 from .util import flatten
 
 """ Minecraft PI low level api v0.1_1
@@ -182,8 +181,7 @@ class Minecraft:
 
     def getBlockWithData(self, *args):
         """Get block with data (x,y,z) => Block"""
-        ans = self.conn.sendReceive(b"world.getBlockWithData", intFloor(args))
-        return Block(*list(map(int, ans.split(","))))
+        return self.conn.sendReceive(b"world.getBlockWithData", intFloor(args)).split(",")
 
     def getBlocks(self, *args):
         """Get a cuboid of blocks (x0,y0,z0,x1,y1,z1) => [id:int]"""
@@ -259,8 +257,8 @@ class Minecraft:
 
 
     @staticmethod
-    def create(address = "localhost", port = 4712):
-        return Minecraft(Connection(address, port))
+    def create(address="localhost", port=4712, debug=False):
+        return Minecraft(Connection(address, port, debug))
 
 
 def mcpy(func):
