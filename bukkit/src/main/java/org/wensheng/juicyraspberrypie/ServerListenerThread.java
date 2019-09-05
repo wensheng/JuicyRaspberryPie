@@ -4,18 +4,12 @@ import java.io.*;
 import java.net.*;
 
 public class ServerListenerThread implements Runnable {
-
-	public ServerSocket serverSocket;
-
-	public SocketAddress bindAddress;
-
-	public boolean running = true;
-
+	ServerSocket serverSocket;
+	boolean running = true;
 	private JuicyRaspberryPie plugin;
 
-	public ServerListenerThread(JuicyRaspberryPie plugin, SocketAddress bindAddress) throws IOException {
+	ServerListenerThread(JuicyRaspberryPie plugin, SocketAddress bindAddress) throws IOException {
 		this.plugin = plugin;
-		this.bindAddress = bindAddress;
 		serverSocket = new ServerSocket();
 		serverSocket.setReuseAddress(true);
 		serverSocket.bind(bindAddress);

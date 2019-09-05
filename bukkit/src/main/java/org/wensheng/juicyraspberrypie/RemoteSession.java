@@ -1,70 +1,58 @@
 package org.wensheng.juicyraspberrypie;
 
 import java.io.*;
-import java.net.*;
 import java.util.*;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
-import org.bukkit.entity.*;
-import org.bukkit.block.*;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-//import org.bukkit.material.Directional;
-import org.bukkit.material.SimpleAttachableMaterialData;
+import org.bukkit.event.player.PlayerInteractEvent;
 
-public class RemoteSession {
-
+class RemoteSession {
+    boolean pendingRemoval = false;
     private Location origin;
-
     private Socket socket;
-
     private BufferedReader in;
-
     private BufferedWriter out;
-    
     private Thread inThread;
-    
     private Thread outThread;
-
     private ArrayDeque<String> inQueue = new ArrayDeque<String>();
-
-    private ArrayDeque<String> outQueue = new ArrayDeque<String>();
-
-    public boolean running = true;
-
-    public boolean pendingRemoval = false;
-
-    public JuicyRaspberryPie plugin;
-
-    protected ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<PlayerInteractEvent>();
-    
-    protected ArrayDeque<AsyncPlayerChatEvent> chatPostedQueue = new ArrayDeque<AsyncPlayerChatEvent>();
-
+    private final ArrayDeque<String> outQueue = new ArrayDeque<String>();
+    private boolean running = true;
+    private JuicyRaspberryPie plugin;
+    private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<PlayerInteractEvent>();
+    private ArrayDeque<AsyncPlayerChatEvent> chatPostedQueue = new ArrayDeque<AsyncPlayerChatEvent>();
     private int maxCommandsPerTick = 9000;
-
-    private boolean closed = false;
-
     private Player attachedPlayer = null;
 
-    public RemoteSession(JuicyRaspberryPie plugin, Socket socket) throws IOException {
+    RemoteSession(JuicyRaspberryPie plugin, Socket socket) throws IOException {
         this.socket = socket;
         this.plugin = plugin;
         init();
+        origin = plugin.getServer().getWorlds().get(0).getSpawnLocation();
     }
 
-    public void init() throws IOException {
+    private void init() throws IOException {
         socket.setTcpNoDelay(true);
         socket.setKeepAlive(true);
         socket.setTrafficClass(0x10);
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         startThreads();
-        plugin.getLogger().info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
+        plugin.logger.info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
     }
 
-    protected void startThreads() {
+    private void startThreads() {
         inThread = new Thread(new InputThread());
         inThread.start();
         outThread = new Thread(new OutputThread());
@@ -72,38 +60,29 @@ public class RemoteSession {
     }
 
 
-    public Location getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(Location origin) {
-        this.origin = origin;
-    }
-
-    public Socket getSocket() {
+    Socket getSocket() {
         return socket;
     }
 
-    public void queuePlayerInteractEvent(PlayerInteractEvent event) {
+    void queuePlayerInteractEvent(PlayerInteractEvent event) {
         //plugin.getLogger().info(event.toString());
         interactEventQueue.add(event);
     }
 
-    public void queueChatPostedEvent(AsyncPlayerChatEvent event) {
+    void queueChatPostedEvent(AsyncPlayerChatEvent event) {
         //plugin.getLogger().info(event.toString());
         chatPostedQueue.add(event);
     }
 
     /** called from the server main thread */
-    public void tick() {
-        if (origin == null) this.origin = plugin.getServer().getWorlds().get(0).getSpawnLocation();
+    void tick() {
         int processedCount = 0;
         String message;
         while ((message = inQueue.poll()) != null) {
             handleLine(message);
             processedCount++;
             if (processedCount >= maxCommandsPerTick) {
-                plugin.getLogger().warning("Over " + maxCommandsPerTick +
+                plugin.logger.warning("Over " + maxCommandsPerTick +
                     " commands were queued - deferring " + inQueue.size() + " to next tick");
                 break;
             }
@@ -114,41 +93,37 @@ public class RemoteSession {
         }
     }
 
-    protected void handleLine(String line) {
+    private void handleLine(String line) {
+        if(!line.contains("(") || !line.contains(")")){
+            send("Wrong format");
+            return;
+        }
+        line = line.trim();
         String methodName = line.substring(0, line.indexOf("("));
-        //split string into args, handles , inside " i.e. ","
-        String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",");
+        String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",\\s*");
         handleCommand(methodName, args);
     }
 
-    protected void handleCommand(String c, String[] args) {
+    private void handleCommand(String c, String[] args) {
         
         try {
-            // get the server
-            Server server = plugin.getServer();
-            
-            // get the world
             World world = origin.getWorld();
+            if(world == null){
+                send("Could not get world");
+                return;
+            }
             
-            // world.getBlock
             if (c.equals("world.getBlock")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-                //send(world.getBlockAt(loc).getType());
                 send(world.getBlockAt(loc).getType().name());
-                
-            // world.getBlocks
             } else if (c.equals("world.getBlocks")) {
                 Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
                 send(getBlocks(loc1, loc2));
-                
-            // world.getBlockWithData
             } else if (c.equals("world.getBlockWithData")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Block block = world.getBlockAt(loc);
-                //send(block.getType() + "," + block.getBlockData());
                 send(block.getType().name() + "," + block.getBlockData());
-            // world.setBlock
             } else if (c.equals("world.setBlock")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Material material = Material.matchMaterial(args[3]);
@@ -158,7 +133,6 @@ public class RemoteSession {
                 int facing = args.length > 4? Integer.parseInt(args[4]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 updateBlock(world, loc, material, blockFace);
-            // world.setBlocks
             } else if (c.equals("world.setBlocks")) {
                 Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
@@ -169,28 +143,24 @@ public class RemoteSession {
                 int facing = args.length > 7? Integer.parseInt(args[7]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 setCuboid(loc1, loc2, material, blockFace);
-                
-            // world.getPlayerIds
             } else if (c.equals("world.getPlayerIds")) {
                 StringBuilder bdr = new StringBuilder();
-                for (Player p: server.getOnlinePlayers()) {
-                    bdr.append(p.getEntityId());
+                for (Player p: plugin.getServer().getOnlinePlayers()) {
+                    bdr.append(p.getName());
+                    bdr.append(":");
+                    bdr.append(p.getUniqueId());
                     bdr.append("|");
                 }
                 bdr.deleteCharAt(bdr.length()-1);
                 send(bdr.toString());
-                
-            // world.getPlayerId
             } else if (c.equals("world.getPlayerId")) {
                 Player p = plugin.getNamedPlayer(args[0]);
                 if (p != null) {
-                    send(p.getEntityId());
+                    send(p.getUniqueId());
                 } else {
-                    plugin.getLogger().info("Player [" + args[0] + "] not found.");
+                    plugin.logger.info("Player [" + args[0] + "] not found.");
                     send("Fail");
                 }
-                
-            // world.setSign
             } else if (c.equals("world.setSign")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 Block thisBlock = world.getBlockAt(loc);
@@ -200,7 +170,7 @@ public class RemoteSession {
                 // SIGN WALL_SIGN, LEGACY 
                 Material material = Material.matchMaterial(args[3]);
                 if(material == null){
-                    material = Material.LEGACY_SIGN;
+                    material = Material.BIRCH_SIGN;
                 }
                 thisBlock.setType(material);
 
@@ -226,6 +196,15 @@ public class RemoteSession {
                     sign.update();
                 }
 
+            } else if(c.equals("world.getNearbyEntities")) {
+                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                double nearby_distance = 10.0;
+                Collection<Entity> nearbyEntities = world.getNearbyEntities(loc, nearby_distance, nearby_distance, nearby_distance);
+                StringBuilder result = new StringBuilder();
+                for(Entity e: nearbyEntities){
+                    result.append(e.getName()).append(": ").append(e.getUniqueId()).append(" \n");
+                }
+                send(result.toString());
             } else if (c.equals("world.spawnEntity")) {
                  Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                  EntityType entityType;
@@ -233,12 +212,11 @@ public class RemoteSession {
                      entityType = EntityType.valueOf(args[3].toUpperCase());
                  }catch(Exception exc){
                      entityType = EntityType.valueOf("COW");
-                 }finally{
                  }
                  Entity entity = world.spawnEntity(loc, entityType);
-                 send(entity.getEntityId());
-
-            // chat.post
+                 send(entity.getUniqueId());
+            } else if (c.equals("world.getHeight")) {
+                send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
             } else if (c.equals("chat.post")) {
                 //create chat message from args as it was split by ,
                 String chatMessage = "";
@@ -247,34 +225,32 @@ public class RemoteSession {
                     chatMessage = chatMessage + args[count] + ",";
                 }
                 chatMessage = chatMessage.substring(0, chatMessage.length() - 1);
-                server.broadcastMessage(chatMessage);
-                
-            // events.clear
+                plugin.getServer().broadcastMessage(chatMessage);
             } else if (c.equals("events.clear")) {
                 interactEventQueue.clear();
                 chatPostedQueue.clear();
-                
-            // events.block.hits
             } else if (c.equals("events.block.hits")) {
                 StringBuilder b = new StringBuilder();
                  PlayerInteractEvent event;
                 while ((event = interactEventQueue.poll()) != null) {
                     Block block = event.getClickedBlock();
-                    Location loc = block.getLocation();
-                    b.append(blockLocationToRelative(loc));
-                    b.append(",");
-                    b.append(blockFaceToNotch(event.getBlockFace()));
-                    b.append(",");
-                    b.append(event.getPlayer().getEntityId());
-                    if (interactEventQueue.size() > 0) {
-                        b.append("|");
+                    if(block != null) {
+                        Location loc = block.getLocation();
+                        b.append(blockLocationToRelative(loc));
+                        b.append(",");
+                        b.append(blockFaceToNotch(event.getBlockFace()));
+                        b.append(",");
+                        b.append(event.getPlayer().getEntityId());
+                        if (interactEventQueue.size() > 0) {
+                            b.append("|");
+                        }
+                    }else{
+                        b.append("Fail");
                     }
                 }
                 //DEBUG
                 //System.out.println(b.toString());
                 send(b.toString());
-            
-            // events.chat.posts
             } else if (c.equals("events.chat.posts")) {
                 StringBuilder b = new StringBuilder();
                 AsyncPlayerChatEvent event;
@@ -289,193 +265,94 @@ public class RemoteSession {
                 //DEBUG
                 //System.out.println(b.toString());
                 send(b.toString());
-                
-            // player.getTile
-            } else if (c.equals("player.getTile")) {
-                String name = null;
-                if (args.length > 0) {
-                    name = args[0];
-                }
-                Player currentPlayer = getCurrentPlayer(name);
-                send(blockLocationToRelative(currentPlayer.getLocation()));
-                
-            // player.setTile
-            } else if (c.equals("player.setTile")) {
-                String name = null, x = args[0], y = args[1], z = args[2];
-                if (args.length > 3) {
-                    name = args[0]; x = args[1]; y = args[2]; z = args[3];
-                }
-                Player currentPlayer = getCurrentPlayer(name);
-                //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
-                Location loc = currentPlayer.getLocation();
-                currentPlayer.teleport(parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getYaw()));
-                
-            // player.getPos
-            } else if (c.equals("player.getPos")) {
-                String name = null;
-                if (args.length > 0) {
-                    name = args[0];
-                }
-                Player currentPlayer = getCurrentPlayer(name);
-                send(locationToRelative(currentPlayer.getLocation()));
-                
-            // player.setPos
-            } else if (c.equals("player.setPos")) {
-                String name = null, x = args[0], y = args[1], z = args[2];
-                if (args.length > 3) {
-                    name = args[0]; x = args[1]; y = args[2]; z = args[3];
-                }
-                
-                Player currentPlayer = getCurrentPlayer(name);
-                //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
-                Location loc = currentPlayer.getLocation();
-                currentPlayer.teleport(parseRelativeLocation(x, y, z, loc.getPitch(), loc.getYaw()));
-
-            // player.getDirection
-            } else if (c.equals("player.getDirection")) {
-                String name = null;
-                if (args.length > 0) {
-                    name = args[0];
-                }
-                Player currentPlayer = getCurrentPlayer(name);
-                send(currentPlayer.getLocation().getDirection().toString());
-
-            // player.getRotation
-            } else if (c.equals("player.getRotation")) {
-                String name = null;
-                if (args.length > 0) {
-                    name = args[0];
-                }
-                Player currentPlayer = getCurrentPlayer(name);
-                send(currentPlayer.getLocation().getYaw());
-                
-            // player.getPitch
-            } else if (c.equals("player.getPitch")) {
-                String name = null;
-                if (args.length > 0) {
-                    name = args[0];
-                }
-                Player currentPlayer = getCurrentPlayer(name);
-                send(currentPlayer.getLocation().getPitch());
-                
-            // world.getHeight
-            } else if (c.equals("world.getHeight")) {
-                send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
-                
-            // entity.getTile
-            } else if (c.equals("entity.getTile")) {
-                //get entity based on id
-                //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                if (entity != null) {
-                    send(blockLocationToRelative(entity.getLocation()));
-                } else {
-                    plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                    send("Fail");
-                }
-                
-            // entity.setTile
-            } else if (c.equals("entity.setTile")) {
-                String x = args[1], y = args[2], z = args[3];
-                //get entity based on id
-                //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                if (entity != null) {
-                    //get entity's current location, so when they are moved we will use the same pitch and yaw (rotation)
-                    Location loc = entity.getLocation();
-                    entity.teleport(parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getYaw()));
-                } else {
-                    plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                    send("Fail");
-                }
-            
-            // entity.getPos
-            } else if (c.equals("entity.getPos")) {
-                //get entity based on id
-                //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                if (entity != null) {
-                    send(locationToRelative(entity.getLocation()));
-                } else {
-                    plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                    send("Fail");
-                }
-            
-            // entity.setPos
-            } else if (c.equals("entity.setPos")) {
-                String x = args[1], y = args[2], z = args[3];
-                //get entity based on id
-                //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                if (entity != null) {
-                    //get entity's current location, so when they are moved we will use the same pitch and yaw (rotation)
-                    Location loc = entity.getLocation();
-                    entity.teleport(parseRelativeLocation(x, y, z, loc.getPitch(), loc.getYaw()));
-                } else {
-                    plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                    send("Fail");
-                }
-
-            // entity.getDirection
-            } else if (c.equals("entity.getDirection")) {
-                //get entity based on id
-                //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                if (entity != null) {
-                    send(entity.getLocation().getDirection().toString());
-                } else {
-                    plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                    send("Fail");
-                }
-                
-                // entity.getRotation
-            } else if (c.equals("entity.getRotation")) {
-                    //get entity based on id
-                    //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                    Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                    if (entity != null) {
-                        send(entity.getLocation().getYaw());
-                    } else {
-                        plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                        send("Fail");
-                    }
-                    
-                // entity.getPitch
-            } else if (c.equals("entity.getPitch")) {
-                    //get entity based on id
-                    //EntityLiving entity = plugin.getEntityLiving(Integer.parseInt(args[0]));
-                    Player entity = plugin.getEntity(Integer.parseInt(args[0]));
-                    if (entity != null) {
-                        send(entity.getLocation().getPitch());
-                    } else {
-                        plugin.getLogger().info("Entity [" + args[0] + "] not found.");
-                        send("Fail");
-                    }
-                        
-            // not a command which is supported
+            } else if(c.startsWith("player.")){
+                handleEntityCommand(c.substring(7), args, true);
+            } else if(c.startsWith("entity.")){
+                handleEntityCommand(c.substring(7), args, false);
             } else {
                 plugin.getLogger().warning(c + " is not supported.");
                 send("Fail");
             }
         } catch (Exception e) {
             
-            plugin.getLogger().warning("Error occured handling command");
+            plugin.logger.warning("Error occured handling command");
             e.printStackTrace();
             send("Fail");
             
         }
     }
 
-    // create a cuboid of lots of blocks 
+
+    private void handleEntityCommand(String c, String[] args, boolean entityIsPlayer) {
+        Entity entity;
+        if(entityIsPlayer) {
+            String name = "";
+            if((c.startsWith("set") && args.length > 3) || args.length == 1) {
+                name = args[0];
+            }
+            entity = getCurrentPlayer(name);
+        }else{
+            entity = plugin.getServer().getEntity(UUID.fromString(args[0]));
+        }
+
+        if(entity == null){
+            send("No such player or entity");
+            return;
+        }
+
+        switch (c) {
+            case "getTile":
+                send(blockLocationToRelative(entity.getLocation()));
+                break;
+            case "setTile": {
+                String x = args[0], y = args[1], z = args[2];
+                if (args.length > 3) {
+                    x = args[1];
+                    y = args[2];
+                    z = args[3];
+                }
+                Location loc = entity.getLocation();
+                entity.teleport(parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                break;
+            }
+            case "getPos":
+                send(locationToRelative(entity.getLocation()));
+                break;
+            case "setPos": {
+                String x = args[0], y = args[1], z = args[2];
+                if (args.length > 3) {
+                    x = args[1];
+                    y = args[2];
+                    z = args[3];
+                }
+                Location loc = entity.getLocation();
+                entity.teleport(parseRelativeLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                break;
+            }
+            case "getDirection":
+                send(entity.getLocation().getDirection().toString());
+                break;
+            case "getRotation":
+                send(entity.getLocation().getYaw());
+                break;
+            case "getPitch":
+                send(entity.getLocation().getPitch());
+                break;
+            default:
+                send("No such entity/player command");
+        }
+    }
+
+    // create a cuboid of lots of blocks
     private void setCuboid(Location pos1, Location pos2, Material blockType, BlockFace blockFace) {
         int minX, maxX, minY, maxY, minZ, maxZ;
         World world = pos1.getWorld();
-        minX = pos1.getBlockX() < pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-        maxX = pos1.getBlockX() >= pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-        minY = pos1.getBlockY() < pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-        maxY = pos1.getBlockY() >= pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-        minZ = pos1.getBlockZ() < pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-        maxZ = pos1.getBlockZ() >= pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
+        minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
 
         for (int x = minX; x <= maxX; ++x) {
             for (int z = minZ; z <= maxZ; ++z) {
@@ -488,22 +365,23 @@ public class RemoteSession {
 
     // get a cuboid of lots of blocks
     private String getBlocks(Location pos1, Location pos2) {
-        StringBuilder blockData = new StringBuilder();
-
-        int minX, maxX, minY, maxY, minZ, maxZ;
         World world = pos1.getWorld();
-        minX = pos1.getBlockX() < pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-        maxX = pos1.getBlockX() >= pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-        minY = pos1.getBlockY() < pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-        maxY = pos1.getBlockY() >= pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-        minZ = pos1.getBlockZ() < pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-        maxZ = pos1.getBlockZ() >= pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
+        if(world == null){
+            return "Fail";
+        }
+        StringBuilder blockData = new StringBuilder();
+        int minX, maxX, minY, maxY, minZ, maxZ;
+        minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
 
         for (int y = minY; y <= maxY; ++y) {
              for (int x = minX; x <= maxX; ++x) {
                  for (int z = minZ; z <= maxZ; ++z) {
-                    //blockData.append(new Integer(world.getBlockTypeIdAt(x, y, z)).toString() + ",");
-                     blockData.append(world.getBlockAt(x, y, z).getType() + ",");
+                     blockData.append(world.getBlockAt(x, y, z).getType()).append(",");
                 }
             }
         }
@@ -528,72 +406,87 @@ public class RemoteSession {
     }
     
     // gets the current player
-    public Player getCurrentPlayer(String name) {
-        // if a named player is returned use that
-        Player player = plugin.getNamedPlayer(name);
-        // otherwise if there is an attached player for this session use that
-        if (player == null) {
-            player = attachedPlayer;
-            // otherwise go and get the host player and make that the attached player
-            if (player == null) {
-                player = plugin.getHostPlayer();
-                attachedPlayer = player;
-            }
+    private Player getCurrentPlayer(String name) {
+        if(!name.equals("")){
+            return plugin.getNamedPlayer(name);
         }
-        return player;
+
+        //TODO: Minecraft-Pi is mostly single player, not sure what to do here if there are
+        // multiple players
+        Player firstPlayer, opPlayer = null;
+        Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        if(players.size() > 0) {
+            firstPlayer = players.iterator().next();
+            for (Player player : players) {
+                if (player.isOp()) {
+                    opPlayer = player;
+                }
+            }
+            if(opPlayer != null){
+                attachedPlayer = opPlayer;
+            }else{
+                attachedPlayer = firstPlayer;
+            }
+            int d = attachedPlayer.getWorld().getEnvironment().ordinal();
+            origin = plugin.getServer().getWorlds().get(d).getSpawnLocation();
+
+        }else{
+            attachedPlayer = null;
+        }
+
+        return attachedPlayer;
     }
 
-    public Location parseRelativeBlockLocation(String xstr, String ystr, String zstr) {
+    private Location parseRelativeBlockLocation(String xstr, String ystr, String zstr) {
         int x = (int) Double.parseDouble(xstr);
         int y = (int) Double.parseDouble(ystr);
         int z = (int) Double.parseDouble(zstr);
         return new Location(origin.getWorld(), origin.getBlockX() + x, origin.getBlockY() + y, origin.getBlockZ() + z);
     }
 
-    public Location parseRelativeLocation(String xstr, String ystr, String zstr) {
+    private Location parseRelativeLocation(String xstr, String ystr, String zstr) {
         double x = Double.parseDouble(xstr);
         double y = Double.parseDouble(ystr);
         double z = Double.parseDouble(zstr);
         return new Location(origin.getWorld(), origin.getX() + x, origin.getY() + y, origin.getZ() + z);
     }
 
-    public Location parseRelativeBlockLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
+    private Location parseRelativeBlockLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
         Location loc = parseRelativeBlockLocation(xstr, ystr, zstr);
         loc.setPitch(pitch);
         loc.setYaw(yaw);
         return loc;
     }
 
-    public Location parseRelativeLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
+    private Location parseRelativeLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
         Location loc = parseRelativeLocation(xstr, ystr, zstr);
         loc.setPitch(pitch);
         loc.setYaw(yaw);
         return loc;
     }
     
-    public String blockLocationToRelative(Location loc) {
+    private String blockLocationToRelative(Location loc) {
         return (loc.getBlockX() - origin.getBlockX()) + "," + (loc.getBlockY() - origin.getBlockY()) + "," +
             (loc.getBlockZ() - origin.getBlockZ());
     }
 
-    public String locationToRelative(Location loc) {
+    private String locationToRelative(Location loc) {
         return (loc.getX() - origin.getX()) + "," + (loc.getY() - origin.getY()) + "," +
             (loc.getZ() - origin.getZ());
     }
 
-    public void send(Object a) {
+    private void send(Object a) {
         send(a.toString());
     }
 
-    public void send(String a) {
+    private void send(String a) {
         if (pendingRemoval) return;
         synchronized(outQueue) {
             outQueue.add(a);
         }
     }
 
-    public void close() {
-        if (closed) return;
+    void close() {
         running = false;
         pendingRemoval = true;
 
@@ -603,7 +496,7 @@ public class RemoteSession {
             outThread.join(2000);
         }
         catch (InterruptedException e) {
-            plugin.getLogger().warning("Failed to stop in/out thread");
+            plugin.logger.warning("Failed to stop in/out thread");
             e.printStackTrace();
         }
 
@@ -612,14 +505,14 @@ public class RemoteSession {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        plugin.getLogger().info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
+        plugin.logger.info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
     }
 
-    public void kick(String reason) {
+    void kick(String reason) {
         try {
             out.write(reason);
             out.flush();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         close();
     }
@@ -627,7 +520,7 @@ public class RemoteSession {
     /** socket listening thread */
     private class InputThread implements Runnable {
         public void run() {
-            plugin.getLogger().info("Starting input thread");
+            plugin.logger.info("Starting input thread");
             while (running) {
                 try {
                     String newLine = in.readLine();
@@ -650,7 +543,7 @@ public class RemoteSession {
             try {
                 in.close();
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to close in buffer");
+                plugin.logger.warning("Failed to close in buffer");
                 e.printStackTrace();
             }
         }
@@ -658,7 +551,7 @@ public class RemoteSession {
 
     private class OutputThread implements Runnable {
         public void run() {
-            plugin.getLogger().info("Starting output thread!");
+            plugin.logger.info("Starting output thread!");
             while (running) {
                 try {
                     String line;
@@ -681,14 +574,14 @@ public class RemoteSession {
             try {
                 out.close();
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to close out buffer");
+                plugin.logger.warning("Failed to close out buffer");
                 e.printStackTrace();
             }
         }
     }
 
     /** from CraftBukkit's org.bukkit.craftbukkit.block.CraftBlock.blockFactToNotch */
-    public static int blockFaceToNotch(BlockFace face) {
+    private static int blockFaceToNotch(BlockFace face) {
         switch (face) {
         case DOWN:
             return 0;

@@ -1,21 +1,5 @@
 package org.wensheng.juicyraspberrypie;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -29,43 +13,56 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.annotation.Nonnull;
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.logging.Logger;
+
 public class JuicyRaspberryPie extends JavaPlugin implements Listener{
-    public final Logger logger = Logger.getLogger("Minecraft");
-    public static final Set<Material> blockBreakDetectionTools = EnumSet.of(
+    final Logger logger = Logger.getLogger("Minecraft");
+    private static final Set<Material> blockBreakDetectionTools = EnumSet.of(
             Material.DIAMOND_SWORD,
             Material.GOLDEN_SWORD,
             Material.IRON_SWORD, 
             Material.STONE_SWORD, 
             Material.WOODEN_SWORD);
 
-    public ServerListenerThread serverThread;
+    private ServerListenerThread serverThread;
+    private final List<RemoteSession> sessions = new ArrayList<>();
 
-    public List<RemoteSession> sessions;
-
-    public Player hostPlayer = null;
-    
     private void save_resources(){
         File py_init_file = new File(getDataFolder(), "config.yml");
         if(!py_init_file.exists()){
             this.saveResource("config.yml", false);
         }
         File mcpiFolder = new File(getDataFolder(), "mcpi");
-        if(!mcpiFolder.exists()){
-            mcpiFolder.mkdir();
-            this.saveResource("mcpi/block.py", false);
-            this.saveResource("mcpi/connection.py", false);
-            this.saveResource("mcpi/event.py", false);
-            this.saveResource("mcpi/entity.py", false);
-            this.saveResource("mcpi/minecraft.py", false);
-            this.saveResource("mcpi/pycmdsvr.py", false);
-            this.saveResource("mcpi/util.py", false);
-            this.saveResource("mcpi/vec3.py", false);
+        if(!mcpiFolder.exists()) {
+            boolean ok = mcpiFolder.mkdir();
+            if (ok) {
+                this.saveResource("mcpi/block.py", false);
+                this.saveResource("mcpi/connection.py", false);
+                this.saveResource("mcpi/event.py", false);
+                this.saveResource("mcpi/entity.py", false);
+                this.saveResource("mcpi/minecraft.py", false);
+                this.saveResource("mcpi/pycmdsvr.py", false);
+                this.saveResource("mcpi/util.py", false);
+                this.saveResource("mcpi/vec3.py", false);
+            } else {
+                logger.warning("Could not create mcpi directory in plugin.");
+            }
         }
         File ppluginsFolder = new File(getDataFolder(), "pplugins");
         if(!ppluginsFolder.exists()){
-            ppluginsFolder.mkdir();
-            this.saveResource("pplugins/README.txt", false);
-            this.saveResource("pplugins/examples.py", false);
+            boolean ok = ppluginsFolder.mkdir();
+            if(ok){
+                this.saveResource("pplugins/README.txt", false);
+                this.saveResource("pplugins/examples.py", false);
+            } else {
+                logger.warning("Could not create pplugins directory in plugin.");
+            }
         }
     }
     
@@ -74,17 +71,14 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         int port = this.getConfig().getInt("port");
         boolean start_pyserver = this.getConfig().getBoolean("start_pyserver");
         
-        //setup session array
-        sessions = new ArrayList<RemoteSession>();
-        
         //create new tcp listener thread
         try {
             serverThread = new ServerListenerThread(this, new InetSocketAddress(port));
             new Thread(serverThread).start();
-            getLogger().info("ThreadListener Started");
+            logger.info("ThreadListener Started");
         } catch (Exception e) {
             e.printStackTrace();
-            getLogger().warning("Failed to start ThreadListener");
+            logger.warning("Failed to start ThreadListener");
             return;
         }
         //register the events
@@ -95,10 +89,13 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         this.save_resources();
 
         if(start_pyserver){
-            logger.info("Starting Python command server...");
-            ProcessBuilder pb = new ProcessBuilder(this.getConfig().getString("pyexe", "python3.exe"), "mcpi/pycmdsvr.py");
+            String pyexe = getConfig().getString("pyexe", "python.exe");
+            String pypath = this.getConfig().getString("pypath", "C:\\Python37");
+
+            logger.info("Starting Python command server using " + pyexe + " in " + pypath);
+            ProcessBuilder pb = new ProcessBuilder(pyexe, "mcpi/pycmdsvr.py");
             Map<String, String> envs = pb.environment();
-            envs.put("Path", this.getConfig().getString("pypath", "C:\\Python34"));
+            envs.put("Path", pypath);
             try {
                 pb.redirectErrorStream(true);
                 pb.directory(this.getDataFolder());
@@ -137,7 +134,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
             try {
                 session.close();
             } catch (Exception e) {
-                getLogger().warning("Failed to close RemoteSession");
+                logger.warning("Failed to close RemoteSession");
                 e.printStackTrace();
             }
         }
@@ -148,11 +145,10 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
             e.printStackTrace();
         }
         
-        sessions = null;
         serverThread = null;
     }
     
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
+    public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String label, String[] args){
         String cmdString;
         int port = this.getConfig().getInt("pysvr_port");
         
@@ -167,7 +163,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         try {
             Socket socket = new Socket("localhost", port);
             DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
-            BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+            BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             String cmdLine = String.join(" ", args);
             toPyServer.writeUTF(cmdLine);
             //if(player instanceof Player){
@@ -204,7 +200,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         ItemStack currentTool = event.getPlayer().getInventory().getItemInMainHand();
-        if (currentTool == null || !blockBreakDetectionTools.contains(currentTool.getType())) {
+        if (!blockBreakDetectionTools.contains(currentTool.getType())) {
             return;
         }
         for (RemoteSession session: sessions) {
@@ -214,17 +210,15 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
     
     @EventHandler(ignoreCancelled=true)
     public void onChatPosted(AsyncPlayerChatEvent event) {
-        //debug
-        //getLogger().info("Chat event fired");
         for (RemoteSession session: sessions) {
             session.queueChatPostedEvent(event);
         }
     }
 
     /** called when a new session is established. */
-    public void handleConnection(RemoteSession newSession) {
+    void handleConnection(RemoteSession newSession) {
         if (checkBanned(newSession)) {
-            getLogger().warning("Kicking " + newSession.getSocket().getRemoteSocketAddress() + " because the IP address has been banned.");
+            logger.warning("Kicking " + newSession.getSocket().getRemoteSocketAddress() + " because the IP address has been banned.");
             newSession.kick("You've been banned from this server!");
             return;
         }
@@ -233,7 +227,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         }
     }
 
-    public Player getNamedPlayer(String name) {
+    Player getNamedPlayer(String name) {
         if (name == null) return null;
         for(Player p: Bukkit.getOnlinePlayers()){
             if(name.equalsIgnoreCase(p.getName())){
@@ -243,26 +237,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         return null;
     }
 
-    public Player getHostPlayer() {
-        if (hostPlayer != null) return hostPlayer;
-        Collection<? extends Player> allPlayers = Bukkit.getOnlinePlayers();
-        if(allPlayers.size()>=1){
-            return allPlayers.iterator().next();
-        }
-        return null;
-    }
-    
-    //get entity by id - TODO to be compatible with the pi it should be changed to return an entity not a player...
-    public Player getEntity(int id) {
-        for (Player p: getServer().getOnlinePlayers()) {
-            if (p.getEntityId() == id) {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    public boolean checkBanned(RemoteSession session) {
+    private boolean checkBanned(RemoteSession session) {
         Set<String> ipBans = getServer().getIPBans();
         String sessionIp = session.getSocket().getInetAddress().getHostAddress();
         return ipBans.contains(sessionIp);
