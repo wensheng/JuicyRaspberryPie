@@ -1,9 +1,9 @@
 name: JuicyRaspberryPie
-description: RaspberryJuice with a Python command Server
+version: ${project.version}
+description: RaspberryJuice with a command Server
 database: false
 main: org.wensheng.juicyraspberrypie.JuicyRaspberryPie
 api-version: 1.14
-version: 1.14
 commands:
   p:
     description: execute python functions in pplugins

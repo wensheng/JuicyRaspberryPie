@@ -1,9 +1,0 @@
-name: JuicyRaspberryPie
-description: RaspberryJuice with a Python command Server
-database: false
-main: org.wensheng.plugins.JuicyRaspberryPie
-version: 1.7
-commands:
-  p:
-    description: execute python functions in pplugins
-    usage: /<command> args

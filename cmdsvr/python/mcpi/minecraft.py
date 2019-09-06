@@ -185,7 +185,7 @@ class Minecraft:
     def getBlocks(self, *args):
         """Get a cuboid of blocks (x0,y0,z0,x1,y1,z1) => [id:int]"""
         s = self.conn.sendReceive(b"world.getBlocks", intFloor(args))
-        return map(int, s.split(","))
+        return s.split(",")
 
     def setBlock(self, *args):
         """Set block (x,y,z,id,[data])"""
@@ -226,11 +226,11 @@ class Minecraft:
     def getPlayerEntityIds(self):
         """Get the entity ids of the connected players => [id:int]"""
         ids = self.conn.sendReceive(b"world.getPlayerIds")
-        return list(map(int, ids.split("|")))
+        return ids.split("|")
 
     def getPlayerEntityId(self, name):
         """Get the entity id of the named player => [id:int]"""
-        return int(self.conn.sendReceive(b"world.getPlayerId", name))
+        return self.conn.sendReceive(b"world.getPlayerId", name)
 
     def saveCheckpoint(self):
         """Save a checkpoint that can be used for restoring the world"""
