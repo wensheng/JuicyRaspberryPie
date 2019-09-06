@@ -287,7 +287,8 @@ class RemoteSession {
         Entity entity;
         if(entityIsPlayer) {
             String name = "";
-            if((c.startsWith("set") && args.length > 3) || args.length == 1) {
+            //if((c.startsWith("set") && args.length > 3) || args.length == 1) {
+            if(args.length > 3 || args.length == 2 || (c.startsWith("get") && args.length == 1)) {
                 name = args[0];
             }
             entity = getCurrentPlayer(name);
@@ -335,9 +336,33 @@ class RemoteSession {
             case "getRotation":
                 send(entity.getLocation().getYaw());
                 break;
+            case "setRotation": {
+                String angle = args[0];
+                if (args.length > 1) {
+                    angle = args[1];
+                }
+                float yaw = Float.parseFloat(angle);
+                Location loc = entity.getLocation();
+                loc.setYaw(yaw);
+                entity.teleport(loc);
+                send("ok");
+                break;
+            }
             case "getPitch":
                 send(entity.getLocation().getPitch());
                 break;
+            case "setPitch": {
+                String angle = args[0];
+                if (args.length > 1) {
+                    angle = args[1];
+                }
+                float pitch = Float.parseFloat(angle);
+                Location loc = entity.getLocation();
+                loc.setPitch(pitch);
+                entity.teleport(loc);
+                send("ok");
+                break;
+            }
             default:
                 send("No such entity/player command");
         }
