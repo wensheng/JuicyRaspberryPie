@@ -59,18 +59,15 @@ class RemoteSession {
         outThread.start();
     }
 
-
     Socket getSocket() {
         return socket;
     }
 
     void queuePlayerInteractEvent(PlayerInteractEvent event) {
-        //plugin.getLogger().info(event.toString());
         interactEventQueue.add(event);
     }
 
     void queueChatPostedEvent(AsyncPlayerChatEvent event) {
-        //plugin.getLogger().info(event.toString());
         chatPostedQueue.add(event);
     }
 
@@ -162,39 +159,47 @@ class RemoteSession {
                     send("Fail");
                 }
             } else if (c.equals("world.setSign")) {
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-                Block thisBlock = world.getBlockAt(loc);
                 // in 1.14
-                //ACACIA BIRCH OAK DARK_OAK JUNGLE SPRUCE LEGACY +_SIGN +_WALL_SIGN
+                //ACACIA BIRCH OAK DARK_OAK JUNGLE SPRUCE -LEGACY- +_SIGN +_WALL_SIGN
+                // no ACACIA_WALL_SIGN
                 // in 1.13
-                // SIGN WALL_SIGN, LEGACY 
+                // SIGN WALL_SIGN, LEGACY
+                // note in 1.14.4 LEGACY is deprecated
                 Material material = Material.matchMaterial(args[3]);
                 if(material == null){
                     material = Material.BIRCH_SIGN;
                 }
+                if (!material.toString().contains("_SIGN")){
+                    send("material must be sign");
+                    return;
+                }
+
+                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Block thisBlock = world.getBlockAt(loc);
                 thisBlock.setType(material);
+                plugin.logger.info(material.toString());
 
                 int facing = args.length > 4? Integer.parseInt(args[4]): 0;
+                if(facing >= 4 || facing < 0){
+                    facing = 0;
+                }
                 BlockFace blockFace = BlockFace.values()[facing];
                 BlockData blockData = thisBlock.getBlockData();
                 if(blockData instanceof org.bukkit.block.data.type.WallSign){
-                    org.bukkit.block.data.type.WallSign s = (org.bukkit.block.data.type.WallSign) thisBlock.getBlockData();
+                    org.bukkit.block.data.type.WallSign s = (org.bukkit.block.data.type.WallSign) blockData;
                     s.setFacing(blockFace);
                     thisBlock.setBlockData(s);
                 }else{
-                    org.bukkit.block.data.type.Sign s = (org.bukkit.block.data.type.Sign) thisBlock.getBlockData();
+                    org.bukkit.block.data.type.Sign s = (org.bukkit.block.data.type.Sign) blockData;
                     s.setRotation(blockFace);
                     thisBlock.setBlockData(s);
                 }
 
-                BlockState signState = thisBlock.getState();
-                if (signState instanceof Sign) {
-                    Sign sign = (Sign) signState;
-                    for (int i = 5; i - 5 < 4 && i < args.length; i++) {
-                        sign.setLine(i - 5, args[i]);
-                    }
-                    sign.update();
+                Sign sign = (Sign) thisBlock.getState();
+                for (int i = 5; i - 5 < 4 && i < args.length; i++) {
+                    sign.setLine(i - 5, args[i]);
                 }
+                sign.update();
 
             } else if(c.equals("world.getNearbyEntities")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
@@ -218,14 +223,12 @@ class RemoteSession {
             } else if (c.equals("world.getHeight")) {
                 send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
             } else if (c.equals("chat.post")) {
-                //create chat message from args as it was split by ,
-                String chatMessage = "";
-                int count;
-                for(count=0;count<args.length;count++){
-                    chatMessage = chatMessage + args[count] + ",";
+                StringBuilder sb = new StringBuilder();
+                for(int i=0; i<args.length; i++){
+                    sb.append(args[i]).append(",");
                 }
-                chatMessage = chatMessage.substring(0, chatMessage.length() - 1);
-                plugin.getServer().broadcastMessage(chatMessage);
+                sb.setLength(sb.length() - 1);
+                plugin.getServer().broadcastMessage(sb.toString());
             } else if (c.equals("events.clear")) {
                 interactEventQueue.clear();
                 chatPostedQueue.clear();
@@ -238,9 +241,9 @@ class RemoteSession {
                         Location loc = block.getLocation();
                         b.append(blockLocationToRelative(loc));
                         b.append(",");
-                        b.append(blockFaceToNotch(event.getBlockFace()));
+                        b.append(event.getBlockFace().name());
                         b.append(",");
-                        b.append(event.getPlayer().getEntityId());
+                        b.append(event.getPlayer().getUniqueId());
                         if (interactEventQueue.size() > 0) {
                             b.append("|");
                         }
@@ -248,8 +251,6 @@ class RemoteSession {
                         b.append("Fail");
                     }
                 }
-                //DEBUG
-                //System.out.println(b.toString());
                 send(b.toString());
             } else if (c.equals("events.chat.posts")) {
                 StringBuilder b = new StringBuilder();

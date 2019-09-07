@@ -76,7 +76,13 @@ def test_pitch():
     print("current pitch:", mc.player.getPitch())
 
 
+def test_direction():
+    direction = mc.player.getDirection()
+    print("current direction:", direction)
+
+
 def main():
-    test_pos()
-    test_rotation()
-    test_pitch()
+    #test_pos()
+    #test_rotation()
+    #test_pitch()
+    test_direction()

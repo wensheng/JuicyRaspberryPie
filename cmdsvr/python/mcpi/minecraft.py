@@ -156,7 +156,7 @@ class CmdEvents:
         """Only triggered by sword => [BlockEvent]"""
         s = self.conn.sendReceive(b"events.block.hits")
         events = [e for e in s.split("|") if e]
-        return [BlockEvent.Hit(*list(map(int, e.split(",")))) for e in events]
+        return [BlockEvent.Hit(*e.split(",")) for e in events]
 
     def pollChatPosts(self):
         """Triggered by posts to chat => [ChatEvent]"""
@@ -184,32 +184,23 @@ class Minecraft:
 
     def getBlocks(self, *args):
         """Get a cuboid of blocks (x0,y0,z0,x1,y1,z1) => [id:int]"""
-        s = self.conn.sendReceive(b"world.getBlocks", intFloor(args))
+        # s = self.conn.sendReceive(b"world.getBlocks", intFloor(args))
+        s = self.conn.sendReceive(b"world.getBlocks", *args)
         return s.split(",")
 
     def setBlock(self, *args):
         """Set block (x,y,z,id,[data])"""
-        #self.conn.send(b"world.setBlock", intFloor(args))
         self.conn.send(b"world.setBlock", *args)
 
     def setBlocks(self, *args):
         """Set a cuboid of blocks (x0,y0,z0,x1,y1,z1,id,[data])"""
-        #self.conn.send(b"world.setBlocks", intFloor(args))
         self.conn.send(b"world.setBlocks", *args)
 
     def setSign(self, *args):
-        """Set a sign (x,y,z,sign_type,direction,[line1,line2,line3,line4])
-        Wallsigns require args[4]:facing direction, 2=north, 3=south, 4=west, 5=east
-        Standing signs require args[4]:facing rotation, (0-15) 0=south, 4=west, 8=north, 12=east
+        """Set a sign (x,y,z,sign_type,direction,line1,line2,line3,line4)
+        direction: 0-north, 1-east, 2-south 3-west
         """
-        args2 = intFloor(args[:3]) 
-        args2.append(args[3])
-        args2.append(int(args[4]))
-
-        lines = "".join(args[5:])[1:-1].split(",")
-        args2 += lines
-
-        self.conn.send(b"world.setSign", args2)
+        self.conn.send(b"world.setSign", args)
 
     def spawnEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""

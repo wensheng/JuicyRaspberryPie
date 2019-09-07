@@ -6,7 +6,7 @@ class BlockEvent:
 
     def __init__(self, type, x, y, z, face, entityId):
         self.type = type
-        self.pos = Vec3(x, y, z)
+        self.pos = Vec3(int(x), int(y), int(z))
         self.face = face
         self.entityId = entityId
 
@@ -15,8 +15,8 @@ class BlockEvent:
             BlockEvent.HIT: "BlockEvent.HIT"
         }.get(self.type, "???")
 
-        return "BlockEvent(%s, %d, %d, %d, %d, %d)"%(
-            sType,self.pos.x,self.pos.y,self.pos.z,self.face,self.entityId);
+        return "BlockEvent(%s, %d, %d, %d, %s, %s)"%(
+            sType, self.pos.x, self.pos.y, self.pos.z, self.face, self.entityId);
 
     @staticmethod
     def Hit(x, y, z, face, entityId):

@@ -81,9 +81,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
             logger.warning("Failed to start ThreadListener");
             return;
         }
-        //register the events
         getServer().getPluginManager().registerEvents(this, this);
-        //setup the schedule to called the tick handler
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new TickHandler(), 1, 1);
 
         this.save_resources();
@@ -101,8 +99,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
                 pb.directory(this.getDataFolder());
                 pb.start();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.warning("Could not start python command server.");
             }
         }
 
@@ -124,8 +121,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
                 toPyServer.close();
                 socket.close();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.warning("Could not send shutdown signal to python command server, please shutdown manually.");
             }
         }
 
@@ -166,17 +162,13 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
             BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             String cmdLine = String.join(" ", args);
             toPyServer.writeUTF(cmdLine);
-            //if(player instanceof Player){
-            //    logger.info(player.getName() + ": send to py server: " + args[0]);
-            //}
             cmdString = fromPyServer.readLine();
             logger.info("the py server send back " + cmdString);
             toPyServer.close();
             fromPyServer.close();
             socket.close();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            sender.sendMessage("command server not available.");
         }
         return true;
     }
@@ -199,8 +191,10 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
     @EventHandler(ignoreCancelled=true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        ItemStack currentTool = event.getPlayer().getInventory().getItemInMainHand();
-        if (!blockBreakDetectionTools.contains(currentTool.getType())) {
+
+        //ItemStack currentTool = event.getPlayer().getInventory().getItemInMainHand();
+        ItemStack currentTool = event.getItem();
+        if (currentTool == null || !blockBreakDetectionTools.contains(currentTool.getType())) {
             return;
         }
         for (RemoteSession session: sessions) {
@@ -208,11 +202,12 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         }
     }
     
-    @EventHandler(ignoreCancelled=true)
+    @EventHandler
     public void onChatPosted(AsyncPlayerChatEvent event) {
         for (RemoteSession session: sessions) {
             session.queueChatPostedEvent(event);
         }
+        logger.info("number of sessions:" + sessions.size());
     }
 
     /** called when a new session is established. */
