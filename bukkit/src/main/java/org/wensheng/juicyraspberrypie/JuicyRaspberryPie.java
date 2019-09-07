@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -207,7 +208,13 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         for (RemoteSession session: sessions) {
             session.queueChatPostedEvent(event);
         }
-        logger.info("number of sessions:" + sessions.size());
+    }
+
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        for (RemoteSession session: sessions) {
+            session.queueProjectileHitEvent(event);
+        }
     }
 
     /** called when a new session is established. */

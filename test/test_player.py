@@ -41,6 +41,7 @@ def test_rotation():
     mc.player.setRotation(0)
     time.sleep(0.2)
     print("current rotation:", mc.player.getRotation())
+    print("current direction:", mc.player.getDirection())
     time.sleep(0.5)
     mc.player.setRotation(45)
     time.sleep(0.5)
@@ -51,6 +52,7 @@ def test_rotation():
     mc.player.setRotation(180)
     time.sleep(0.2)
     print("current rotation:", mc.player.getRotation())
+    print("current direction:", mc.player.getDirection())
 
 
 def test_pitch():
@@ -76,13 +78,7 @@ def test_pitch():
     print("current pitch:", mc.player.getPitch())
 
 
-def test_direction():
-    direction = mc.player.getDirection()
-    print("current direction:", direction)
-
-
 def main():
-    #test_pos()
-    #test_rotation()
-    #test_pitch()
-    test_direction()
+    test_pos()
+    test_rotation()
+    test_pitch()

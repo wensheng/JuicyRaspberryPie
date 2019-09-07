@@ -40,6 +40,7 @@ Tips:
 
 1. set "allow-nether=false" in server.properties, set "allow-end: false" in bukkit.yml, so server starts up quickly.
 2. in %appdata%/.minecraft/options.txt change "pauseOnLostFocus"  to false so minecraft doesn't pause when you do interactive programming
+3. issue "/gamerule doDaylightCycle false" to disable day/night cycle
 
 **Forge Mod**
 

@@ -2,7 +2,7 @@ import math
 
 from .connection import Connection
 from .vec3 import Vec3
-from .event import BlockEvent, ChatEvent
+from .event import BlockEvent, ChatEvent, ProjectileEvent
 from .util import flatten
 
 """ Minecraft PI low level api v0.1_1
@@ -94,6 +94,9 @@ class CmdEntity(CmdPositioner):
         Also can be used to find name of entity if entity is not a player."""
         return self.conn.sendReceive(b"entity.getName", id)
 
+    def remove(self, id):
+        self.conn.send(b"entity.remove", id)
+
 
 class CmdPlayer(CmdPositioner):
     """Methods for the host (Raspberry Pi) player"""
@@ -164,6 +167,13 @@ class CmdEvents:
         events = [e for e in s.split("|") if e]
         return [ChatEvent.Post(int(e[:e.find(",")]), e[e.find(",") + 1:]) for e in events]
 
+    def pollProjectileHits(self):
+        """Only triggered by projectiles => [BlockEvent]"""
+        s = self.conn.sendReceive(b"events.projectile.hits")
+        events = [e for e in s.split("|") if e]
+        return [ProjectileEvent.Hit(*e.split(",")) for e in events]
+
+
 class Minecraft:
     """The main class to interact with a running instance of Minecraft Pi."""
     def __init__(self, connection):
@@ -204,7 +214,11 @@ class Minecraft:
 
     def spawnEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
-        return int(self.conn.sendReceive(b"world.spawnEntity", *args))
+        return self.conn.sendReceive(b"world.spawnEntity", *args)
+
+    def getNearbyEntities(self, *args):
+        """get nearby entities (x,y,z)"""
+        return self.conn.sendReceive(b"world.getNearbyEntities", *args).split(",")
 
     def removeEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""

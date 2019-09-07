@@ -12,9 +12,11 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -30,8 +32,9 @@ class RemoteSession {
     private final ArrayDeque<String> outQueue = new ArrayDeque<String>();
     private boolean running = true;
     private JuicyRaspberryPie plugin;
-    private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<PlayerInteractEvent>();
-    private ArrayDeque<AsyncPlayerChatEvent> chatPostedQueue = new ArrayDeque<AsyncPlayerChatEvent>();
+    private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<>();
+    private ArrayDeque<AsyncPlayerChatEvent> chatPostedQueue = new ArrayDeque<>();
+    private ArrayDeque<ProjectileHitEvent> projectileHitQueue = new ArrayDeque<>();
     private int maxCommandsPerTick = 9000;
     private Player attachedPlayer = null;
 
@@ -69,6 +72,13 @@ class RemoteSession {
 
     void queueChatPostedEvent(AsyncPlayerChatEvent event) {
         chatPostedQueue.add(event);
+    }
+
+    void queueProjectileHitEvent(ProjectileHitEvent event){
+        Arrow arrow = (Arrow) event.getEntity();
+        if(arrow.getShooter() instanceof Player){
+            projectileHitQueue.add(event);
+        }
     }
 
     /** called from the server main thread */
@@ -205,11 +215,14 @@ class RemoteSession {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 double nearby_distance = 10.0;
                 Collection<Entity> nearbyEntities = world.getNearbyEntities(loc, nearby_distance, nearby_distance, nearby_distance);
-                StringBuilder result = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 for(Entity e: nearbyEntities){
-                    result.append(e.getName()).append(": ").append(e.getUniqueId()).append(" \n");
+                    sb.append(e.getName()).append(": ").append(e.getUniqueId()).append(",");
                 }
-                send(result.toString());
+                if(sb.length()>1) {
+                    sb.setLength(sb.length() - 1);
+                }
+                send(sb.toString());
             } else if (c.equals("world.spawnEntity")) {
                  Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                  EntityType entityType;
@@ -224,17 +237,18 @@ class RemoteSession {
                 send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
             } else if (c.equals("chat.post")) {
                 StringBuilder sb = new StringBuilder();
-                for(int i=0; i<args.length; i++){
-                    sb.append(args[i]).append(",");
+                for (String arg : args) {
+                    sb.append(arg).append(",");
                 }
                 sb.setLength(sb.length() - 1);
                 plugin.getServer().broadcastMessage(sb.toString());
             } else if (c.equals("events.clear")) {
                 interactEventQueue.clear();
                 chatPostedQueue.clear();
+                projectileHitQueue.clear();
             } else if (c.equals("events.block.hits")) {
                 StringBuilder b = new StringBuilder();
-                 PlayerInteractEvent event;
+                PlayerInteractEvent event;
                 while ((event = interactEventQueue.poll()) != null) {
                     Block block = event.getClickedBlock();
                     if(block != null) {
@@ -244,11 +258,36 @@ class RemoteSession {
                         b.append(event.getBlockFace().name());
                         b.append(",");
                         b.append(event.getPlayer().getUniqueId());
-                        if (interactEventQueue.size() > 0) {
-                            b.append("|");
+                    }else{
+                        b.append("0,0,0,Fail,0");
+                    }
+                    if (interactEventQueue.size() > 0) {
+                        b.append("|");
+                    }
+                }
+                send(b.toString());
+            } else if (c.equals("events.projectile.hits")) {
+                StringBuilder b = new StringBuilder();
+                 ProjectileHitEvent event;
+                while ((event = projectileHitQueue.poll()) != null) {
+                    Arrow arrow = (Arrow) event.getEntity();
+                    Player player = (Player) arrow.getShooter();
+                    if(player != null) {
+                        Block block = arrow.getLocation().getBlock();
+                        Location loc = block.getLocation();
+                        b.append(blockLocationToRelative(loc));
+                        b.append(",");
+                        b.append(player.getUniqueId());
+                        b.append(",");
+                        Entity hitEntity = event.getHitEntity();
+                        if (hitEntity != null) {
+                            b.append(hitEntity.getUniqueId());
                         }
                     }else{
-                        b.append("Fail");
+                        b.append("0,0,0,Fail,0");
+                    }
+                    if (projectileHitQueue.size() > 0) {
+                        b.append("|");
                     }
                 }
                 send(b.toString());
@@ -364,6 +403,11 @@ class RemoteSession {
                 send("ok");
                 break;
             }
+            case "remove":
+                if(!(entity instanceof Player)){
+                    entity.remove();
+                }
+                break;
             default:
                 send("No such entity/player command");
         }
@@ -605,25 +649,4 @@ class RemoteSession {
             }
         }
     }
-
-    /** from CraftBukkit's org.bukkit.craftbukkit.block.CraftBlock.blockFactToNotch */
-    private static int blockFaceToNotch(BlockFace face) {
-        switch (face) {
-        case DOWN:
-            return 0;
-        case UP:
-            return 1;
-        case NORTH:
-            return 2;
-        case SOUTH:
-            return 3;
-        case WEST:
-            return 4;
-        case EAST:
-            return 5;
-        default:
-            return 7; // Good as anything here, but technically invalid
-        }
-    }
-
 }
