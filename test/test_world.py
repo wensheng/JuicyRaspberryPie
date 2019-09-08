@@ -11,15 +11,21 @@ api tested:
     mc.postToChat
     mc.setSign
 """
+import os
 import time
 from math import (pi, sin, cos)
 from mcpi.minecraft import Minecraft
 
-mc = Minecraft.create(port=4711)
+try:
+    port = int(os.environ["mcpi_port"])
+except (KeyError, ValueError):
+    port = 4711
+mc = Minecraft.create(port=port)
 pos = mc.player.getTilePos()
 
 
 def test_block():
+    print(pos.x, pos.y, pos.z)
     mc.setBlock(pos.x + 1, pos.y, pos.z, "gOLd_bLocK")
     time.sleep(0.2)
     print(mc.getBlock(pos.x + 1, pos.y, pos.z))
@@ -33,6 +39,7 @@ def test_blocks():
     time.sleep(0.2)
     blocks = mc.getBlocks(pos.x + 1, pos.y, pos.z,
                           pos.x + 5, pos.y + 3, pos.z + 5)
+    # note we should get most gold and a few air
     for block in blocks:
         print(block)
 

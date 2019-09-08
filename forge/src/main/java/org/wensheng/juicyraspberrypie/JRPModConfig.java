@@ -5,7 +5,7 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class JRPModConfig {
+class JRPModConfig {
     private static final ForgeConfigSpec serverSpec;
     public static final Server SERVER;
 
@@ -15,7 +15,7 @@ public class JRPModConfig {
         SERVER = specPair.getLeft();
     }
 
-    public static void register(final ModLoadingContext context) {
+    static void register(final ModLoadingContext context) {
         context.registerConfig(ModConfig.Type.COMMON, serverSpec);
     }
 

@@ -13,12 +13,14 @@ import net.minecraftforge.fml.event.lifecycle.*;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,14 +29,13 @@ import java.util.stream.Collectors;
 public class JuicyRaspberryPieMod
 {
     private static final int API_PORT = 4712;
-    private static final int WS_PORT = 4722;
-    private ServerListenerThread serverThread;
-    private ApiHandler apiHandler = null;
-    public static Set<ResourceLocation> BLOCKNAMES = null;
-    public static Set<ResourceLocation> ENTITYNAMES = null;
+    private ServerListenerThread serverThread = null;
+    static Set<ResourceLocation> BLOCKNAMES = null;
+    static Set<ResourceLocation> ENTITYNAMES = null;
+    private ServerSocket serverSocket;
 
     // Directly reference a log4j logger.
-    private static final Logger LOGGER = LogManager.getLogger();
+    static final Logger LOGGER = LogManager.getLogger();
 
     public JuicyRaspberryPieMod() {
         BLOCKNAMES = ForgeRegistries.BLOCKS.getKeys();
@@ -83,14 +84,18 @@ public class JuicyRaspberryPieMod
                 map(m->m.getMessageSupplier().get()).
                 collect(Collectors.toList()));
     }
+
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
         PyCommand.register(event.getCommandDispatcher());
-        apiHandler = new ApiHandler();
+        ApiHandler apiHandler = new ApiHandler();
         MinecraftForge.EVENT_BUS.register(apiHandler);
         try{
-            serverThread = new ServerListenerThread(apiHandler, new InetSocketAddress(API_PORT));
+            serverSocket = new ServerSocket();
+            serverSocket.setReuseAddress(true);
+            serverSocket.bind(new InetSocketAddress(API_PORT));
+            serverThread = new ServerListenerThread(apiHandler, serverSocket);
             new Thread(serverThread).start();
             LOGGER.info("Socket server thread started");
         }catch (Exception e){
@@ -103,7 +108,18 @@ public class JuicyRaspberryPieMod
 
     @SubscribeEvent
     public void onServerStopping(FMLServerStoppingEvent event) {
-
+        // close socket in main thread instead of inside serverListenerThread
+        // otherwise socket not closed
+        try {
+            if (serverSocket != null) {
+                serverSocket.close();
+            }
+        }catch (IOException ignored){
+        }
+        if(serverThread != null){
+            LOGGER.info("Stopping socket serverListenerThread...");
+            serverThread.running.set(false);
+        }
     }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD

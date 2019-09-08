@@ -14,7 +14,9 @@ class Connection:
 
     def __init__(self, address, port, debug=False):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(10)
         self.socket.connect((address, port))
+        self.socket.settimeout(60)  # doc suggests None for makefile
         self.lastSent = ""
         self.debug = debug
 
