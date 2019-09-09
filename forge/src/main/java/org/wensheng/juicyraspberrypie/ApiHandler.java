@@ -2,9 +2,15 @@ package org.wensheng.juicyraspberrypie;
 
 
 import net.minecraft.block.*;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.item.ArrowItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.SwordItem;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -15,10 +21,14 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.client.event.ClientChatEvent;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -34,7 +44,11 @@ public class ApiHandler {
     private ServerWorld world;
     private PlayerEntity player = null;
     private ArrayDeque<String> inQueue = new ArrayDeque<>();
+    private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<>();
+    private ArrayDeque<ClientChatReceivedEvent> chatPostedQueue = new ArrayDeque<>();
+    private ArrayDeque<ProjectileImpactEvent> projectileHitQueue = new ArrayDeque<>();
     private final List<String> queuedCommands = Arrays.asList("world.setBlock", "world.setBlocks");
+    //private final set<Item> blockBreakDetectionTools = Arrays.asList(Item.class.)
 
     ApiHandler() {
         // Only worry about single player world for now
@@ -61,6 +75,25 @@ public class ApiHandler {
 
     @SubscribeEvent
     public void onLivingDeathEvent(LivingDeathEvent event) {
+    }
+
+    @SubscribeEvent
+    public void onPlayerInteract(PlayerInteractEvent.RightClickBlock event){
+        ItemStack itemStack = event.getItemStack();
+        if(itemStack.getItem() instanceof SwordItem){
+            interactEventQueue.add(event);
+        }
+    }
+
+    @SubscribeEvent
+    public void onChatPosted(ClientChatReceivedEvent event) {
+        chatPostedQueue.add(event);
+    }
+
+    @SubscribeEvent
+    public void onProjectileHit(ProjectileImpactEvent.Arrow event) {
+        // what about fireball?
+        projectileHitQueue.add(event);
     }
 
     void process(PrintWriter writer, String line) {
@@ -192,6 +225,56 @@ public class ApiHandler {
             // because single player, no need to broadcast
             //player.getServer().getPlayerList().sendPacketToAllPlayers(...);
             player.sendMessage(new StringTextComponent(sb.toString()));
+        } else if (cmd.startsWith("events.block.hits")) {
+            StringBuilder sb = new StringBuilder();
+            PlayerInteractEvent event;
+            while((event = interactEventQueue.poll())!= null){
+                BlockPos pos = event.getPos();
+                BlockState bs = world.getBlockState(pos);
+                sb.append(blockPosToRelative(pos));
+                sb.append(",");
+                sb.append(event.getFace().getName());
+                sb.append(",");
+                sb.append(event.getPlayer().getUniqueID());
+                sb.append("|");
+            }
+            if(sb.length()>0) {
+                sb.setLength(sb.length() - 1);
+            }
+            sendLine(sb.toString());
+        } else if (cmd.startsWith("events.projectile.hists")) {
+            StringBuilder sb = new StringBuilder();
+            ProjectileImpactEvent event;
+            while((event = projectileHitQueue.poll())!= null){
+                ArrowEntity arrow = (ArrowEntity) event.getEntity();
+                Entity shooter = arrow.getShooter();
+                BlockPos pos = arrow.getPosition();
+                sb.append(blockPosToRelative(pos)).append(",");
+                sb.append(shooter.getUniqueID().toString()).append(",");
+                //TODO: hit what? entity or block
+                sb.append(event.getRayTraceResult().getType().name());
+                sb.append("|");
+            }
+            if(sb.length()>0) {
+                sb.setLength(sb.length() - 1);
+            }
+            sendLine(sb.toString());
+        } else if (cmd.startsWith("events.chat.posts")) {
+            StringBuilder sb = new StringBuilder();
+            ClientChatReceivedEvent event;
+            while((event = chatPostedQueue.poll())!= null){
+                sb.append("0").append(",");  // dummy player id for single player
+                sb.append(event.getMessage().getString());
+                sb.append("|");
+            }
+            if(sb.length()>0) {
+                sb.setLength(sb.length() - 1);
+            }
+            sendLine(sb.toString());
+        } else if (cmd.startsWith("events.clear")) {
+            interactEventQueue.clear();
+            chatPostedQueue.clear();
+            projectileHitQueue.clear();
         } else if (cmd.startsWith("player.")) {
             entityCommand(player, cmd.substring(7), args);
         } else if (cmd.startsWith("entity.")) {
@@ -205,9 +288,6 @@ public class ApiHandler {
         }
         /* TODO: to be implemented
         "world.spawnParticle"
-        "events.block.hits"
-        "events.chat.posts"
-        "events.clear"
          */
         else {
             unknownCommand();
@@ -509,5 +589,11 @@ public class ApiHandler {
     private BlockPos decodeLocation(int x, int y, int z) {
         BlockPos spawnPos = world.getSpawnPoint();
         return new BlockPos(spawnPos.getX() + x, spawnPos.getY() + y, spawnPos.getZ() + z);
+    }
+
+    private String blockPosToRelative(BlockPos pos) {
+        BlockPos spawnPos = world.getSpawnPoint();
+        return (pos.getX() - spawnPos.getX()) + "," + (pos.getY() - spawnPos.getY()) + "," +
+                (pos.getZ() - spawnPos.getZ());
     }
 }
