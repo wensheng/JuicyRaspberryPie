@@ -1,17 +1,17 @@
 package org.wensheng.juicyraspberrypie;
 
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.Minecraft;
+import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
@@ -37,7 +37,7 @@ public class ApiHandler {
     private final List<String> queuedCommands = Arrays.asList("world.setBlock", "world.setBlocks");
 
     ApiHandler() {
-        // TODO: actually get the world which the current player is in (overworld, nether, the_end)
+        // Only worry about single player world for now
         final MinecraftServer ms = ServerLifecycleHooks.getCurrentServer();
         this.world = DimensionManager.getWorld(ms, DimensionType.OVERWORLD, false,false);
     }
@@ -86,7 +86,7 @@ public class ApiHandler {
 
 
     private void handleCommand(String cmd, String[] args)
-            throws InputMismatchException, NoSuchElementException, IndexOutOfBoundsException {
+            throws NoSuchElementException, IndexOutOfBoundsException {
 
         if (cmd.equals("world.getBlock")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
@@ -110,8 +110,13 @@ public class ApiHandler {
             sendLine(sb.toString());
         } else if (cmd.equals("world.setBlock")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
-            BlockState bs = blockStateFromName(args[3]);
-            int facing = args.length > 4 ? Integer.parseInt(args[4]) : 0;
+            Block block = blockFromName(args[3]);
+            BlockState bs;
+            if(args.length > 4){
+                bs = block.getDefaultState().with(DirectionalBlock.FACING, getFacing(Integer.parseInt(args[4])));
+            }else{
+                bs = block.getDefaultState();
+            }
             world.setBlockState(pos, bs, 2);
         } else if (cmd.equals("world.getBlocks")) {
             BlockPos pos1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
@@ -121,23 +126,72 @@ public class ApiHandler {
             BlockPos pos1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
             BlockPos pos2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
             BlockState bs = blockStateFromName(args[6]);
-            int facing = args.length > 7 ? Integer.parseInt(args[7]) : 0;
+            //int facing = args.length > 7 ? Integer.parseInt(args[7]) : 0;
             setCuboid(world, pos1, pos2, bs);
+        } else if (cmd.equals("world.getPlayerId")) {
+            sendLine(player.getUniqueID().toString());
         } else if (cmd.equals("world.getPlayerIds")) {
-            sendLine("NOT YET implemented");
+            // single-player world, this command doesn't make sense
+            sendLine(player.getUniqueID().toString());
         } else if (cmd.equals("world.spawnEntity")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
             EntityType et = entityTypeFromName(args[3]);
             Entity e = et.create(world);
-            e.setPosition(pos.getX(), pos.getY(), pos.getZ());
-            world.addEntity(e);
-            sendLine(e.getEntityId());
-        } else if (cmd.equals("world.removeEntity")) {
-            Entity e = world.getEntityByID(Integer.parseInt(args[0]));
-            world.removeEntity(e);
-            sendLine("removed");
+            if(e != null) {
+                e.setPosition(pos.getX(), pos.getY(), pos.getZ());
+                world.addEntity(e);
+                sendLine(e.getEntityId());
+            }else{
+                sendLine("Error spawning entity");
+            }
+        } else if (cmd.equals("world.getNearbyEntities")) {
+            BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
+            BlockPos pos1 = new BlockPos(pos.getX() - 10, pos.getY() - 5, pos.getZ() - 10);
+            BlockPos pos2 = new BlockPos(pos.getX() + 10, pos.getY() + 5, pos.getZ() + 10);
+            AxisAlignedBB aabb = new AxisAlignedBB(pos1, pos2);
+            List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, aabb);
+            StringBuilder sb = new StringBuilder();
+            for(Entity entity:entities){
+                sb.append(entity.getClass().toString()).append(":").append(entity.getUniqueID()).append("|");
+            }
+            sb.setLength(sb.length()-1);
+            sendLine(sb.toString());
+        } else if (cmd.equals("world.getHeight")) {
+            int x = Integer.parseInt(args[0]);
+            int z = Integer.parseInt(args[1]);
+            int highest = -32;
+            BlockPos pos = new BlockPos(x, 0, z);
+            for(int y = 255; y > highest; y--){
+                if(!world.getBlockState(pos.add(0, y, 0)).getBlock().equals(Blocks.AIR)){
+                    highest = y;
+                    break;
+                }
+            }
+            sendLine(highest);
+        } else if (cmd.equals("world.setSign")) {
+            BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
+            Block block = blockFromName(args[3]);
+            if(!block.toString().contains("_sign")){
+                block = blockFromName("birch_sign");
+            }
+            int facing = Integer.parseInt(args[4]);
+            BlockState bs;
+            if(block.toString().contains("_wall_sign")){
+                //jungle_wall_sign will error here, probably a minecraft bug
+                bs = block.getDefaultState().with(WallSignBlock.FACING, getFacing(facing));
+            }else {
+                bs = block.getDefaultState().with(StandingSignBlock.ROTATION, facing);
+            }
+            // TODO: add sign text
+            world.setBlockState(pos, bs, 2);
         } else if(cmd.equals("chat.post")){
-            sendLine("NOT YET");
+            StringBuilder sb = new StringBuilder();
+            for(String arg: args){
+                sb.append(arg).append(",");
+            }
+            // because single player, no need to broadcast
+            //player.getServer().getPlayerList().sendPacketToAllPlayers(...);
+            player.sendMessage(new StringTextComponent(sb.toString()));
         } else if (cmd.startsWith("player.")) {
             entityCommand(player, cmd.substring(7), args);
         } else if (cmd.startsWith("entity.")) {
@@ -150,14 +204,10 @@ public class ApiHandler {
             entityCommand(e, cmd.substring(7), newargs);
         }
         /* TODO: to be implemented
-        "world.getHeight"
         "world.spawnParticle"
-        "world.getPlayerId"
-        "world.setting"
         "events.block.hits"
         "events.chat.posts"
         "events.clear"
-        "world.setSign"
          */
         else {
             unknownCommand();
@@ -201,7 +251,6 @@ public class ApiHandler {
             }else{
                 bs = Blocks.SANDSTONE.getDefaultState();
             }*/
-        BlockState bs;
         // This doesn't work
         /*try {
             ByteArrayInputStream bi = new ByteArrayInputStream(blockName.getBytes());
@@ -224,11 +273,49 @@ public class ApiHandler {
             //Item item = ForgeRegistries.ITEMS.getValue(found);
             //bs = Block.getBlockFromItem(item).getDefaultState();
             Block block = ForgeRegistries.BLOCKS.getValue(found);
-            bs = block.getDefaultState();
-        }else{
-            bs = Blocks.SANDSTONE.getDefaultState();
+            if(block != null) {
+                return block.getDefaultState();
+            }
         }
-        return bs;
+        return Blocks.SANDSTONE.getDefaultState();
+    }
+
+    private Block blockFromName(String blockName){
+        ResourceLocation found = null;
+        String name = "minecraft:" + blockName.toLowerCase();
+        for(ResourceLocation bn: JuicyRaspberryPieMod.BLOCKNAMES){
+            if(bn.toString().equals(name)){
+                found = bn;
+                break;
+            }
+        }
+        if(found != null){
+            //Item item = ForgeRegistries.ITEMS.getValue(found);
+            //bs = Block.getBlockFromItem(item).getDefaultState();
+            return ForgeRegistries.BLOCKS.getValue(found);
+        }else{
+            return Blocks.SANDSTONE;
+        }
+    }
+
+    private Direction getFacing(int facing) {
+        // Note this is opposite of Bukkit facing
+        Direction direction;
+        switch (facing){
+            case 1:
+                direction = Direction.EAST;
+                break;
+            case 2:
+                direction = Direction.SOUTH;
+                break;
+            case 3:
+                direction = Direction.WEST;
+                break;
+            default:
+                direction = Direction.NORTH;
+        }
+        return direction;
+
     }
 
     private EntityType entityTypeFromName(String entityName) {
@@ -291,7 +378,7 @@ public class ApiHandler {
                 break;
             }
             case "setTile":
-                // same as SetPos
+                // TODO: actually set tile pos
                 entitySetPos(entity, args);
                 break;
             case "getRotation":
@@ -318,6 +405,12 @@ public class ApiHandler {
             case "getNameAndUUID":
                 sendLine(entity.getName() + "," + entity.getUniqueID());
                 break;
+            case "remove": {
+                if(!(entity instanceof PlayerEntity)){
+                    world.removeEntity(entity);
+                }
+                break;
+            }
             default:
                 unknownCommand();
                 break;
