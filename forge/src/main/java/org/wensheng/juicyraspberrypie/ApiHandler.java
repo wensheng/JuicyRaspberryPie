@@ -7,18 +7,26 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.particles.BasicParticleType;
+import net.minecraft.particles.ParticleType;
+import net.minecraft.tileentity.SignTileEntity;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -177,6 +185,16 @@ public class ApiHandler {
             }else{
                 sendLine("Error spawning entity");
             }
+        } else if (cmd.equals("world.spawnParticle")) {
+            BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
+            BasicParticleType pt = particleTypeFromName(args[3]);
+            int count;
+            if(args.length > 4) {
+                count = Integer.parseInt(args[4]);
+            }else{
+                count = 10;
+            }
+            world.spawnParticle(pt, pos.getX(), pos.getY(), pos.getZ(), count, 0, 0, 0, 1);
         } else if (cmd.equals("world.getNearbyEntities")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
             BlockPos pos1 = new BlockPos(pos.getX() - 10, pos.getY() - 5, pos.getZ() - 10);
@@ -210,13 +228,26 @@ public class ApiHandler {
             int facing = Integer.parseInt(args[4]);
             BlockState bs;
             if(block.toString().contains("_wall_sign")){
-                //jungle_wall_sign will error here, probably a minecraft bug
                 bs = block.getDefaultState().with(WallSignBlock.FACING, getFacing(facing));
+
             }else {
                 bs = block.getDefaultState().with(StandingSignBlock.ROTATION, facing);
             }
-            // TODO: add sign text
-            world.setBlockState(pos, bs, 2);
+            world.setBlockState(pos, bs, 3);
+            if(bs.hasTileEntity()) {
+                SignTileEntity tile = (SignTileEntity) bs.createTileEntity(world);
+                if(tile != null) {
+                    for (int i = 0; i < 4 && i < (args.length - 5); i++) {
+                        tile.signText[i] = new StringTextComponent(args[i + 5]);
+                    }
+                    tile.setPos(pos);
+                    tile.markDirty();
+                    world.addTileEntity(tile);
+                    // this is beyond ridiculous
+                    IChunk chunk = world.getChunk(pos);
+                    chunk.addTileEntity(pos, tile);
+                }
+            }
         } else if(cmd.equals("chat.post")){
             StringBuilder sb = new StringBuilder();
             for(String arg: args){
@@ -247,10 +278,15 @@ public class ApiHandler {
             ProjectileImpactEvent event;
             while((event = projectileHitQueue.poll())!= null){
                 ArrowEntity arrow = (ArrowEntity) event.getEntity();
-                Entity shooter = arrow.getShooter();
                 BlockPos pos = arrow.getPosition();
                 sb.append(blockPosToRelative(pos)).append(",");
-                sb.append(shooter.getUniqueID().toString()).append(",");
+                Entity shooter = arrow.getShooter();
+                if(shooter != null) {
+                    sb.append(shooter.getUniqueID().toString()).append(",");
+                }else{
+                    sb.append("Nobody");
+                }
+                sb.append(",");
                 //TODO: hit what? entity or block
                 sb.append(event.getRayTraceResult().getType().name());
                 sb.append("|");
@@ -286,9 +322,6 @@ public class ApiHandler {
             String[] newargs = Arrays.copyOfRange(args, 1, args.length);
             entityCommand(e, cmd.substring(7), newargs);
         }
-        /* TODO: to be implemented
-        "world.spawnParticle"
-         */
         else {
             unknownCommand();
         }
@@ -414,6 +447,24 @@ public class ApiHandler {
             et = EntityType.ZOMBIE;
         }
         return et;
+    }
+
+    private BasicParticleType particleTypeFromName(String particleName) {
+        ResourceLocation found = null;
+        String name = "minecraft:" + particleName.toLowerCase();
+        for (ResourceLocation bn : JuicyRaspberryPieMod.PARTICLE_TYPES) {
+            if (bn.toString().equals(name)) {
+                found = bn;
+                break;
+            }
+        }
+        BasicParticleType pt;
+        if (found != null) {
+            pt = (BasicParticleType) ForgeRegistries.PARTICLE_TYPES.getValue(found);
+        } else {
+            pt = ParticleTypes.EXPLOSION;
+        }
+        return pt;
     }
 
     private void setCuboid(World world, BlockPos pos1, BlockPos pos2, BlockState bs) {

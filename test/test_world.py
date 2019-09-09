@@ -66,12 +66,12 @@ def test_sign():
                "dark oak wall sign", "2 facing south")
     mc.setSign(pos.x - 4, pos.y + 1, pos.z - 2, "spruce_wall_sign", 3,
                "sprunce wall sign", "3 facing west")
-    mc.setSign(pos.x - 3, pos.y + 2, pos.z - 2, "jungle_wall_sign", 4,
-               "error")
 
 
 def test_misc():
     mc.postToChat("Hello, 世界！")
+    # mc.spawnParticle(pos.x + 3, pos.y + 2, pos.z + 3, "smoke")
+    #mc.spawnParticle(pos.x + 3, pos.y + 2, pos.z + 3, "bubble")
     print("getHeight:", mc.getHeight(0, 0))
     print("getPlayerEntityIds:", mc.getPlayerEntityIds())
     print("getPlayerEntityId for wensheng:", mc.getPlayerEntityId("wensheng"))

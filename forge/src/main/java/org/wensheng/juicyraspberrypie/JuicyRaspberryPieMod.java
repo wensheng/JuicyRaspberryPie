@@ -2,6 +2,7 @@ package org.wensheng.juicyraspberrypie;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.particles.BasicParticleType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -32,6 +33,7 @@ public class JuicyRaspberryPieMod
     private ServerListenerThread serverThread = null;
     static Set<ResourceLocation> BLOCKNAMES = null;
     static Set<ResourceLocation> ENTITYNAMES = null;
+    static Set<ResourceLocation> PARTICLE_TYPES = null;
     private ServerSocket serverSocket;
 
     // Directly reference a log4j logger.
@@ -40,6 +42,7 @@ public class JuicyRaspberryPieMod
     public JuicyRaspberryPieMod() {
         BLOCKNAMES = ForgeRegistries.BLOCKS.getKeys();
         ENTITYNAMES = ForgeRegistries.ENTITIES.getKeys();
+        PARTICLE_TYPES = ForgeRegistries.PARTICLE_TYPES.getKeys();
         final FMLJavaModLoadingContext ctx = FMLJavaModLoadingContext.get();
         // Register the setup method for modloading
         ctx.getModEventBus().addListener(this::setup);

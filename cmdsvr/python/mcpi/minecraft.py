@@ -216,6 +216,10 @@ class Minecraft:
         """Spawn entity (x,y,z,id,[data])"""
         return self.conn.sendReceive(b"world.spawnEntity", *args)
 
+    def spawnParticle(self, *args):
+        """Spawn entity (x,y,z,id,[data])"""
+        return self.conn.send(b"world.spawnParticle", *args)
+
     def getNearbyEntities(self, *args):
         """get nearby entities (x,y,z)"""
         return self.conn.sendReceive(b"world.getNearbyEntities", *args).split(",")
