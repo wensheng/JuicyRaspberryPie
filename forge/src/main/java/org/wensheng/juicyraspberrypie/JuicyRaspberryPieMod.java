@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,18 +32,15 @@ public class JuicyRaspberryPieMod
 {
     private static final int API_PORT = 4712;
     private ServerListenerThread serverThread = null;
-    static Set<ResourceLocation> BLOCKNAMES = null;
-    static Set<ResourceLocation> ENTITYNAMES = null;
-    static Set<ResourceLocation> PARTICLE_TYPES = null;
+    static final Set<String> BLOCK_NAMES = new HashSet<>();
+    static final Set<String> ENTITY_NAMES = new HashSet<>();
+    static final Set<String> PARTICLE_NAMES = new HashSet<>();
     private ServerSocket serverSocket;
 
     // Directly reference a log4j logger.
     static final Logger LOGGER = LogManager.getLogger();
 
     public JuicyRaspberryPieMod() {
-        BLOCKNAMES = ForgeRegistries.BLOCKS.getKeys();
-        ENTITYNAMES = ForgeRegistries.ENTITIES.getKeys();
-        PARTICLE_TYPES = ForgeRegistries.PARTICLE_TYPES.getKeys();
         final FMLJavaModLoadingContext ctx = FMLJavaModLoadingContext.get();
         // Register the setup method for modloading
         ctx.getModEventBus().addListener(this::setup);
@@ -61,8 +59,15 @@ public class JuicyRaspberryPieMod
     {
         // some preinit code
         LOGGER.info("HELLO FROM PREINIT");
-        LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
-
+        for(ResourceLocation rloc: ForgeRegistries.BLOCKS.getKeys()){
+            BLOCK_NAMES.add(rloc.toString());
+        }
+        for(ResourceLocation rloc: ForgeRegistries.ENTITIES.getKeys()){
+            ENTITY_NAMES.add(rloc.toString());
+        }
+        for(ResourceLocation rloc: ForgeRegistries.PARTICLE_TYPES.getKeys()){
+            PARTICLE_NAMES.add(rloc.toString());
+        }
     }
 
     private void doServerStuff(final FMLDedicatedServerSetupEvent event) {

@@ -2,34 +2,26 @@ package org.wensheng.juicyraspberrypie;
 
 
 import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.particles.BasicParticleType;
-import net.minecraft.particles.ParticleType;
-import net.minecraft.tileentity.SignTileEntity;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.item.ArrowItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
+import net.minecraft.particles.BasicParticleType;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.SignTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.TickEvent;
@@ -43,7 +35,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Logger;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 public class ApiHandler {
     private static final float TOO_SMALL = (float) 1e-9;
@@ -56,7 +51,6 @@ public class ApiHandler {
     private ArrayDeque<ClientChatReceivedEvent> chatPostedQueue = new ArrayDeque<>();
     private ArrayDeque<ProjectileImpactEvent> projectileHitQueue = new ArrayDeque<>();
     private final List<String> queuedCommands = Arrays.asList("world.setBlock", "world.setBlocks");
-    //private final set<Item> blockBreakDetectionTools = Arrays.asList(Item.class.)
 
     ApiHandler() {
         // Only worry about single player world for now
@@ -166,7 +160,7 @@ public class ApiHandler {
         } else if (cmd.equals("world.setBlocks")) {
             BlockPos pos1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
             BlockPos pos2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
-            BlockState bs = blockStateFromName(args[6]);
+            BlockState bs = blockFromName(args[6]).getDefaultState();
             //int facing = args.length > 7 ? Integer.parseInt(args[7]) : 0;
             setCuboid(world, pos1, pos2, bs);
         } else if (cmd.equals("world.getPlayerId")) {
@@ -194,7 +188,13 @@ public class ApiHandler {
             }else{
                 count = 10;
             }
-            world.spawnParticle(pt, pos.getX(), pos.getY(), pos.getZ(), count, 0, 0, 0, 1);
+            float speed;
+            if(args.length > 5) {
+                speed = Float.parseFloat(args[5]);
+            }else{
+                speed = 1.0f;
+            }
+            world.spawnParticle(pt, pos.getX(), pos.getY(), pos.getZ(), count, 0, 0, 0, speed);
         } else if (cmd.equals("world.getNearbyEntities")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
             BlockPos pos1 = new BlockPos(pos.getX() - 10, pos.getY() - 5, pos.getZ() - 10);
@@ -350,65 +350,17 @@ public class ApiHandler {
         return sb.toString();
     }
 
-    private BlockState blockStateFromName(String blockName){
-        // from ID works, but it's not the way from 1.13 on
-        /*
-            int itemId = Integer.parseInt(args[3]);
-            if (null != world.getTileEntity(pos)) {
-                world.removeTileEntity(pos);
-            }
-            Item item = Item.getItemById(itemId);
-            if(item != null) {
-                ItemStack stack = new ItemStack(item, 1);
-                bs = Block.getBlockFromItem(stack.getItem()).getDefaultState();
-            }else{
-                bs = Blocks.SANDSTONE.getDefaultState();
-            }*/
-        // This doesn't work
-        /*try {
-            ByteArrayInputStream bi = new ByteArrayInputStream(blockName.getBytes());
-            ObjectInputStream oi = new ObjectInputStream(bi);
-            ItemStack stack = (ItemStack) oi.readObject();
-            bs = Block.getBlockFromItem(stack.getItem()).getDefaultState();
-        } catch (IOException | ClassNotFoundException  e) {
-            bs = Blocks.SANDSTONE.getDefaultState();
-        }*/
-        // TODO: resource from other mod namespaces, not just "minecraft:"
-        ResourceLocation found = null;
-        String name = "minecraft:" + blockName.toLowerCase();
-        for(ResourceLocation bn: JuicyRaspberryPieMod.BLOCKNAMES){
-            if(bn.toString().equals(name)){
-                found = bn;
-                break;
-            }
-        }
-        if(found != null){
-            //Item item = ForgeRegistries.ITEMS.getValue(found);
-            //bs = Block.getBlockFromItem(item).getDefaultState();
-            Block block = ForgeRegistries.BLOCKS.getValue(found);
-            if(block != null) {
-                return block.getDefaultState();
-            }
-        }
-        return Blocks.SANDSTONE.getDefaultState();
-    }
-
     private Block blockFromName(String blockName){
-        ResourceLocation found = null;
-        String name = "minecraft:" + blockName.toLowerCase();
-        for(ResourceLocation bn: JuicyRaspberryPieMod.BLOCKNAMES){
-            if(bn.toString().equals(name)){
-                found = bn;
-                break;
-            }
-        }
-        if(found != null){
-            //Item item = ForgeRegistries.ITEMS.getValue(found);
-            //bs = Block.getBlockFromItem(item).getDefaultState();
-            return ForgeRegistries.BLOCKS.getValue(found);
+        String name;
+        if(!blockName.contains(":")) {
+            name = "minecraft:" + blockName.toLowerCase();
         }else{
-            return Blocks.SANDSTONE;
+            name = blockName.toLowerCase();
         }
+        if(JuicyRaspberryPieMod.BLOCK_NAMES.contains(name)){
+            return ForgeRegistries.BLOCKS.getValue(new ResourceLocation(name));
+        }
+        return Blocks.SANDSTONE;
     }
 
     private Direction getFacing(int facing) {
@@ -432,39 +384,29 @@ public class ApiHandler {
     }
 
     private EntityType entityTypeFromName(String entityName) {
-        ResourceLocation found = null;
-        String name = "minecraft:" + entityName.toLowerCase();
-        for(ResourceLocation bn: JuicyRaspberryPieMod.ENTITYNAMES){
-            if(bn.toString().equals(name)){
-                found = bn;
-                break;
-            }
-        }
-        EntityType et;
-        if(found != null){
-            et = ForgeRegistries.ENTITIES.getValue(found);
+        String name;
+        if(!entityName.contains(":")) {
+            name = "minecraft:" + entityName.toLowerCase();
         }else{
-            et = EntityType.ZOMBIE;
+            name = entityName.toLowerCase();
         }
-        return et;
+        if(JuicyRaspberryPieMod.ENTITY_NAMES.contains(name)){
+            return ForgeRegistries.ENTITIES.getValue(new ResourceLocation(name));
+        }
+        return EntityType.ZOMBIE;
     }
 
     private BasicParticleType particleTypeFromName(String particleName) {
-        ResourceLocation found = null;
-        String name = "minecraft:" + particleName.toLowerCase();
-        for (ResourceLocation bn : JuicyRaspberryPieMod.PARTICLE_TYPES) {
-            if (bn.toString().equals(name)) {
-                found = bn;
-                break;
-            }
+        String name;
+        if(!particleName.contains(":")) {
+            name = "minecraft:" + particleName.toLowerCase();
+        }else{
+            name = particleName.toLowerCase();
         }
-        BasicParticleType pt;
-        if (found != null) {
-            pt = (BasicParticleType) ForgeRegistries.PARTICLE_TYPES.getValue(found);
-        } else {
-            pt = ParticleTypes.EXPLOSION;
+        if(JuicyRaspberryPieMod.PARTICLE_NAMES.contains(name)){
+            return (BasicParticleType) ForgeRegistries.PARTICLE_TYPES.getValue(new ResourceLocation(name));
         }
-        return pt;
+        return ParticleTypes.EXPLOSION;
     }
 
     private void setCuboid(World world, BlockPos pos1, BlockPos pos2, BlockState bs) {
