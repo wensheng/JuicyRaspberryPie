@@ -1,7 +1,7 @@
 import socket
 import select
 import sys
-from util import flatten_parameters_to_bytestring
+from .util import flatten_parameters_to_bytestring
 
 """ @author: Aron Nieminen, Mojang AB"""
 
@@ -12,10 +12,13 @@ class Connection:
     """Connection to a Minecraft Pi game"""
     RequestFailed = "Fail"
 
-    def __init__(self, address, port):
+    def __init__(self, address, port, debug=False):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(10)
         self.socket.connect((address, port))
+        self.socket.settimeout(60)  # doc suggests None for makefile
         self.lastSent = ""
+        self.debug = debug
 
     def drain(self):
         """Drains the socket of incoming data"""
@@ -24,21 +27,18 @@ class Connection:
             if not readable:
                 break
             data = self.socket.recv(1500)
-            e =  "Drained Data: <%s>\n"%data.strip()
-            e += "Last Message: <%s>\n"%self.lastSent.strip()
-            sys.stderr.write(e)
+            if self.debug:
+                e =  "Drained Data: <%s>\n"%data.strip()
+                e += "Last Message: <%s>\n"%self.lastSent.strip()
+                sys.stderr.write(e)
 
     def send(self, f, *data):
         """
         Sends data. Note that a trailing newline '\n' is added here
-
-        The protocol uses CP437 encoding - https://en.wikipedia.org/wiki/Code_page_437
-        which is mildly distressing as it can't encode all of Unicode.
         """
-
         s = b"".join([f, b"(", flatten_parameters_to_bytestring(data), b")", b"\n"])
-
         self._send(s)
+
 
     def _send(self, s):
         """

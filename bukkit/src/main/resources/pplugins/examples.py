@@ -10,7 +10,7 @@ def cube(size=5, typeName='SANDSTONE'):
     pos = mc.player.getTilePos()
     s = int(size)
     mc.setBlocks(pos.x + 1, pos.y, pos.z,
-        pos.x + s, pos.y + s - 1, pos.z + s - 1, typeName)
+                 pos.x + s, pos.y + s - 1, pos.z + s - 1, typeName)
 
 
 def flatten(size=50):
@@ -22,9 +22,9 @@ def flatten(size=50):
     pos = mc.player.getTilePos()
     s = int(size)
     mc.setBlocks(pos.x - s, pos.y - 1, pos.z - s,
-        pos.x + s, pos.y - 1, pos.z + s, 'SANDSTONE')
+                 pos.x + s, pos.y - 1, pos.z + s, 'SANDSTONE')
     mc.setBlocks(pos.x - s, pos.y, pos.z - s,
-        pos.x + s, pos.y + 64, pos.z + s, 'AIR')
+                 pos.x + s, pos.y + 64, pos.z + s, 'AIR')
 
 
 def falling_block():
@@ -40,10 +40,10 @@ def falling_block():
         # stop falling
         if mc.getBlock(pos.x, y-i-1, pos.z) != 'AIR':
             break
-        mc.setBlock(pos.x, y-i, pos.z, 'AIR')
-        mc.setBlock(pos.x, y-i-1, pos.z, 'GOLD_BLOCK')
+        mc.setBlock(pos.x, y - i, pos.z, 'AIR')
+        mc.setBlock(pos.x, y - i - 1, pos.z, 'GOLD_BLOCK')
 
-    
+
 def rainbow():
     """_mcpy
     create a rainbow.
@@ -53,7 +53,7 @@ def rainbow():
     pos = mc.player.getTilePos()
     colors = ['RED_WOOL', 'ORANGE_WOOL', 'YELLOW_WOOL', 'LIME_WOOL', 'LIGHT_BLUE_WOOL', 'BLUE_WOOL', 'PURPLE_WOOL']
     height = 60
-    mc.setBlocks(pos.x-64,0,0,pos.x+64,height + len(colors),0,'AIR')
+    mc.setBlocks(pos.x - 64, 0, 0, pos.x + 64, height + len(colors), 0, 'AIR')
     for x in range(0, 128):
         for colourindex in range(0, len(colors)):
             y = sin((x / 128.0) * pi) * height + colourindex

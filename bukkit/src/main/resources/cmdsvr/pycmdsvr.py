@@ -1,9 +1,9 @@
 # wenshengwang at gmail dot com
 # BSD License
-"""This is a TCP server. It is started by the JuicyRaspberryPie plugin and 
-listen on localhost port 32123. 
+"""This is a TCP server. It is started by the JuicyRaspberryPie plugin/mod and
+listen on localhost port 4731(plugin) or 4732(mod).
 When it start, it scan the "pplugins" directory for any python files and try
-to load them as modules, in these modules, it search for any functions whose 
+to load them as modules, in these modules, it search for any functions whose
 docstring starts with "_mcpy" and register them as commands.
 When the server receive a command, if it matches one in the registry, it will
 be executed. If not, it will execute a dummy command.
@@ -16,18 +16,32 @@ import socketserver
 import threading
 import types
 import importlib
+import time
+import yaml
 
 plugin_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, plugin_dir)
-from mcpi.minecraft import mc
+from mcpi.minecraft import Minecraft
 
-HOST = 'localhost'
-# TODO: read port from config.yml
-PORT = 32123
+
+config = {}
+with open(os.path.join(plugin_dir, "config.yml")) as f:
+    try:
+        config = yaml.safe_load(f)
+    except yaml.YAMLError:
+        pass
+
+HOST = config.get("cmdsvr_host", "localhost")
+PORT = config.get("cmdsvr_port", 4733)
+
 
 KEEP_RUNNING = True
+exit_signal = threading.Event()
+
+
 def keep_running():
     return KEEP_RUNNING
+
 
 def register_commands():
     global mc_functions
@@ -53,11 +67,12 @@ def register_commands():
                 print(e)
 
 
-def chat(msg="Whaaat?!"):
-    mc.postToChat(msg)
-
-
 class MyTCPHandler(socketserver.BaseRequestHandler):
+    def chat(self, msg="Whaaat?!"):
+        mc = Minecraft.create()
+        mc.postToChat(msg)
+        # self.request.sendall(s.encode('utf-8'))
+
     def handle(self):
         global KEEP_RUNNING
         self.data = self.request.recv(1024)
@@ -65,27 +80,25 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         args = self.data[2:].decode('utf-8').split()
         cmd = args[0]
         if cmd == "list":
-            s = "Available commands: %s" % ( " ".join(list(mc_functions.keys())))
-            self.request.sendall(s.encode('utf-8'))
-            threading.Thread(target=chat, args=(s,), kwargs={}).start()
-            return
-        if cmd == "help":
-            s = 'JuicyRaspberryPie: put your Python files in pplugins, then "/p cmd" to call your function, "/p list" to see list of commands'
-            self.request.sendall(s.encode('utf-8'))
-            threading.Thread(target=chat, args=(s,), kwargs={}).start()
-            return
-        if cmd == "update":
+            s = "Available commands: %s" % (" ".join(list(mc_functions.keys())))
+            threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
+        elif cmd == "help":
+            s = ('JuicyRaspberryPie: put your Python files in pplugins, '
+                 'then "/p cmd" to call your function, "/p list" to see list of commands')
+            threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
+        elif cmd == "update":
             register_commands()
             s = 'found commands: ' + " ".join(mc_functions)
-            self.request.sendall(s.encode('utf-8'))
-            threading.Thread(target=chat, args=(s,), kwargs={}).start()
-            return
-        if cmd == "BYE":
+            threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
+        elif cmd == "shutdownserver":
             print("got shutdown request, signing off")
             KEEP_RUNNING = False
             return
-        threading.Thread(target=mc_functions.get(cmd, chat), args=tuple(args[1:]), kwargs={}).start()
-        self.request.sendall("ok".encode('utf-8'))
+        elif cmd in mc_functions:
+            threading.Thread(target=mc_functions[cmd], args=tuple(args[1:]), kwargs={}).start()
+            self.request.sendall("ok".encode('utf-8'))
+        else:
+            self.request.sendall(("Unknown command: %s" % args).encode('utf-8'))
 
 
 register_commands()
@@ -93,7 +106,20 @@ register_commands()
 if __name__ == "__main__":
     socketserver.TCPServer.allow_reuse_address = True
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
+    server.socket.settimeout(1)
+
     def server_serve():
         while keep_running():
             server.handle_request()
-    threading.Thread(target=server_serve).start()
+
+    thread = threading.Thread(target=server_serve)
+    thread.daemon = True
+    try:
+        thread.start()
+        while keep_running():
+            time.sleep(0.5)
+    except (KeyboardInterrupt, SystemExit):
+        print("Exit...")
+        KEEP_RUNNING = False
+
+    thread.join()

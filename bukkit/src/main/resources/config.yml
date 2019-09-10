@@ -1,5 +1,7 @@
-port: 4711
-start_pyserver: true
-pysvr_port: 32123
-pyexe: "C:\\Users\\wensheng\\Anaconda3\\python.exe"
-pypath: "C:\\Users\\wensheng\\Anaconda3"
+api_port: 4711
+start_cmdsvr: true
+cmdsvr_host: "localhost"
+cmdsvr_port: 4731
+pyexe: "/usr/bin/python3"
+# windows pyexe example
+# pyexe: "C:\\Users\\wensheng\\Anaconda3\\python.exe"

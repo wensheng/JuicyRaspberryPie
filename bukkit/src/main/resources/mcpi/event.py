@@ -1,4 +1,4 @@
-from vec3 import Vec3
+from .vec3 import Vec3
 
 class BlockEvent:
     """An Event related to blocks (e.g. placed, removed, hit)"""
@@ -6,7 +6,7 @@ class BlockEvent:
 
     def __init__(self, type, x, y, z, face, entityId):
         self.type = type
-        self.pos = Vec3(x, y, z)
+        self.pos = Vec3(int(x), int(y), int(z))
         self.face = face
         self.entityId = entityId
 
@@ -15,8 +15,8 @@ class BlockEvent:
             BlockEvent.HIT: "BlockEvent.HIT"
         }.get(self.type, "???")
 
-        return "BlockEvent(%s, %d, %d, %d, %d, %d)"%(
-            sType,self.pos.x,self.pos.y,self.pos.z,self.face,self.entityId);
+        return "BlockEvent(%s, %d, %d, %d, %s, %s)"%(
+            sType, self.pos.x, self.pos.y, self.pos.z, self.face, self.entityId)
 
     @staticmethod
     def Hit(x, y, z, face, entityId):
@@ -37,9 +37,33 @@ class ChatEvent:
             ChatEvent.POST: "ChatEvent.POST"
         }.get(self.type, "???")
 
-        return "ChatEvent(%s, %d, %s)"%(
-            sType,self.entityId,self.message);
+        return "ChatEvent(%s, %d, %s)" % (
+            sType, self.entityId, self.message)
 
     @staticmethod
     def Post(entityId, message):
         return ChatEvent(ChatEvent.POST, entityId, message)
+
+
+class ProjectileEvent:
+    """An Event related to projectiles (e.g. placed, removed, hit)"""
+    HIT = 0
+
+    def __init__(self, type, x, y, z, face, shooterName,victimName):
+        self.type = type
+        self.pos = Vec3(int(x), int(y), int(z))
+        self.face = face
+        self.shooterName = shooterName
+        self.victimName = victimName
+
+    def __repr__(self):
+        sType = {
+            ProjectileEvent.HIT: "ProjectileEvent.HIT"
+        }.get(self.type, "???")
+
+        return "ProjectileEvent(%s, %d, %d, %d, %s, %s)" % (
+            sType, self.pos.x, self.pos.y, self.pos.z, self.shooterName, self.victimName)
+
+    @staticmethod
+    def Hit(x, y, z, face, shooterName,victimName):
+        return ProjectileEvent(BlockEvent.HIT, x, y, z, face, shooterName,victimName)

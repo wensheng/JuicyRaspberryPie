@@ -39,22 +39,31 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         if(!py_init_file.exists()){
             this.saveResource("config.yml", false);
         }
+
+        File svrFolder = new File(getDataFolder(), "cmdsvr");
+        if(!svrFolder.exists()) {
+            boolean ok = svrFolder.mkdir();
+            if (ok) {
+                this.saveResource("cmdsvr/pycmdsvr.py", false);
+            } else {
+                logger.warning("Could not create cmdsvr directory in plugin.");
+            }
+        }
+
         File mcpiFolder = new File(getDataFolder(), "mcpi");
         if(!mcpiFolder.exists()) {
             boolean ok = mcpiFolder.mkdir();
             if (ok) {
-                this.saveResource("mcpi/block.py", false);
                 this.saveResource("mcpi/connection.py", false);
                 this.saveResource("mcpi/event.py", false);
-                this.saveResource("mcpi/entity.py", false);
                 this.saveResource("mcpi/minecraft.py", false);
-                this.saveResource("mcpi/pycmdsvr.py", false);
                 this.saveResource("mcpi/util.py", false);
                 this.saveResource("mcpi/vec3.py", false);
             } else {
                 logger.warning("Could not create mcpi directory in plugin.");
             }
         }
+
         File ppluginsFolder = new File(getDataFolder(), "pplugins");
         if(!ppluginsFolder.exists()){
             boolean ok = ppluginsFolder.mkdir();
@@ -69,8 +78,8 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
     
     public void onEnable(){
         this.saveDefaultConfig();
-        int port = this.getConfig().getInt("port");
-        boolean start_pyserver = this.getConfig().getBoolean("start_pyserver");
+        int port = this.getConfig().getInt("api_port");
+        boolean start_pyserver = this.getConfig().getBoolean("start_cmdsvr");
         
         //create new tcp listener thread
         try {
@@ -89,26 +98,30 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
 
         if(start_pyserver){
             String pyexe = getConfig().getString("pyexe", "python.exe");
-            String pypath = this.getConfig().getString("pypath", "C:\\Python37");
+            //String pypath = this.getConfig().getString("pypath", "C:\\Python37");
 
-            logger.info("Starting Python command server using " + pyexe + " in " + pypath);
-            ProcessBuilder pb = new ProcessBuilder(pyexe, "mcpi/pycmdsvr.py");
-            Map<String, String> envs = pb.environment();
-            envs.put("Path", pypath);
+            //logger.info("Starting Python command server using " + pyexe + " in " + pypath);
+            logger.info("Starting Python command server using " + pyexe);
+            ProcessBuilder pb = new ProcessBuilder(pyexe, "cmdsvr/pycmdsvr.py");
+            //Map<String, String> envs = pb.environment();
+            //envs.put("Path", pypath);
             try {
                 pb.redirectErrorStream(true);
                 pb.directory(this.getDataFolder());
                 pb.start();
             } catch (IOException e) {
-                logger.warning("Could not start python command server.");
+                logger.warning("******************************************************************************");
+                logger.warning("Could not start python command server! Please check your `pyexe` in config.yml");
+                logger.warning("******************************************************************************");
             }
         }
 
     }
     
     public void onDisable(){
-        int port = this.getConfig().getInt("pysvr_port");
-        boolean start_pyserver = this.getConfig().getBoolean("start_pyserver");
+        int port = this.getConfig().getInt("cmdsvr_port");
+        // cmdsvr_host is not used, always "localhost" for now
+        boolean start_pyserver = this.getConfig().getBoolean("start_cmdsvr");
         if(port==0){
             port = 32123;
         }
@@ -147,7 +160,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
     
     public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String label, String[] args){
         String cmdString;
-        int port = this.getConfig().getInt("pysvr_port");
+        int port = this.getConfig().getInt("cmdsvr_port");
         
         if(args.length<1){
             return false;
