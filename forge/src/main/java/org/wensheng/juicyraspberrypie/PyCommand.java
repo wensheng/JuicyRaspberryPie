@@ -52,7 +52,7 @@ public class PyCommand {
 		} catch (Exception e) {
 			ITextComponent message = new StringTextComponent("No Python Command Server available");
 			ctx.getSource().sendFeedback(message, true);
-			logger.error("No python command server available.");
+			logger.error("No py command server available.");
 		}
 
 		if(!replyString.equals("ok")){

@@ -32,7 +32,13 @@ with open(os.path.join(plugin_dir, "config.yml")) as f:
         pass
 
 HOST = config.get("cmdsvr_host", "localhost")
-PORT = config.get("cmdsvr_port", 4733)
+PORT = config.get("cmdsvr_port", 4731)
+# env variable 'JRP_CMDSVR_PORT' can overwrite config file
+if 'JRP_CMDSVR_PORT' in os.environ:
+    try:
+        PORT = int(os.environ['JRP_CMDSVR_PORT'])
+    except ValueError:
+        pass
 
 
 KEEP_RUNNING = True
@@ -71,7 +77,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def chat(self, msg="Whaaat?!"):
         mc = Minecraft.create()
         mc.postToChat(msg)
-        # self.request.sendall(s.encode('utf-8'))
 
     def handle(self):
         global KEEP_RUNNING
@@ -82,18 +87,21 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         if cmd == "list":
             s = "Available commands: %s" % (" ".join(list(mc_functions.keys())))
             threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
+            self.request.sendall("ok".encode('utf-8'))
         elif cmd == "help":
             s = ('JuicyRaspberryPie: put your Python files in pplugins, '
                  'then "/p cmd" to call your function, "/p list" to see list of commands')
             threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
+            self.request.sendall("ok".encode('utf-8'))
         elif cmd == "update":
             register_commands()
             s = 'found commands: ' + " ".join(mc_functions)
             threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
+            self.request.sendall("ok".encode('utf-8'))
         elif cmd == "shutdownserver":
             print("got shutdown request, signing off")
             KEEP_RUNNING = False
-            return
+            self.request.sendall("ok".encode('utf-8'))
         elif cmd in mc_functions:
             threading.Thread(target=mc_functions[cmd], args=tuple(args[1:]), kwargs={}).start()
             self.request.sendall("ok".encode('utf-8'))
@@ -105,6 +113,7 @@ register_commands()
 
 if __name__ == "__main__":
     socketserver.TCPServer.allow_reuse_address = True
+    print("Command server started at %s:%d." % (HOST, PORT))
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
     server.socket.settimeout(1)
 

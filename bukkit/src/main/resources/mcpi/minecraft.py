@@ -1,3 +1,4 @@
+import os
 import math
 
 from .connection import Connection
@@ -259,6 +260,13 @@ class Minecraft:
 
     @staticmethod
     def create(address="localhost", port=4711, debug=False):
+        if "JRP_API_HOST" in os.environ:
+            address = os.environ["JRP_API_HOST"]
+        if "JRP_API_PORT" in os.environ:
+            try:
+                port = int(os.environ["JRP_API_PORT"])
+            except ValueError:
+                pass
         return Minecraft(Connection(address, port, debug))
 
 

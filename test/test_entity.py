@@ -12,15 +12,11 @@ api tested:
     mc.entity.setPitch
     mc.entity.getDirection
 """
-import os
 import time
 from math import (pi, sin, cos)
 from mcpi.minecraft import Minecraft
 
-port = int(os.environ.get("mcpi_port", 4711))
-host = os.environ.get("mcpi_host", "localhost")
-
-mc = Minecraft.create(address=host, port=port)
+mc = Minecraft.create()
 pos = mc.player.getTilePos()
 
 

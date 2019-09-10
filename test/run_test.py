@@ -15,10 +15,10 @@ parser.add_argument('--host', default="127.0.0.1", help="MCPI host")
 parser.add_argument('--port', type=int, default=4711, help="MCPI port")
 args = parser.parse_args()
 name = args.name
-os.environ["mcpi_host"] = args.host
-os.environ["mcpi_port"] = str(args.port)
+os.environ["JRP_API_HOST"] = args.host
+os.environ["JRP_API_PORT"] = str(args.port)
 
-cmdsvr_pydir = join(dirname(dirname(abspath(__file__))), "cmdsvr", "python")
+cmdsvr_pydir = join(dirname(dirname(abspath(__file__))), "bukkit", "src", "main", "resources")
 sys.path.insert(0, cmdsvr_pydir)
 
 try:
