@@ -1,11 +1,25 @@
 # Simple functional tests
 
-To run tests:
+To test local spigot server:
 
     ./run_test.py world
     ./run_test.py player
     ./run_test.py event
     ./run_test.py entity
+
+To test local windows forge mod:
+
+    python run_test.py --port=4712 world
+    python run_test.py --port=4712 player
+    python run_test.py --port=4712 event
+    python run_test.py --port=4712 entity
+
+To test remote bukkit server(e.g. 192.168.1.10) from local windows PC:
+
+    python run_test.py --host=192.168.1.10 world
+    python run_test.py --host=192.168.1.10 player
+    python run_test.py --host=192.168.1.10 event
+    python run_test.py --host=192.168.1.10 entity
 
 API tested:
 
@@ -18,6 +32,7 @@ API tested:
 * mc.getPlayerEntityIds - world.getPlayerEntityIds
 * mc.getHeight - world.getHeight
 * mc.spawnEntity - world.spawnEntity
+* mc.spawnParticle - world.spawnParticle
 * mc.getNearbyEntities - world.getNearbyEntities
 * mc.postToChat - chat.post
 * mc.setSign - world.setSign

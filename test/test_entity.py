@@ -17,11 +17,10 @@ import time
 from math import (pi, sin, cos)
 from mcpi.minecraft import Minecraft
 
-try:
-    port = int(os.environ["mcpi_port"])
-except (KeyError, ValueError):
-    port = 4711
-mc = Minecraft.create(port=port)
+port = int(os.environ.get("mcpi_port", 4711))
+host = os.environ.get("mcpi_host", "localhost")
+
+mc = Minecraft.create(address=host, port=port)
 pos = mc.player.getTilePos()
 
 
