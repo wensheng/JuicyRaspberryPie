@@ -12,6 +12,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.Particle;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -233,6 +234,27 @@ class RemoteSession {
                  }
                  Entity entity = world.spawnEntity(loc, entityType);
                  send(entity.getUniqueId());
+            } else if (c.equals("world.spawnParticle")) {
+                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Particle particle;
+                try{
+                    particle = Particle.valueOf(args[3].toUpperCase());
+                }catch(Exception exc){
+                    particle = Particle.valueOf("EXPLOSION_NORMAL");
+                }
+                int count;
+                if(args.length > 4){
+                    count = Integer.parseInt(args[4]);
+                }else{
+                    count = 10;
+                }
+                double speed;
+                if(args.length > 5){
+                    speed = Double.parseDouble(args[5]);
+                }else{
+                    speed = 1.0;
+                }
+                world.spawnParticle(particle, loc, count, 0, 0, 0, speed);
             } else if (c.equals("world.getHeight")) {
                 send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
             } else if (c.equals("chat.post")) {

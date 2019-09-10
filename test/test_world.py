@@ -70,9 +70,12 @@ def test_sign():
 
 def test_misc():
     mc.postToChat("Hello, 世界！")
-    mc.spawnParticle(pos.x + 3, pos.y + 2, pos.z + 3, "explosion", 1000)
-    time.sleep(2)
+    # explosion doesn't work in bukkit, it should be explosion_normal, explosion_large
+    # mc.spawnParticle(pos.x + 3, pos.y + 2, pos.z + 3, "explosion", 1000)
+    # time.sleep(2)
     mc.spawnParticle(pos.x + 3, pos.y + 2, pos.z + 3, "smoke", 1000, 0.1)
+    time.sleep(2)
+    mc.spawnParticle(pos.x + 3, pos.y + 2, pos.z + 3, "heart", 100, 0.05)
     print("getHeight:", mc.getHeight(0, 0))
     print("getPlayerEntityIds:", mc.getPlayerEntityIds())
     print("getPlayerEntityId for wensheng:", mc.getPlayerEntityId("wensheng"))
