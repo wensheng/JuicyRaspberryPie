@@ -215,10 +215,13 @@ class RemoteSession {
             } else if(c.equals("world.getNearbyEntities")) {
                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
                 double nearby_distance = 10.0;
-                Collection<Entity> nearbyEntities = world.getNearbyEntities(loc, nearby_distance, nearby_distance, nearby_distance);
+                if(args.length > 3){
+                    nearby_distance = Double.parseDouble(args[3]);
+                }
+                Collection<Entity> nearbyEntities = world.getNearbyEntities(loc, nearby_distance, 5.0, nearby_distance);
                 StringBuilder sb = new StringBuilder();
                 for(Entity e: nearbyEntities){
-                    sb.append(e.getName()).append(": ").append(e.getUniqueId()).append(",");
+                    sb.append(e.getName()).append(":").append(e.getUniqueId()).append(",");
                 }
                 if(sb.length()>1) {
                     sb.setLength(sb.length() - 1);

@@ -167,7 +167,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         }
         
         if(port==0){
-            port = 32123;
+            port = 4731;
         }
         
         try {
@@ -177,7 +177,10 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
             String cmdLine = String.join(" ", args);
             toPyServer.writeUTF(cmdLine);
             cmdString = fromPyServer.readLine();
-            logger.info("the py server send back " + cmdString);
+            logger.info("the py server send back:|" + cmdString + "|");
+            if(!cmdString.equals("ok")){
+                sender.sendMessage(cmdString);
+            }
             toPyServer.close();
             fromPyServer.close();
             socket.close();

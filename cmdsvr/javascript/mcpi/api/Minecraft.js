@@ -8,6 +8,9 @@ const Events = require('./Events');
 const Player = require('./Player');
 const World = require('./World');
 
+const APIHOST = process.env.apihost || "localhost"
+const APIPORT = process.env.apiport? parseInt(process.env.apiport) : 4711
+
 class Minecraft {
   /**
    * Constructs a new Minecraft object.
@@ -15,7 +18,7 @@ class Minecraft {
    * @param {string} host the host
    * @param {number} port the port
    */
-  constructor(host="localhost", port=4712) {
+  constructor(host=APIHOST, port=APIPORT) {
     assert(host, 'host is required');
     assert(port, 'port is required');
 

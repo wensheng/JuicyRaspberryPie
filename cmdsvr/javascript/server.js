@@ -1,7 +1,8 @@
 const path = require("path")
 const net = require("net")
 const fs = require("fs")
-const port = 4732
+const SVRHOST = process.env.svrhost || 'localhost'
+const SVRPORT = process.env.svrport? parseInt(process.env.svrport): 4732
 
 var pplugins_path = path.join(__dirname, "pplugins")
 
@@ -15,6 +16,7 @@ fs.readdirSync(pplugins_path).forEach(file => {
 
 
 var sockets = []
+console.log(`Starting command server on ${SVRHOST}:${SVRPORT}`)
 net.createServer(function(socket){
   sockets.push(socket)
   socket.setNoDelay()
@@ -29,7 +31,7 @@ net.createServer(function(socket){
       s = "Available commands: " + Object.keys(global.ppf).join() + '\n'
       socket.write(Buffer.from(s))
     }else if(cmd == 'help'){
-      s = 'JuicyRaspberryPie: put your Python files in pplugins, then "/py cmd" to call your function, "/py list" to see list of commands\n'
+      s = 'JuicyRaspberryPie: put your Python files in pplugins, then "/p cmd" to call your function, "/p list" to see list of commands\n'
       socket.write(Buffer.from(s))
     }else if (cmd == 'shutdownserver'){
       s = 'Shutdown request received, server will be shutdown.\n'
@@ -50,7 +52,7 @@ net.createServer(function(socket){
   socket.on('error', err => {
     console.log(`Error: ${err}`)
   })
-}).listen(port, 'localhost')
+}).listen(SVRPORT, 'localhost')
 
 
 //global.ppf['cube'](5, 'stone')

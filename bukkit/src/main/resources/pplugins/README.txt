@@ -1,7 +1,6 @@
 Put your Python files here.
 In your Python file, define functions with doctring that starts with "_mcp", 
 or, decorate them with "@mcpy", these functions will then be available in Minecraft as "p command".
-(Or "py command" if you use mod)
 
 For example, you define 2 functions: hi and blk as follow:
 

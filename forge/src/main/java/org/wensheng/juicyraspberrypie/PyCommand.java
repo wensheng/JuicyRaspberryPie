@@ -22,7 +22,7 @@ public class PyCommand {
 
 	static void register(CommandDispatcher<CommandSource> dispatcher) {
 		dispatcher.register(
-				Commands.literal("py").then(
+				Commands.literal("p").then(
 						Commands.argument("arg", MessageArgument.message())
 								.executes(PyCommand::executeCommand)
 				)
@@ -52,7 +52,7 @@ public class PyCommand {
 		} catch (Exception e) {
 			ITextComponent message = new StringTextComponent("No Python Command Server available");
 			ctx.getSource().sendFeedback(message, true);
-			logger.error("No py command server available.");
+			logger.error("No JRP command server available.");
 		}
 
 		if(!replyString.equals("ok")){

@@ -21,8 +21,6 @@ import yaml
 
 plugin_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, plugin_dir)
-from mcpi.minecraft import Minecraft
-
 
 config = {}
 with open(os.path.join(plugin_dir, "config.yml")) as f:
@@ -74,10 +72,6 @@ def register_commands():
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
-    def chat(self, msg="Whaaat?!"):
-        mc = Minecraft.create()
-        mc.postToChat(msg)
-
     def handle(self):
         global KEEP_RUNNING
         self.data = self.request.recv(1024)
@@ -86,22 +80,19 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         cmd = args[0]
         if cmd == "list":
             s = "Available commands: %s" % (" ".join(list(mc_functions.keys())))
-            threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
-            self.request.sendall("ok".encode('utf-8'))
+            self.request.sendall(s.encode('utf-8'))
         elif cmd == "help":
             s = ('JuicyRaspberryPie: put your Python files in pplugins, '
                  'then "/p cmd" to call your function, "/p list" to see list of commands')
-            threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
-            self.request.sendall("ok".encode('utf-8'))
+            self.request.sendall(s.encode('utf-8'))
         elif cmd == "update":
             register_commands()
             s = 'found commands: ' + " ".join(mc_functions)
-            threading.Thread(target=self.chat, args=(s,), kwargs={}).start()
-            self.request.sendall("ok".encode('utf-8'))
+            self.request.sendall(s.encode('utf-8'))
         elif cmd == "shutdownserver":
             print("got shutdown request, signing off")
             KEEP_RUNNING = False
-            self.request.sendall("ok".encode('utf-8'))
+            self.request.sendall("Command server received the request and will be shutdown".encode('utf-8'))
         elif cmd in mc_functions:
             threading.Thread(target=mc_functions[cmd], args=tuple(args[1:]), kwargs={}).start()
             self.request.sendall("ok".encode('utf-8'))

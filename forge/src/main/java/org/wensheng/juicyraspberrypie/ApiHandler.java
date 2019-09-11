@@ -35,10 +35,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Logger;
 
 import java.io.PrintWriter;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class ApiHandler {
     private static final float TOO_SMALL = (float) 1e-9;
@@ -197,13 +194,17 @@ public class ApiHandler {
             world.spawnParticle(pt, pos.getX(), pos.getY(), pos.getZ(), count, 0, 0, 0, speed);
         } else if (cmd.equals("world.getNearbyEntities")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
-            BlockPos pos1 = new BlockPos(pos.getX() - 10, pos.getY() - 5, pos.getZ() - 10);
-            BlockPos pos2 = new BlockPos(pos.getX() + 10, pos.getY() + 5, pos.getZ() + 10);
+            int nearby_distance = 10;
+            if(args.length > 3){
+                nearby_distance = Integer.parseInt(args[3]);
+            }
+            BlockPos pos1 = new BlockPos(pos.getX() - nearby_distance, pos.getY() - 5, pos.getZ() - nearby_distance);
+            BlockPos pos2 = new BlockPos(pos.getX() + nearby_distance, pos.getY() + 5, pos.getZ() + nearby_distance);
             AxisAlignedBB aabb = new AxisAlignedBB(pos1, pos2);
             List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, aabb);
             StringBuilder sb = new StringBuilder();
             for(Entity entity:entities){
-                sb.append(entity.getClass().toString()).append(":").append(entity.getUniqueID()).append("|");
+                sb.append(entity.getClass().toString()).append(":").append(entity.getUniqueID()).append(",");
             }
             sb.setLength(sb.length()-1);
             sendLine(sb.toString());
@@ -318,7 +319,7 @@ public class ApiHandler {
                 sendLine("No entity ID");
                 return;
             }
-            Entity e = world.getEntityByID(Integer.parseInt(args[0]));
+            Entity e = world.getEntityByUuid(UUID.fromString(args[0]));
             String[] newargs = Arrays.copyOfRange(args, 1, args.length);
             entityCommand(e, cmd.substring(7), newargs);
         }
