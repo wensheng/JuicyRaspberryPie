@@ -1,49 +1,36 @@
 # JuicyRaspberryPie
-Programming Minecraft with Python!
+Programming Minecraft with Python, Javascript, or any language!
 
-JuicyRaspberryPie implements MinecraftPi modding API for Bukkit server or Minecraft Forge mod .
+JuicyRaspberryPie provides a modding API plugin/mod for Spigot(Bukkit) server or Minecraft Forge.  It also includes a command server that makes programming Minecraft much easier.  It's a great tool to teach kids programming.
 
-An integrated Python command server is added to make Python programming much easier.
+## Installation
 
-JuicyRaspberryPie is based on [*RaspberryJuice*](https://github.com/zhuowei/RaspberryJuice)
+**For Spigot(Bukkit)**
 
-youtube demo (note this video is somewhat outdated, for example cube command should be "/p cube 5 gold_block", it now use block name instead of ID):
+Download juicyraspberrypie-1.x.x.jar from [releases](https://github.com/wensheng/JuicyRaspberryPie/releases) and put it in your server `plugins` folder.  Start the Spigot server.  
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=qhDLa2muivY&t=15m" target="_blank"><img src="http://img.youtube.com/vi/qhDLa2muivY/0.jpg" alt="youtube" width="240" height="180" border="10" /></a>
+A detailed installation walk-through video can be found here(todo).
 
-## Pre-requisites:
+**For Minecraft Forge**
 
-1. Spigot or CraftBukkit server is installed.  Download Spigot from https://getbukkit.org/download/spigot
-2. Python 3 is installed
+Download juicyraspberrypie-forge-1.x.x.jar from [releases](https://github.com/wensheng/JuicyRaspberryPie/releases) and put it in your Minecraft `mods` folder.  Start Minecraft with Forge, choose `SinglePlayer`, then select a world.
 
-## How to use
+A detailed installation walk-through video can be found here(todo).
 
-1. Download juicyraspberrypie-1.x.x.jar from [releases](https://github.com/wensheng/JuicyRaspberryPie/releases) and put it in plugins folder.  Start the Spigot/CraftBukkit server. A **juicyraspberrypie** folder should be created.
-2. Inside the **juicyraspberrypie** folder, change config.yml to point pyexe and pypath to the correction location on your system.  See config.yml below.
-3. Put your Python files in **pplugins** folder and you're ready to do.  Your Python functions just need to have doctrings that starts with "_mcpy", or decorated with "@mcpy", see pplugins/README.txt for details.
+## Documentation
 
-## config.yml
+Below are detailed documentation, each has one or more instructional videos.
 
-1. On Linux, the default should be fine. 
-2. On Windows, your "pyexe" should be "python.exe", and your pypath should be ""C:\\Users\\yourusername\\Anaconda3" or "C:\\Python37" depending on where you installed Python.  Note the two backslashes!
-3. If you use Mac and you installed python3 with "brew install python3", then your pyexe would be "python3" and your pypath would mostly likely be "/usr/local/bin".
+1. [doc/using-api-spigot.md](How to use API on Spigot)
+1. [doc/using-api-forge.md](How to use API on Forge)
+1. [doc/comsvr-spigot.md](How to program command server on Spigot)
+1. [doc/comsvr-forge.md](How to program command server on Forge)
+1. [doc/develop-api.md](How to develop API)
+1. [doc/develop-spigot.md](How to develop Spigot API plugin) (for contributors to JuicyRaspberryPie Spigot plugin)
+1. [doc/develop-forge.md](How to develop Forge API mod) (for contributors to JuicyRaspberryPie Forge mod)
 
-## How to develop
+## Info
 
-**Bukkit Server**
-
-You need maven and jdk8.
-
-In bukkit folder, do "./buld.sh 1.14.4", "1.14.4" is the Bukkit version number, specify whatever version you need.
-
-Tips: 
-
-1. set "allow-nether=false" in server.properties, set "allow-end: false" in bukkit.yml, so server starts up quickly.
-2. in %appdata%/.minecraft/options.txt change "pauseOnLostFocus"  to false so minecraft doesn't pause when you do interactive programming
-3. issue "/gamerule doDaylightCycle false" to disable day/night cycle
-
-**Forge Mod**
-
-Import forge folder import IntelliJ.
+JuicyRaspberryPie API is based on MinecraftPi modding API.  Its Spigot/Bukkit plugin implementation is based on [*RaspberryJuice*](https://github.com/zhuowei/RaspberryJuice)
 
 ![juicy](misc/images/juicy.png)
