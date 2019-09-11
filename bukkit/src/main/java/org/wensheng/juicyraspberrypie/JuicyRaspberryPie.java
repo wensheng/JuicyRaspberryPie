@@ -11,6 +11,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -233,6 +234,13 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         }
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event){
+        for (RemoteSession session: sessions) {
+            session.handlePlayerQuitEvent();
+        }
+    }
+
     /** called when a new session is established. */
     void handleConnection(RemoteSession newSession) {
         if (checkBanned(newSession)) {
@@ -245,15 +253,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         }
     }
 
-    Player getNamedPlayer(String name) {
-        if (name == null) return null;
-        for(Player p: Bukkit.getOnlinePlayers()){
-            if(name.equalsIgnoreCase(p.getName())){
-                return p;
-            }
-        }
-        return null;
-    }
+
 
     private boolean checkBanned(RemoteSession session) {
         Set<String> ipBans = getServer().getIPBans();

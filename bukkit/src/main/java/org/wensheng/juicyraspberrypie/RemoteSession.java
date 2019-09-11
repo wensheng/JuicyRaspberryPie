@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 class RemoteSession {
     boolean pendingRemoval = false;
@@ -29,8 +30,8 @@ class RemoteSession {
     private BufferedWriter out;
     private Thread inThread;
     private Thread outThread;
-    private ArrayDeque<String> inQueue = new ArrayDeque<String>();
-    private final ArrayDeque<String> outQueue = new ArrayDeque<String>();
+    private ArrayDeque<String> inQueue = new ArrayDeque<>();
+    private final ArrayDeque<String> outQueue = new ArrayDeque<>();
     private boolean running = true;
     private JuicyRaspberryPie plugin;
     private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<>();
@@ -43,7 +44,7 @@ class RemoteSession {
         this.socket = socket;
         this.plugin = plugin;
         init();
-        origin = plugin.getServer().getWorlds().get(0).getSpawnLocation();
+        setPlayerAndOrigin();
     }
 
     private void init() throws IOException {
@@ -54,6 +55,7 @@ class RemoteSession {
         this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         startThreads();
         plugin.logger.info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
+
     }
 
     private void startThreads() {
@@ -73,6 +75,46 @@ class RemoteSession {
 
     void queueChatPostedEvent(AsyncPlayerChatEvent event) {
         chatPostedQueue.add(event);
+    }
+
+    void handlePlayerQuitEvent(){
+        // one player quit should not affect other sessions, so no
+        //setPlayerAndOrigin();
+    }
+
+    private void setPlayerAndOrigin(){
+        int world_dimension = 0;
+        Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        if(players.size() > 0) {
+            /*
+            Player firstPlayer, opPlayer = null;
+            firstPlayer = players.iterator().next();
+            for (Player player : players) {
+                if (player.isOp()) {
+                    opPlayer = player;
+                }
+            }
+            if(opPlayer != null){
+                attachedPlayer = opPlayer;
+            }else{
+                attachedPlayer = firstPlayer;
+            }
+            */
+            attachedPlayer = players.iterator().next();
+            world_dimension = attachedPlayer.getWorld().getEnvironment().ordinal();
+        }
+        origin = plugin.getServer().getWorlds().get(world_dimension).getSpawnLocation();
+    }
+
+    private boolean setPlayerAndOrigin(String playerName){
+        for(Player p: Bukkit.getOnlinePlayers())
+            if(playerName.equalsIgnoreCase(p.getName())){
+                attachedPlayer = p;
+                int d = attachedPlayer.getWorld().getEnvironment().ordinal();
+                origin = plugin.getServer().getWorlds().get(d).getSpawnLocation();
+                return true;
+        }
+        return false;
     }
 
     void queueProjectileHitEvent(ProjectileHitEvent event){
@@ -162,7 +204,7 @@ class RemoteSession {
                 bdr.deleteCharAt(bdr.length()-1);
                 send(bdr.toString());
             } else if (c.equals("world.getPlayerId")) {
-                Player p = plugin.getNamedPlayer(args[0]);
+                Player p = getNamedPlayer(args[0]);
                 if (p != null) {
                     send(p.getUniqueId());
                 } else {
@@ -334,6 +376,10 @@ class RemoteSession {
                 handleEntityCommand(c.substring(7), args, true);
             } else if(c.startsWith("entity.")){
                 handleEntityCommand(c.substring(7), args, false);
+            } else if(c.startsWith("setPlayer")){
+                if(!setPlayerAndOrigin(args[0])){
+                    send("Fail");
+                }
             } else {
                 plugin.getLogger().warning(c + " is not supported.");
                 send("Fail");
@@ -351,12 +397,12 @@ class RemoteSession {
     private void handleEntityCommand(String c, String[] args, boolean entityIsPlayer) {
         Entity entity;
         if(entityIsPlayer) {
-            String name = "";
             //if((c.startsWith("set") && args.length > 3) || args.length == 1) {
             if(args.length > 3 || args.length == 2 || (c.startsWith("get") && args.length == 1)) {
-                name = args[0];
+                entity = getNamedPlayer(args[0]);
+            }else {
+                entity = getCurrentPlayer();
             }
-            entity = getCurrentPlayer(name);
         }else{
             entity = plugin.getServer().getEntity(UUID.fromString(args[0]));
         }
@@ -499,36 +545,23 @@ class RemoteSession {
         Location loc = new Location(world, x, y, z);
         updateBlock(world, loc, blockType, blockFace);
     }
-    
+
+    Player getNamedPlayer(String name) {
+        if (name == null) return null;
+        for(Player p: Bukkit.getOnlinePlayers()){
+            if(name.equalsIgnoreCase(p.getName())){
+                return p;
+            }
+        }
+        return null;
+    }
+
     // gets the current player
-    private Player getCurrentPlayer(String name) {
-        if(!name.equals("")){
-            return plugin.getNamedPlayer(name);
+    private Player getCurrentPlayer() {
+        if(attachedPlayer != null){
+            return attachedPlayer;
         }
-
-        //TODO: Minecraft-Pi is mostly single player, not sure what to do here if there are
-        // multiple players
-        Player firstPlayer, opPlayer = null;
-        Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-        if(players.size() > 0) {
-            firstPlayer = players.iterator().next();
-            for (Player player : players) {
-                if (player.isOp()) {
-                    opPlayer = player;
-                }
-            }
-            if(opPlayer != null){
-                attachedPlayer = opPlayer;
-            }else{
-                attachedPlayer = firstPlayer;
-            }
-            int d = attachedPlayer.getWorld().getEnvironment().ordinal();
-            origin = plugin.getServer().getWorlds().get(d).getSpawnLocation();
-
-        }else{
-            attachedPlayer = null;
-        }
-
+        setPlayerAndOrigin();
         return attachedPlayer;
     }
 
