@@ -1,18 +1,11 @@
 package org.wensheng.juicyraspberrypie;
 
-import java.io.*;
-import java.util.*;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
-import org.bukkit.Particle;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -20,7 +13,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+
+import java.io.*;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.UUID;
 
 class RemoteSession {
     boolean pendingRemoval = false;
@@ -151,6 +150,9 @@ class RemoteSession {
         line = line.trim();
         String methodName = line.substring(0, line.indexOf("("));
         String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",\\s*");
+        if(args.length == 1 && args[0].equals("")){
+            args = new String[0];
+        }
         handleCommand(methodName, args);
     }
 
@@ -377,8 +379,10 @@ class RemoteSession {
             } else if(c.startsWith("entity.")){
                 handleEntityCommand(c.substring(7), args, false);
             } else if(c.startsWith("setPlayer")){
-                if(!setPlayerAndOrigin(args[0])){
-                    send("Fail");
+                if(setPlayerAndOrigin(args[0])){
+                    send("true");
+                }else{
+                    send("false");
                 }
             } else {
                 plugin.getLogger().warning(c + " is not supported.");
@@ -546,7 +550,7 @@ class RemoteSession {
         updateBlock(world, loc, blockType, blockFace);
     }
 
-    Player getNamedPlayer(String name) {
+    private Player getNamedPlayer(String name) {
         if (name == null) return null;
         for(Player p: Bukkit.getOnlinePlayers()){
             if(name.equalsIgnoreCase(p.getName())){
