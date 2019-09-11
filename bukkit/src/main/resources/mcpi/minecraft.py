@@ -258,6 +258,9 @@ class Minecraft:
         """Set a world setting (setting, status). keys: world_immutable, nametags_visible"""
         self.conn.send(b"world.setting", setting, 1 if bool(status) else 0)
 
+    def setPlayer(self, name):
+        return self.conn.sendReceive(b"setPlayer", name)
+
     @staticmethod
     def create(address="localhost", port=4711, debug=False):
         if "JRP_API_HOST" in os.environ:

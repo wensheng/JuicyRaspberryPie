@@ -23,11 +23,12 @@ Below are detailed documentation, each has one or more instructional videos.
 
 1. [How to use API on Spigot](doc/using-api-spigot.md)
 1. [How to use API on Forge](doc/using-api-forge.md)
-1. [How to program command server on Spigot](doc/comsvr-spigot.md)
-1. [How to program command server on Forge](doc/comsvr-forge.md)
-1. [How to develop API](doc/develop-api.md)
-1. [How to develop Spigot API plugin](doc/develop-spigot.md) (for contributors to JuicyRaspberryPie Spigot plugin)
-1. [How to develop Forge API mod](doc/develop-forge.md) (for contributors to JuicyRaspberryPie Forge mod)
+1. [How to program command server on Spigot](doc/comsvr-spigot.md) (empty)
+1. [How to program command server on Forge](doc/comsvr-forge.md) (empty)
+2. [Python API](doc/python-api.md) (wip)
+1. [How to develop API](doc/develop-api.md) (empty)
+1. [How to develop Spigot API plugin](doc/develop-spigot.md) (for contributors to JuicyRaspberryPie Spigot plugin) (empty)
+1. [How to develop Forge API mod](doc/develop-forge.md) (for contributors to JuicyRaspberryPie Forge mod) (empty)
 
 ## Info
 

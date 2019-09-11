@@ -43,7 +43,7 @@ Find you place in Minecraft by:
 
 A panda appears right in front of your eyes.
 
-Explore [API doc](api.md) to find out more what you can do with JuicyRaspberryPie API.  
+Explore [API doc](python-api.md) to find out more what you can do with JuicyRaspberryPie API.  
 
 ## Using Python API programmably
 (todo)

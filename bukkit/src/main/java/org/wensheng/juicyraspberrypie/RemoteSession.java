@@ -401,10 +401,15 @@ class RemoteSession {
     private void handleEntityCommand(String c, String[] args, boolean entityIsPlayer) {
         Entity entity;
         if(entityIsPlayer) {
-            //if((c.startsWith("set") && args.length > 3) || args.length == 1) {
             if(args.length > 3 || args.length == 2 || (c.startsWith("get") && args.length == 1)) {
+                //getX(pid)
+                //setX(pid,a1)
+                //setX(pid,a1,a2,a3)
                 entity = getNamedPlayer(args[0]);
             }else {
+                //getX()
+                //setX(a1)
+                //setX(a1,a2,a3)
                 entity = getCurrentPlayer();
             }
         }else{
@@ -656,15 +661,12 @@ class RemoteSession {
             while (running) {
                 try {
                     String newLine = in.readLine();
-                    //System.out.println(newLine);
                     if (newLine == null) {
                         running = false;
                     } else {
                         inQueue.add(newLine);
-                        //System.out.println("Added to in queue");
                     }
                 } catch (Exception e) {
-                    // if its running raise an error
                     if (running) {
                         e.printStackTrace();
                         running = false;
