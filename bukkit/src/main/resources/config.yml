@@ -1,5 +1,5 @@
 api_port: 4711
-start_cmdsvr: true
+start_cmdsvr: false
 cmdsvr_host: "localhost"
 cmdsvr_port: 4731
 pyexe: "/usr/bin/python3"
