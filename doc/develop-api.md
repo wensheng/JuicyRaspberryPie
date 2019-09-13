@@ -2,13 +2,13 @@
 
 When we say API here, we really means client API library, because a application programming interface (API) is on the server side.  We usually make API calls to server using a client library, and we often (mistakenly) just refer client library as API.
 
-Minecraft with JuicyRaspberryPie exposes API through a socket server.  When one make API calls, she first acquire a socket to the server, then sends and receives information through the socket to/from the server.  A client library make it much easier to use the socket and hide a lot of complexity.
+Minecraft with JuicyRaspberryPie exposes API through a socket server.  When one make API calls, she first acquires a socket to the server, then sends and receives information through the socket to/from the server.  A client library make it much easier to use the socket and hide a lot of complexity.
 
-The API can be accessed without any library because it's a standard socket.  You can use a program call Telnet to access it.
+The API can be accessed without any library because it's a standard socket.  You can use a program called `Telnet` to access it.
 
 ## Using Telnet to access JuicyRaspberryPie API
 
-The socket server in JuicyRaspberryPie Spigot plugin by default listen at port 4711, the one in Forge listen at port 4712.
+The socket server in JuicyRaspberryPie Spigot plugin by default listen on port 4711, the one in Forge listen on port 4712.
 
 On Linux or Mac, login to Minecraft, then open a terminal window, and type:
 
@@ -28,6 +28,8 @@ Now type any API commands, for example:
     world.spawnParticle(64,-5,-24,smoke,1000,0.01)
     
 The first line get the player position.  The second line is the result  we received from the server. The third line create a block of TNT on your east side. The 4th line spawn a puffer fish on your south (your fish will die shortly if you spawn it on land).  The 5th line create a cloud of smoke on your south-east.
+
+Press Ctrl+] (control and right-square-bracket), the `quit` to exit the Telnet program.
 
 ## Client API library
 

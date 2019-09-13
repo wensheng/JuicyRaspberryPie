@@ -58,3 +58,4 @@ API tested:
 * mc.event.pollChatPosts - events.chat.posts
 * mc.event.pollProjectileHits - events.projectile.hits (todo)
 * mc.event.clearAll - events.clear
+* mc.setPlayer - setPlayer (todo, Bukkit only)

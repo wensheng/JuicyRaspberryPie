@@ -1,6 +1,6 @@
 # How to use JuicyRaspberryPie API on Forge
 
-(**Please note I use  version 1.14.4, which at the time of this writing is the latest version of Spigot. You should replace `1.14.4` with whatever version you want to use**)
+(**Please note as an example I use version 1.14.4, which at the time of this writing is the latest version of Forge. You should replace `1.14.4` with whatever version you want to use**)
 
 ## Forge Installation
 1. Go to https://files.minecraftforge.net/, select 1.14.4 from left menu pane.

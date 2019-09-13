@@ -19,7 +19,7 @@ A detailed installation walk-through video can be found here(todo).
 
 ## Documentation
 
-Below are detailed documentation, each has one or more instructional videos.
+Below are detailed documentation, each has(*will have*) one or more instructional videos.
 
 1. [How to use API on Spigot](doc/using-api-spigot.md)
 1. [How to use API on Forge](doc/using-api-forge.md)

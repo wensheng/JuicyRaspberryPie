@@ -1,5 +1,5 @@
 # How to program command server on Forge
-JuicyRaspberryPie plugin provides a "/p" command. When a player issue a "/p" command inside Minecraft, the plugin will try to send that command to a command server.   the command server interprets incoming commands, then send API request back to Minecraft for it to execute.
+JuicyRaspberryPie mod provides a "/p" command. When a player issue a "/p" command inside Minecraft, the mod will try to send that command to a command server.   the command server interprets incoming commands, then send API request back to Minecraft for it to execute.
 
 ## Setting up a command server
 JuicyRaspberryPie Forge mod, unlike JuicyRaspberryPie Spigot plugin, does not have a embedded command server. To set up a command server, clone or download https://github.com/wensheng/JuicyRaspberryPie. In JuicyRaspberryPie folder, navigate to bukkit/src/main, copy `resources` folder to anywhere you like, maybe rename it to something you can remember.  Open command window, `cd` to the folder.
