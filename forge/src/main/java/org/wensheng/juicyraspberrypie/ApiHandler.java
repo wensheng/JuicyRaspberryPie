@@ -172,7 +172,7 @@ public class ApiHandler {
             if(e != null) {
                 e.setPosition(pos.getX(), pos.getY(), pos.getZ());
                 world.addEntity(e);
-                sendLine(e.getEntityId());
+                sendLine(e.getUniqueID().toString());
             }else{
                 sendLine("Error spawning entity");
             }
