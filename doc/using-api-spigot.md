@@ -4,7 +4,7 @@
 
 ## Spigot Installation
 1. Download [BuildTools.jar](https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar) from [this page](https://hub.spigotmc.org/jenkins/job/BuildTools/)
-2. Open a command window, run `java -jar BuildTools.jar --rev 1.14.4
+2. Open a command window, run `java -jar BuildTools.jar --rev 1.14.4`
 3. Some files will be created, among them we are interested in spigot-1.14.4.jar, copy it to a designated folder, rename it to just `spigot.jar`
 4. Create a script/batch file, for example `run.bat`, with following content:
    `java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -jar spigot.jar`
@@ -56,4 +56,4 @@ Explore [API doc](python-api.md) to find out more what you can do with JuicyRasp
 1. in %appdata%/.minecraft/options.txt change "pauseOnLostFocus"  to false so Minecraft doesn't pause when you move away from Minecraft.
 2. issue `/gamerule doDaylightCycle false` to disable day/night cycle
 3. If you don't use nether and the_end", set "allow-nether=false" in server.properties, set "allow-end: false" in bukkit.yml, so server starts up quickly.
-
+4. On windows, sometime you have error message when you start Spigot.  This happen when your command window(cmd) was set to UTF-8 encoding. The error can be ignored.  Or, do a `chcp` to check if it says 65001.  Doing a `chcp 437` then starting Spigot again will get rid of the error.

@@ -99,6 +99,35 @@ class CmdEntity(CmdPositioner):
         self.conn.send(b"entity.remove", id)
 
 
+class Entity:
+    def __init__(self, conn, entity_uuid, typeName):
+        self.p = CmdPositioner(conn, b"entity")
+        self.id = entity_uuid
+        self.type = typeName
+    def getPos(self):
+        return self.p.getPos(self.id)
+    def setPos(self, *args):
+        return self.p.setPos(self.id, args)
+    def getTilePos(self):
+        return self.p.getTilePos(self.id)
+    def setTilePos(self, *args):
+        return self.p.setTilePos(self.id, args)
+    def setDirection(self, *args):
+        return self.p.setDirection(self.id, args)
+    def getDirection(self):
+        return self.p.getDirection(self.id)
+    def setRotation(self, yaw):
+        return self.p.setRotation(self.id, yaw)
+    def getRotation(self):
+        return self.p.getRotation(self.id)
+    def setPitch(self, pitch):
+        return self.p.setPitch(self.id, pitch)
+    def getPitch(self):
+        return self.p.getPitch(self.id)
+    def remove(self):
+        self.p.conn.send(b"entity.remove", self.id)
+
+
 class CmdPlayer(CmdPositioner):
     """Methods for the host (Raspberry Pi) player"""
     def __init__(self, connection):
@@ -215,7 +244,7 @@ class Minecraft:
 
     def spawnEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
-        return self.conn.sendReceive(b"world.spawnEntity", *args)
+        return Entity(self.conn, self.conn.sendReceive(b"world.spawnEntity", *args), args[3])
 
     def spawnParticle(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
@@ -223,7 +252,11 @@ class Minecraft:
 
     def getNearbyEntities(self, *args):
         """get nearby entities (x,y,z)"""
-        return self.conn.sendReceive(b"world.getNearbyEntities", *args).split(",")
+        entities = []
+        for i in self.conn.sendReceive(b"world.getNearbyEntities", *args).split(","):
+            name, eid = i.split(":")
+            entities.append(Entity(self.conn, eid, name))
+        return entities
 
     def removeEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
