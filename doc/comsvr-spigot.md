@@ -1,5 +1,7 @@
 # How to program command server on Spigot
 
+Instructional video: https://youtu.be/gUl2TidJaSk
+
 JuicyRaspberryPie plugin provides a "/p" command. When a player issue a "/p" command inside Minecraft, the plugin will try to send that command to a command server.   the command server interprets incoming commands, then send API request back to Minecraft for it to execute.
 
 JuicyRaspberryPie ships with an embedded command server, by default, it's not turned on.  To turn it on, edit the file plugins/JuicyRaspberryPie/config.yml.  Changed `start_cmdsvr: false` to `start_cmdsvr: true`; also make sure `pyexe` point to correct python executable in your system.  Reload Spigot, the embedded command server will be turned on. 

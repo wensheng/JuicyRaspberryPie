@@ -9,7 +9,7 @@ JuicyRaspberryPie provides a modding API plugin/mod for Spigot(Bukkit) server or
 
 Download juicyraspberrypie-1.x.x.jar from [releases](https://github.com/wensheng/JuicyRaspberryPie/releases) and put it in your server `plugins` folder.  Start the Spigot server.  
 
-A detailed installation walk-through video can be found here(todo).
+A detailed installation walk-through video: https://youtu.be/6-bqPcMoZ8M
 
 **For Minecraft Forge**
 

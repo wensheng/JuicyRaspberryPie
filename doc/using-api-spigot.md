@@ -2,6 +2,8 @@
 
 (**Please note as an example I use version 1.14.4, which at the time of this writing is the latest version of Spigot. You should replace `1.14.4` with whatever version you want to use**)
 
+Installation video: https://youtu.be/6-bqPcMoZ8M
+
 ## Spigot Installation
 1. Download [BuildTools.jar](https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar) from [this page](https://hub.spigotmc.org/jenkins/job/BuildTools/)
 2. Open a command window, run `java -jar BuildTools.jar --rev 1.14.4`
