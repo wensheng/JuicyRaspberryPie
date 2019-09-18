@@ -2,6 +2,8 @@
 
 (**Please note as an example I use version 1.14.4, which at the time of this writing is the latest version of Forge. You should replace `1.14.4` with whatever version you want to use**)
 
+Installation video: https://youtu.be/WoTxVFbr7_s
+
 ## Forge Installation
 1. Go to https://files.minecraftforge.net/, select 1.14.4 from left menu pane.
 2. Click `Installer` to download forge installer.
