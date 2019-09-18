@@ -1,4 +1,7 @@
 # How to program command server on Forge
+
+Instructional video: https://youtu.be/Bt3ayOVazu0
+
 JuicyRaspberryPie mod provides a "/p" command. When a player issue a "/p" command inside Minecraft, the mod will try to send that command to a command server.   the command server interprets incoming commands, then send API request back to Minecraft for it to execute.
 
 ## Setting up a command server
