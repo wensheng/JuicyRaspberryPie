@@ -12,12 +12,13 @@ Let's look at an example.
 
 You have following function `spawnDonkey(count)` defined in a file inside pplugins folder:
 
-```def spawnDonkey(count):
-       "_mcp:"
-       mc = Minecraft.create()
-       pos = mc.player.getTilePos()
-       for i in range(count):
-           mc.spawnEntity(pos.x+2, pos.y, pos.z, 'donkey')
+```
+def spawnDonkey(count):
+   "_mcp:"
+   mc = Minecraft.create()
+   pos = mc.player.getTilePos()
+   for i in range(count):
+       mc.spawnEntity(pos.x+2, pos.y, pos.z, 'donkey')
 ```
 
 The command server registers `spawnDonkey` function when it runs.
