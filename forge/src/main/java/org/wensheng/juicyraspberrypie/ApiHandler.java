@@ -1,9 +1,17 @@
 package org.wensheng.juicyraspberrypie;
 
 
-import net.minecraft.block.*;
+//import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.StandingSignBlock;
+import net.minecraft.block.WallSignBlock;
+import net.minecraft.block.DirectionalBlock;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.item.ItemStack;
@@ -13,17 +21,17 @@ import net.minecraft.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.SignTileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector2f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
@@ -52,7 +60,8 @@ public class ApiHandler {
     ApiHandler() {
         // Only worry about single player world for now
         final MinecraftServer ms = ServerLifecycleHooks.getCurrentServer();
-        this.world = DimensionManager.getWorld(ms, DimensionType.OVERWORLD, false,false);
+        //this.world = DimensionManager.getWorld(ms, DimensionType.OVERWORLD, false,false);
+        this.world = ms.overworld();
     }
 
     @SubscribeEvent
@@ -145,11 +154,12 @@ public class ApiHandler {
             Block block = blockFromName(args[3]);
             BlockState bs;
             if(args.length > 4){
-                bs = block.getDefaultState().with(DirectionalBlock.FACING, getFacing(Integer.parseInt(args[4])));
+                bs = block.defaultBlockState();
+                bs = bs.setValue(DirectionalBlock.FACING, getFacing(Integer.parseInt(args[4])));
             }else{
-                bs = block.getDefaultState();
+                bs = block.defaultBlockState();
             }
-            world.setBlockState(pos, bs, 2);
+            world.setBlock(pos, bs, 2);
         } else if (cmd.equals("world.getBlocks")) {
             BlockPos pos1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
             BlockPos pos2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
@@ -157,22 +167,23 @@ public class ApiHandler {
         } else if (cmd.equals("world.setBlocks")) {
             BlockPos pos1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
             BlockPos pos2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
-            BlockState bs = blockFromName(args[6]).getDefaultState();
+
+            BlockState bs = blockFromName(args[6]).defaultBlockState();
             //int facing = args.length > 7 ? Integer.parseInt(args[7]) : 0;
             setCuboid(world, pos1, pos2, bs);
         } else if (cmd.equals("world.getPlayerId")) {
-            sendLine(player.getUniqueID().toString());
+            sendLine(player.getUUID().toString());
         } else if (cmd.equals("world.getPlayerIds")) {
             // single-player world, this command doesn't make sense
-            sendLine(player.getUniqueID().toString());
+            sendLine(player.getUUID().toString());
         } else if (cmd.equals("world.spawnEntity")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
             EntityType et = entityTypeFromName(args[3]);
             Entity e = et.create(world);
             if(e != null) {
-                e.setPosition(pos.getX(), pos.getY(), pos.getZ());
-                world.addEntity(e);
-                sendLine(e.getUniqueID().toString());
+                e.setPos(pos.getX(), pos.getY(), pos.getZ());
+                world.addFreshEntity(e);
+                sendLine(e.getStringUUID());
             }else{
                 sendLine("Error spawning entity");
             }
@@ -191,7 +202,7 @@ public class ApiHandler {
             }else{
                 speed = 1.0f;
             }
-            world.spawnParticle(pt, pos.getX(), pos.getY(), pos.getZ(), count, 0, 0, 0, speed);
+            world.addParticle(pt, pos.getX(), pos.getY(), pos.getZ(), 0, 0, 0);
         } else if (cmd.equals("world.getNearbyEntities")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
             int nearby_distance = 10;
@@ -201,10 +212,11 @@ public class ApiHandler {
             BlockPos pos1 = new BlockPos(pos.getX() - nearby_distance, pos.getY() - 5, pos.getZ() - nearby_distance);
             BlockPos pos2 = new BlockPos(pos.getX() + nearby_distance, pos.getY() + 5, pos.getZ() + nearby_distance);
             AxisAlignedBB aabb = new AxisAlignedBB(pos1, pos2);
-            List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, aabb);
+            //List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, aabb);
+            List<LivingEntity> entities = world.getNearbyEntities(LivingEntity.class, EntityPredicate.DEFAULT, player, aabb);
             StringBuilder sb = new StringBuilder();
-            for(Entity entity:entities){
-                sb.append(entity.getClass().toString()).append(":").append(entity.getUniqueID()).append(",");
+            for(LivingEntity entity:entities){
+                sb.append(entity.getClass().toString()).append(":").append(entity.getStringUUID()).append(",");
             }
             sb.setLength(sb.length()-1);
             sendLine(sb.toString());
@@ -214,7 +226,7 @@ public class ApiHandler {
             int highest = -32;
             BlockPos pos = new BlockPos(x, 0, z);
             for(int y = 255; y > highest; y--){
-                if(!world.getBlockState(pos.add(0, y, 0)).getBlock().equals(Blocks.AIR)){
+                if(!world.getBlockState(pos.above(y)).getBlock().equals(Blocks.AIR)){
                     highest = y;
                     break;
                 }
@@ -229,24 +241,26 @@ public class ApiHandler {
             int facing = Integer.parseInt(args[4]);
             BlockState bs;
             if(block.toString().contains("_wall_sign")){
-                bs = block.getDefaultState().with(WallSignBlock.FACING, getFacing(facing));
-
+                bs = block.defaultBlockState();
+                bs = bs.setValue(WallSignBlock.FACING, getFacing(facing));
             }else {
-                bs = block.getDefaultState().with(StandingSignBlock.ROTATION, facing);
+                bs = block.defaultBlockState();
+                bs = bs.setValue(StandingSignBlock.ROTATION, facing);
             }
-            world.setBlockState(pos, bs, 3);
+            world.setBlock(pos, bs, 3);
             if(bs.hasTileEntity()) {
                 SignTileEntity tile = (SignTileEntity) bs.createTileEntity(world);
                 if(tile != null) {
                     for (int i = 0; i < 4 && i < (args.length - 5); i++) {
-                        tile.signText[i] = new StringTextComponent(args[i + 5]);
+                        tile.setMessage(i, new StringTextComponent(args[i + 5]));
                     }
-                    tile.setPos(pos);
-                    tile.markDirty();
-                    world.addTileEntity(tile);
+                    tile.setPosition(pos);
+                    // TODO:
+                    //tile.markDirty();
+                    world.addBlockEntity(tile);
                     // this is beyond ridiculous
-                    IChunk chunk = world.getChunk(pos);
-                    chunk.addTileEntity(pos, tile);
+                    //IChunk chunk = world.getChunk(pos);
+                    //chunk.addTileEntity(pos, tile);
                 }
             }
         } else if(cmd.equals("chat.post")){
@@ -254,9 +268,8 @@ public class ApiHandler {
             for(String arg: args){
                 sb.append(arg).append(",");
             }
-            // because single player, no need to broadcast
-            //player.getServer().getPlayerList().sendPacketToAllPlayers(...);
-            player.sendMessage(new StringTextComponent(sb.toString()));
+            // because single player, send to herself
+            player.sendMessage(new StringTextComponent(sb.toString()), player.getUUID());
         } else if (cmd.startsWith("events.block.hits")) {
             StringBuilder sb = new StringBuilder();
             PlayerInteractEvent event;
@@ -267,7 +280,7 @@ public class ApiHandler {
                 sb.append(",");
                 sb.append(event.getFace().getName());
                 sb.append(",");
-                sb.append(event.getPlayer().getUniqueID());
+                sb.append(event.getPlayer().getUUID());
                 sb.append("|");
             }
             if(sb.length()>0) {
@@ -279,11 +292,12 @@ public class ApiHandler {
             ProjectileImpactEvent event;
             while((event = projectileHitQueue.poll())!= null){
                 ArrowEntity arrow = (ArrowEntity) event.getEntity();
-                BlockPos pos = arrow.getPosition();
+                BlockPos pos = arrow.blockPosition();
                 sb.append(blockPosToRelative(pos)).append(",");
-                Entity shooter = arrow.getShooter();
+                //Entity shooter = arrow.getShooter();
+                Entity shooter = arrow.getOwner();
                 if(shooter != null) {
-                    sb.append(shooter.getUniqueID().toString()).append(",");
+                    sb.append(shooter.getStringUUID()).append(",");
                 }else{
                     sb.append("Nobody");
                 }
@@ -319,7 +333,7 @@ public class ApiHandler {
                 sendLine("No entity ID");
                 return;
             }
-            Entity e = world.getEntityByUuid(UUID.fromString(args[0]));
+            Entity e = world.getEntity(UUID.fromString(args[0]));
             String[] newargs = Arrays.copyOfRange(args, 1, args.length);
             entityCommand(e, cmd.substring(7), newargs);
         }
@@ -424,7 +438,7 @@ public class ApiHandler {
                 for (int y = minY; y <= maxY; ++y) {
                     BlockPos pos = new BlockPos(x, y, z);
                     //world.removeTileEntity(pos);
-                    world.setBlockState(pos, bs, 2);
+                    world.setBlock(pos, bs, 2);
                 }
             }
         }
@@ -441,14 +455,14 @@ public class ApiHandler {
         }
         switch (cmd) {
             case "getPos":
-                sendLine(encodeVec3(entity.getPositionVector()));
+                sendLine(encodeVec3(entity.position()));
                 break;
             case "setPos":
                 entitySetPos(entity, args);
                 break;
             case "getTile": {
-                Vec3d pos = encodeVec3(entity.getPositionVector());
-                sendLine("" + trunc(pos.getX()) + "," + trunc(pos.getY()) + "," + trunc(pos.getZ()));
+                Vector3d pos = encodeVec3(entity.position());
+                sendLine("" + trunc(pos.x()) + "," + trunc(pos.y()) + "," + trunc(pos.z()));
                 break;
             }
             case "setTile":
@@ -456,19 +470,24 @@ public class ApiHandler {
                 entitySetPos(entity, args);
                 break;
             case "getRotation":
-                sendLine(normalizeAngle(entity.rotationYaw));
+                Vector2f vec = entity.getRotationVector();
+                sendLine(vec.toString());
                 break;
             case "setRotation": {
                 float angle = Float.parseFloat(args[0]);
-                entity.rotationYaw = angle;
-                entity.setRotationYawHead(angle);
+                //entity.rotationYaw = angle;
+                //entity.setRotationYawHead(angle);
+                // TODO:
                 break;
             }
             case "getPitch":
-                sendLine(normalizeAngle(entity.rotationPitch));
+                //sendLine(normalizeAngle(entity.rotationPitch));
+                // TODO:
+                sendLine(entity.getRotationVector().toString());
                 break;
             case "setPitch":
-                entity.rotationPitch = Float.parseFloat(args[0]);
+                //entity.rotationPitch = Float.parseFloat(args[0]);
+                // TODO:
                 break;
             case "getDirection":
                 entityGetDirection(entity);
@@ -477,11 +496,11 @@ public class ApiHandler {
                 entitySetDirection(entity, args);
                 break;
             case "getNameAndUUID":
-                sendLine(entity.getName() + "," + entity.getUniqueID());
+                sendLine(entity.getName() + "," + entity.getStringUUID());
                 break;
             case "remove": {
                 if(!(entity instanceof PlayerEntity)){
-                    world.removeEntity(entity);
+                    world.removeEntity(entity, false);
                 }
                 break;
             }
@@ -495,16 +514,18 @@ public class ApiHandler {
         BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
         //e.setPositionAndUpdate(pos.getX(), pos.getY(), pos.getZ());
         //setPositionAndUpdate is gone, no one mentions it
-        e.setPosition(pos.getX(), pos.getY(), pos.getZ());
+        e.setPos(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private void entitySetDirection(Entity e, String[] args) {
         double x = Double.parseDouble(args[0]);
         double y = Double.parseDouble(args[1]);
         double z = Double.parseDouble(args[2]);
-        entitySetDirection(e, x, y, z);
+        //entitySetDirection(e, x, y, z);
+        // TODO:
     }
 
+    /*
     private void entitySetDirection(Entity e, double x, double y, double z) {
         double xz = Math.sqrt(x * x + z * z);
 
@@ -516,7 +537,7 @@ public class ApiHandler {
 
         if (x * x + y * y + z * z >= TOO_SMALL * TOO_SMALL)
             e.rotationPitch = (float) (Math.atan2(-y, xz) * 180 / Math.PI);
-    }
+    }*/
 
     private void fail(String string) {
         System.err.println("Error: "+string);
@@ -534,12 +555,16 @@ public class ApiHandler {
 
     private void entityGetDirection(Entity e) {
         //sendLine(e.getLookVec());
+        /*
         double pitch = e.rotationPitch * Math.PI / 180.;
         double yaw = e.rotationYaw * Math.PI / 180.;
         double x = Math.cos(-pitch) * Math.sin(-yaw);
         double z = Math.cos(-pitch) * Math.cos(-yaw);
         double y = Math.sin(-pitch);
-        sendLine(new Vec3d(x,y,z));
+        sendLine(new Vector3d(x,y,z));
+        */
+        Direction d = e.getDirection();
+        sendLine(new Vector3d(d.getStepX(), d.getStepY(), d.getStepZ()));
     }
 
     private static int trunc(double x) {
@@ -558,8 +583,8 @@ public class ApiHandler {
         sendLine(Integer.toString(x));
     }
 
-    private void sendLine(Vec3d v) {
-        sendLine(""+v.getX()+","+v.getY()+","+v.getZ());
+    private void sendLine(Vector3d v) {
+        sendLine(""+v.x()+","+v.y()+","+v.z());
     }
 
     private void sendLine(String string) {
@@ -571,22 +596,22 @@ public class ApiHandler {
         int x = (int) Double.parseDouble(xstr);
         int y = (int) Double.parseDouble(ystr);
         int z = (int) Double.parseDouble(zstr);
-        BlockPos spawnPos = world.getSpawnPoint();
+        BlockPos spawnPos = world.getSharedSpawnPos();
         return new BlockPos(spawnPos.getX() + x, spawnPos.getY() + y, spawnPos.getZ() + z);
     }
 
-    private Vec3d encodeVec3(Vec3d pos) {
-        BlockPos spawnPos = world.getSpawnPoint();
-        return new Vec3d(pos.getX()-spawnPos.getX(), pos.getY()-spawnPos.getY(),
-                pos.getZ()-spawnPos.getZ());
+    private Vector3d encodeVec3(Vector3d pos) {
+        BlockPos spawnPos = world.getSharedSpawnPos();
+        return new Vector3d(pos.x()-spawnPos.getX(), pos.y()-spawnPos.getY(),
+                pos.z()-spawnPos.getZ());
     }
     private BlockPos decodeLocation(int x, int y, int z) {
-        BlockPos spawnPos = world.getSpawnPoint();
+        BlockPos spawnPos = world.getSharedSpawnPos();
         return new BlockPos(spawnPos.getX() + x, spawnPos.getY() + y, spawnPos.getZ() + z);
     }
 
     private String blockPosToRelative(BlockPos pos) {
-        BlockPos spawnPos = world.getSpawnPoint();
+        BlockPos spawnPos = world.getSharedSpawnPos();
         return (pos.getX() - spawnPos.getX()) + "," + (pos.getY() - spawnPos.getY()) + "," +
                 (pos.getZ() - spawnPos.getZ());
     }

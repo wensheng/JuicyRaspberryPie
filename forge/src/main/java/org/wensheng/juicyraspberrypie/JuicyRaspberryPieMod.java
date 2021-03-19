@@ -76,7 +76,8 @@ public class JuicyRaspberryPieMod
 
     private void doClientStuff(final FMLClientSetupEvent event) {
         // do something that can only be done on the client
-        LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().gameSettings);
+        //LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().gameSettings);
+        // TODO:
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event)
@@ -96,7 +97,7 @@ public class JuicyRaspberryPieMod
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
-        PyCommand.register(event.getCommandDispatcher());
+        //PyCommand.register(event.getCommandDispatcher());
         ApiHandler apiHandler = new ApiHandler();
         MinecraftForge.EVENT_BUS.register(apiHandler);
         try{

@@ -18,3 +18,4 @@ out
 build
 .gradle
 package-lock.json
+/others/

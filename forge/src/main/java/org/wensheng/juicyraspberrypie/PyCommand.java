@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 public class PyCommand {
 	private static Logger logger = JuicyRaspberryPieMod.LOGGER;
 
-	static void register(CommandDispatcher<CommandSource> dispatcher) {
+	public static void register(CommandDispatcher<CommandSource> dispatcher) {
 		dispatcher.register(
 				Commands.literal("p").then(
 						Commands.argument("arg", MessageArgument.message())
@@ -51,13 +51,13 @@ public class PyCommand {
 			socket.close();
 		} catch (Exception e) {
 			ITextComponent message = new StringTextComponent("No Python Command Server available");
-			ctx.getSource().sendFeedback(message, true);
+			ctx.getSource().sendFailure(message);
 			logger.error("No JRP command server available.");
 		}
 
 		if(!replyString.equals("ok")){
 			ITextComponent message = new StringTextComponent(replyString);
-			ctx.getSource().sendFeedback(message, true);
+			ctx.getSource().sendSuccess(message, true);
 		}
 
 		return 1;

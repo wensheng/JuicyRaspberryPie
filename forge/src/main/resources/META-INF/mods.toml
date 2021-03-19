@@ -1,5 +1,6 @@
 modLoader="javafml"
-loaderVersion="[28,)"
+loaderVersion="[34,)"
+license="MIT"
 [[mods]]
 modId="juicyraspberrypie"
 version="${file.jarVersion}"
@@ -12,7 +13,7 @@ Later.
 [[dependencies.juicyraspberrypie]] #optional
     modId="forge"
     mandatory=true
-    versionRange="[28,)"
+    versionRange="[34,)"
     # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
     ordering="NONE"
     # Side this dependency is applied on - BOTH, CLIENT or SERVER
@@ -21,6 +22,6 @@ Later.
 [[dependencies.juicyraspberrypie]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.14.4]"
+    versionRange="[1.16.3,1.17)"
     ordering="NONE"
     side="BOTH"
