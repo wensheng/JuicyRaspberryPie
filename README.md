@@ -27,7 +27,7 @@ Below are detailed documentation, each has(*will have*) one or more instructiona
 1. [How to program command server on Forge](doc/comsvr-forge.md)
 2. [Python API](doc/python-api.md)
 1. [How to develop API](doc/develop-api.md)
-1. [How to develop Spigot API plugin](doc/develop-spigot.md) (for contributors to JuicyRaspberryPie Spigot plugin) (empty)
+1. [How to develop Spigot API plugin](bukkit/README.md) (for contributors to JuicyRaspberryPie Spigot plugin)
 1. [How to develop Forge API mod](doc/develop-forge.md) (for contributors to JuicyRaspberryPie Forge mod) (empty)
 
 ## Info

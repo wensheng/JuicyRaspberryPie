@@ -41,9 +41,9 @@ Clone or download this repo, then in IntelliJ Idea, open File -> Open..., open J
 
 Edit pom.xml, change "Version" and "SpigotVersion" to 1.16.5 or whatever you're using.
 
-Open File -> "Project Structure", in "Project Settings" -> Artifacts -> "Output Directory", specify output jar location, for example: `E:\mcdev\mc1.16.5\run\plugins`
+Open File -> "Project Structure", in "Project Settings" -> Artifacts, add 'Jar (from modules with dependencies...), click "OK".  In "Output Directory", specify output jar location, for example: `E:\mcdev\mc1.16.5\run\plugins`, check `include in project build`.
 
-Click Run-Edit Configurations. In "Jar Application", create a configuration called "spigot", then "Path to Jar", enter or find spigot.jar location, for example:
+Click Run -> "Edit Configurations...", add a "Jar Application" called "spigot", then in "Path to Jar", enter or find spigot.jar location, for example:
  `E:\mcdev\mc1.16.5\run\spigot.jar`.
 
 Click build icon (hammer) or Build -> "Build Project".
