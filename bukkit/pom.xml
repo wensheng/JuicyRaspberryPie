@@ -5,7 +5,7 @@
     <groupId>org.wensheng</groupId>
     <artifactId>juicyraspberrypie</artifactId>
     <!--version>${SpigotVersion}</version-->
-    <version>1.16.5</version>
+    <version>1.17.1</version>
     <packaging>jar</packaging>
 
     <build>
@@ -24,7 +24,7 @@
        <plugins>
            <plugin>
                <artifactId>maven-compiler-plugin</artifactId>
-               <version>3.7.0</version>
+               <version>3.8.1</version>
                <configuration>
                    <source>1.8</source>
                    <target>1.8</target>
@@ -34,24 +34,29 @@
    </build>
 
    <properties>
-       <SpigotVersion>1.16.5</SpigotVersion>
+       <SpigotVersion>1.17.1</SpigotVersion>
        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
    </properties>
 
     <repositories>
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc</id>
+            <url>https://papermc.io/repo/repository/maven-public/</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>${SpigotVersion}-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.17.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
         </dependency>
     </dependencies>
 
