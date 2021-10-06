@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import javax.annotation.Nonnull;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -157,7 +156,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         serverThread = null;
     }
     
-    public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String label, String[] args){
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
         String cmdString;
         int port = this.getConfig().getInt("cmdsvr_port");
         
