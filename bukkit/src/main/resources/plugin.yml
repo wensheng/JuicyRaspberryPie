@@ -3,7 +3,7 @@ version: ${project.version}
 description: RaspberryJuice with a command Server
 database: false
 main: org.wensheng.juicyraspberrypie.JuicyRaspberryPie
-api-version: 1.14
+api-version: 1.18
 commands:
   p:
     description: execute python functions in pplugins
