@@ -3,11 +3,11 @@ package org.wensheng.juicyraspberrypie;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.MessageArgument;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.MessageArgument;
+import net.minecraft.network.chat.TextComponent;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 public class PyCommand {
 	private static Logger logger = JuicyRaspberryPieMod.LOGGER;
 
-	public static void register(CommandDispatcher<CommandSource> dispatcher) {
+	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
 				Commands.literal("p").then(
 						Commands.argument("arg", MessageArgument.message())
@@ -29,10 +29,11 @@ public class PyCommand {
 		);
 	}
 
-	private static int executeCommand(CommandContext<CommandSource> ctx) throws CommandSyntaxException {
+	private static int executeCommand(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 		String replyString = "";
 		logger.info("Execute command ...");
-		ITextComponent arg = MessageArgument.getMessage(ctx, "arg");
+		// TODO: this is probably wrong
+		TextComponent arg = (TextComponent) MessageArgument.getMessage(ctx, "arg");
 		//ServerPlayerEntity player = ctx.getSource().asPlayer();
 
 		try {
@@ -50,13 +51,13 @@ public class PyCommand {
 			fromPyServer.close();
 			socket.close();
 		} catch (Exception e) {
-			ITextComponent message = new StringTextComponent("No Python Command Server available");
+			TextComponent message = new TextComponent("No Python Command Server available");
 			ctx.getSource().sendFailure(message);
 			logger.error("No JRP command server available.");
 		}
 
 		if(!replyString.equals("ok")){
-			ITextComponent message = new StringTextComponent(replyString);
+			TextComponent message = new TextComponent(replyString);
 			ctx.getSource().sendSuccess(message, true);
 		}
 

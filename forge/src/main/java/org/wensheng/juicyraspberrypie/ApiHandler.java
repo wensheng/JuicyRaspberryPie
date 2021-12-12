@@ -1,36 +1,24 @@
 package org.wensheng.juicyraspberrypie;
 
-
-//import net.minecraft.block.*;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.StandingSignBlock;
-import net.minecraft.block.WallSignBlock;
-import net.minecraft.block.DirectionalBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPredicate;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.particles.BasicParticleType;
-import net.minecraft.particles.ParticleTypes;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.projectile.*;
+import net.minecraft.core.*;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tileentity.SignTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector2f;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -38,7 +26,7 @@ import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Logger;
 
@@ -49,8 +37,8 @@ public class ApiHandler {
     private static final float TOO_SMALL = (float) 1e-9;
     private static Logger logger = JuicyRaspberryPieMod.LOGGER;
     private PrintWriter writer = null;
-    private ServerWorld world;
-    private PlayerEntity player = null;
+    private ServerLevel world;
+    private Player player = null;
     private ArrayDeque<String> inQueue = new ArrayDeque<>();
     private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<>();
     private ArrayDeque<ClientChatReceivedEvent> chatPostedQueue = new ArrayDeque<>();
@@ -61,13 +49,14 @@ public class ApiHandler {
         // Only worry about single player world for now
         final MinecraftServer ms = ServerLifecycleHooks.getCurrentServer();
         //this.world = DimensionManager.getWorld(ms, DimensionType.OVERWORLD, false,false);
+        ms.overworld();
         this.world = ms.overworld();
     }
 
     @SubscribeEvent
     public void onEntityJoinWorldEvent(EntityJoinWorldEvent event) {
-        if (event.getEntity() instanceof PlayerEntity){
-            player = (PlayerEntity) event.getEntity();
+        if (event.getEntity() instanceof Player){
+            player = (Player) event.getEntity();
         }
     }
 
@@ -99,7 +88,7 @@ public class ApiHandler {
     }
 
     @SubscribeEvent
-    public void onProjectileHit(ProjectileImpactEvent.Arrow event) {
+    public void onProjectileHit(ProjectileImpactEvent event) {
         // what about fireball?
         projectileHitQueue.add(event);
     }
@@ -189,7 +178,7 @@ public class ApiHandler {
             }
         } else if (cmd.equals("world.spawnParticle")) {
             BlockPos pos = parseRelativeBlockLocation(args[0], args[1], args[2]);
-            BasicParticleType pt = particleTypeFromName(args[3]);
+            SimpleParticleType pt = particleTypeFromName(args[3]);
             int count;
             if(args.length > 4) {
                 count = Integer.parseInt(args[4]);
@@ -211,9 +200,9 @@ public class ApiHandler {
             }
             BlockPos pos1 = new BlockPos(pos.getX() - nearby_distance, pos.getY() - 5, pos.getZ() - nearby_distance);
             BlockPos pos2 = new BlockPos(pos.getX() + nearby_distance, pos.getY() + 5, pos.getZ() + nearby_distance);
-            AxisAlignedBB aabb = new AxisAlignedBB(pos1, pos2);
+            AABB aabb = new AABB(pos1, pos2);
             //List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, aabb);
-            List<LivingEntity> entities = world.getNearbyEntities(LivingEntity.class, EntityPredicate.DEFAULT, player, aabb);
+            List<LivingEntity> entities = world.getNearbyEntities(LivingEntity.class, TargetingConditions.DEFAULT, player, aabb);
             StringBuilder sb = new StringBuilder();
             for(LivingEntity entity:entities){
                 sb.append(entity.getClass().toString()).append(":").append(entity.getStringUUID()).append(",");
@@ -248,7 +237,10 @@ public class ApiHandler {
                 bs = bs.setValue(StandingSignBlock.ROTATION, facing);
             }
             world.setBlock(pos, bs, 3);
-            if(bs.hasTileEntity()) {
+            // TODO: how to do this in 1.18?
+            //if(bs.hasTileEntity()) {
+            if(bs.hasBlockEntity()) {
+                /*
                 SignTileEntity tile = (SignTileEntity) bs.createTileEntity(world);
                 if(tile != null) {
                     for (int i = 0; i < 4 && i < (args.length - 5); i++) {
@@ -262,6 +254,7 @@ public class ApiHandler {
                     //IChunk chunk = world.getChunk(pos);
                     //chunk.addTileEntity(pos, tile);
                 }
+                */
             }
         } else if(cmd.equals("chat.post")){
             StringBuilder sb = new StringBuilder();
@@ -269,7 +262,7 @@ public class ApiHandler {
                 sb.append(arg).append(",");
             }
             // because single player, send to herself
-            player.sendMessage(new StringTextComponent(sb.toString()), player.getUUID());
+            player.sendMessage(new TextComponent(sb.toString()), player.getUUID());
         } else if (cmd.startsWith("events.block.hits")) {
             StringBuilder sb = new StringBuilder();
             PlayerInteractEvent event;
@@ -291,7 +284,7 @@ public class ApiHandler {
             StringBuilder sb = new StringBuilder();
             ProjectileImpactEvent event;
             while((event = projectileHitQueue.poll())!= null){
-                ArrowEntity arrow = (ArrowEntity) event.getEntity();
+                Arrow arrow = (Arrow) event.getProjectile();
                 BlockPos pos = arrow.blockPosition();
                 sb.append(blockPosToRelative(pos)).append(",");
                 //Entity shooter = arrow.getShooter();
@@ -411,7 +404,7 @@ public class ApiHandler {
         return EntityType.ZOMBIE;
     }
 
-    private BasicParticleType particleTypeFromName(String particleName) {
+    private SimpleParticleType particleTypeFromName(String particleName) {
         String name;
         if(!particleName.contains(":")) {
             name = "minecraft:" + particleName.toLowerCase();
@@ -419,12 +412,12 @@ public class ApiHandler {
             name = particleName.toLowerCase();
         }
         if(JuicyRaspberryPieMod.PARTICLE_NAMES.contains(name)){
-            return (BasicParticleType) ForgeRegistries.PARTICLE_TYPES.getValue(new ResourceLocation(name));
+            return (SimpleParticleType) ForgeRegistries.PARTICLE_TYPES.getValue(new ResourceLocation(name));
         }
         return ParticleTypes.EXPLOSION;
     }
 
-    private void setCuboid(World world, BlockPos pos1, BlockPos pos2, BlockState bs) {
+    private void setCuboid(ServerLevel world, BlockPos pos1, BlockPos pos2, BlockState bs) {
         int minX, maxX, minY, maxY, minZ, maxZ;
         minX = Math.min(pos1.getX(), pos2.getX());
         minY = Math.min(pos1.getY(), pos2.getY());
@@ -461,7 +454,7 @@ public class ApiHandler {
                 entitySetPos(entity, args);
                 break;
             case "getTile": {
-                Vector3d pos = encodeVec3(entity.position());
+                Vec3 pos = encodeVec3(entity.position());
                 sendLine("" + trunc(pos.x()) + "," + trunc(pos.y()) + "," + trunc(pos.z()));
                 break;
             }
@@ -470,7 +463,7 @@ public class ApiHandler {
                 entitySetPos(entity, args);
                 break;
             case "getRotation":
-                Vector2f vec = entity.getRotationVector();
+                Vec2 vec = entity.getRotationVector();
                 sendLine(vec.toString());
                 break;
             case "setRotation": {
@@ -499,7 +492,7 @@ public class ApiHandler {
                 sendLine(entity.getName() + "," + entity.getStringUUID());
                 break;
             case "remove": {
-                if(!(entity instanceof PlayerEntity)){
+                if(!(entity instanceof Player)){
                     world.removeEntity(entity, false);
                 }
                 break;
@@ -564,7 +557,7 @@ public class ApiHandler {
         sendLine(new Vector3d(x,y,z));
         */
         Direction d = e.getDirection();
-        sendLine(new Vector3d(d.getStepX(), d.getStepY(), d.getStepZ()));
+        sendLine(new Vec3(d.getStepX(), d.getStepY(), d.getStepZ()));
     }
 
     private static int trunc(double x) {
@@ -583,7 +576,7 @@ public class ApiHandler {
         sendLine(Integer.toString(x));
     }
 
-    private void sendLine(Vector3d v) {
+    private void sendLine(Vec3 v) {
         sendLine(""+v.x()+","+v.y()+","+v.z());
     }
 
@@ -600,9 +593,9 @@ public class ApiHandler {
         return new BlockPos(spawnPos.getX() + x, spawnPos.getY() + y, spawnPos.getZ() + z);
     }
 
-    private Vector3d encodeVec3(Vector3d pos) {
+    private Vec3 encodeVec3(Vec3 pos) {
         BlockPos spawnPos = world.getSharedSpawnPos();
-        return new Vector3d(pos.x()-spawnPos.getX(), pos.y()-spawnPos.getY(),
+        return new Vec3(pos.x()-spawnPos.getX(), pos.y()-spawnPos.getY(),
                 pos.z()-spawnPos.getZ());
     }
     private BlockPos decodeLocation(int x, int y, int z) {
