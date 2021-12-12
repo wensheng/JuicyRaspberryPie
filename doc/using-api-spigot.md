@@ -1,15 +1,15 @@
 # How to use JuicyRaspberryPie API on Spigot
 
-(**Please note as an example I use version 1.14.4, which at the time of this writing is the latest version of Spigot. You should replace `1.14.4` with whatever version you want to use**)
+(**Please note as an example I use version 1.18.1, which at the time of this writing is the latest version of Spigot. You should replace `1.18.1` with whatever version you want to use**)
 
 Installation video: https://youtu.be/6-bqPcMoZ8M
 
 ## Spigot Installation
 1. Download [BuildTools.jar](https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar) from [this page](https://hub.spigotmc.org/jenkins/job/BuildTools/)
-2. Open a command window, run `java -jar BuildTools.jar --rev 1.14.4`
-3. Some files will be created, among them we are interested in spigot-1.14.4.jar, copy it to a designated folder, rename it to just `spigot.jar`
+2. Open a command window, run `java -jar BuildTools.jar --rev 1.18.1`
+3. Some files will be created, among them we are interested in spigot-1.18.1.jar, copy it to a designated folder, rename it to just `spigot.jar`
 4. Create a script/batch file, for example `run.bat`, with following content:
-   `java -Xms4G -Xmx4G -XX:+UseConcMarkSweepGC -jar spigot.jar`
+   `java -Xms8G -Xmx8G -XX:+UseConcMarkSweepGC -jar spigot.jar`
 5. Type `run` in command window. Spigot will try to start and shutdown.
 6. Open `eula.txt` with a text editor, change `eula=false` to `eula=true`
 7. Re-run script, Spigot should start normally.
@@ -17,12 +17,14 @@ Installation video: https://youtu.be/6-bqPcMoZ8M
 reference: https://www.spigotmc.org/wiki/spigot-installation/
 
 ## JuicyRaspberryPie Plugin Installation
-1. Download juicyraspberrypie-1.14.4.jar from https://github.com/wensheng/JuicyRaspberryPie/releases
+1. Download juicyraspberrypie-1.18.1.jar from https://github.com/wensheng/JuicyRaspberryPie/releases
 2. Move the file to `plugins` folder, the folder is at the same place where Spigot.jar is.
 3. Start or reload Spigot. (To reload, just type `reload` in Spigot command window)
+4. When juicyraspberrypie.jar is loaded for the 1st time, a folder `JuicyRaspberryPie` will be created under plugins folder.
+   * Inside JuicyRaspberryPie, you need to modify the file `config.yml` to point pyexe to correct location where python.exe is actually located
 
 ## Using Python API Interactively
-In the plugins folder, a `JuicyRaspberryPie` folder is created.  Open command window, navigate to JuicyRaspberryPie, then start python. (Please note only Python3 is supported)
+Open command window(cmd or terminal), navigate to plugins/JuicyRaspberryPie folder, then start python. (Please note only Python3 is supported)
 Open Minecraft if you haven't already, choose "Multiplayer", then select the Spigot server.
 
 Navigate away from Minecraft.  On Windows, press Alt-Tab, or Win-Tab. If you game menu is on whenever you navigate away from Minecraft, see [tips](#tips).
