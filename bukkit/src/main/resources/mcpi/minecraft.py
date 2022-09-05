@@ -240,7 +240,7 @@ class Minecraft:
         """Set a sign (x,y,z,sign_type,direction,line1,line2,line3,line4)
         direction: 0-north, 1-east, 2-south 3-west
         """
-        self.conn.send(b"world.setSign", args)
+        self.conn.send(b"world.setSign", *args)
 
     def spawnEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
