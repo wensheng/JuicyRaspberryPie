@@ -266,6 +266,11 @@ class Minecraft:
         """Get the height of the world (x,z) => int"""
         return int(self.conn.sendReceive(b"world.getHeight", intFloor(args)))
 
+    def getPlayer(self, name):
+        """Get player entity (name)"""
+        entityId =self.conn.sendReceive(b"world.getPlayerId", name)
+        return Entity(self.conn, entityId, name)
+    
     def getPlayerEntityIds(self):
         """Get the entity ids of the connected players => [id:int]"""
         ids = self.conn.sendReceive(b"world.getPlayerIds")
