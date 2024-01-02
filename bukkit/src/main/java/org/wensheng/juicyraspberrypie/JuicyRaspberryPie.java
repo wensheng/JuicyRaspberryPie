@@ -52,6 +52,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         if(!mcpiFolder.exists()) {
             boolean ok = mcpiFolder.mkdir();
             if (ok) {
+                this.saveResource("mcpi/__init__.py", false);
                 this.saveResource("mcpi/connection.py", false);
                 this.saveResource("mcpi/event.py", false);
                 this.saveResource("mcpi/minecraft.py", false);
