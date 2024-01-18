@@ -378,6 +378,8 @@ class RemoteSession {
                 handleEntityCommand(c.substring(7), args, true);
             } else if(c.startsWith("entity.")){
                 handleEntityCommand(c.substring(7), args, false);
+            } else if(c.startsWith("getPlayer")){
+                send(attachedPlayer == null ? "(none)" : attachedPlayer.getName());
             } else if(c.startsWith("setPlayer")){
                 if(setPlayerAndOrigin(args[0])){
                     send("true");
