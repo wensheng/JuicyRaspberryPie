@@ -203,7 +203,9 @@ class RemoteSession {
                     bdr.append(p.getUniqueId());
                     bdr.append("|");
                 }
-                bdr.deleteCharAt(bdr.length()-1);
+                if (bdr.length() > 0) {
+                    bdr.deleteCharAt(bdr.length()-1);
+                }
                 send(bdr.toString());
             } else if (c.equals("world.getPlayerId")) {
                 Player p = getNamedPlayer(args[0]);
