@@ -381,7 +381,8 @@ class RemoteSession {
             } else if(c.startsWith("entity.")){
                 handleEntityCommand(c.substring(7), args, false);
             } else if(c.startsWith("getPlayer")){
-                send(attachedPlayer == null ? "(none)" : attachedPlayer.getName());
+                final Player p = getCurrentPlayer();
+                send(p == null ? "(none)" : p.getName());
             } else if(c.startsWith("setPlayer")){
                 if(setPlayerAndOrigin(args[0])){
                     send("true");
@@ -572,7 +573,11 @@ class RemoteSession {
     // gets the current player
     private Player getCurrentPlayer() {
         if(attachedPlayer != null){
-            return attachedPlayer;
+            if (Bukkit.getOnlinePlayers().contains(attachedPlayer)) {
+                return attachedPlayer;
+            } else {
+                attachedPlayer = null;
+            }
         }
         setPlayerAndOrigin();
         return attachedPlayer;
