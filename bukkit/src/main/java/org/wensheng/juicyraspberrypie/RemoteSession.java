@@ -193,7 +193,9 @@ class RemoteSession {
                     bdr.append(p.getUniqueId());
                     bdr.append("|");
                 }
-                bdr.deleteCharAt(bdr.length()-1);
+                if (bdr.length() > 0) {
+                    bdr.deleteCharAt(bdr.length()-1);
+                }
                 send(bdr.toString());
             } else if (c.equals("world.getPlayerId")) {
                 Player p = getNamedPlayer(args[0]);
@@ -368,6 +370,9 @@ class RemoteSession {
                 handleEntityCommand(c.substring(7), args, true);
             } else if(c.startsWith("entity.")){
                 handleEntityCommand(c.substring(7), args, false);
+            } else if(c.startsWith("getPlayer")){
+                final Player p = getCurrentPlayer();
+                send(p == null ? "(none)" : p.getName());
             } else if(c.startsWith("setPlayer")){
                 if(setPlayerAndOrigin(args[0])){
                     send("true");
@@ -550,7 +555,11 @@ class RemoteSession {
     // gets the current player
     private Player getCurrentPlayer() {
         if(attachedPlayer != null){
-            return attachedPlayer;
+            if (Bukkit.getOnlinePlayers().contains(attachedPlayer)) {
+                return attachedPlayer;
+            } else {
+                attachedPlayer = null;
+            }
         }
         setPlayerAndOrigin();
         return attachedPlayer;
