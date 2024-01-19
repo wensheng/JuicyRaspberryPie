@@ -20,28 +20,32 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class RemoteSession {
+    private final static int MAX_COMMANDS_PER_TICK = 9000;
     boolean pendingRemoval = false;
     private Location origin;
-    private Socket socket;
+    private final Socket socket;
     private BufferedReader in;
     private BufferedWriter out;
     private Thread inThread;
     private Thread outThread;
-    private ArrayDeque<String> inQueue = new ArrayDeque<>();
+    private final ArrayDeque<String> inQueue = new ArrayDeque<>();
     private final ArrayDeque<String> outQueue = new ArrayDeque<>();
     private boolean running = true;
-    private JuicyRaspberryPie plugin;
-    private ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<>();
-    private ArrayDeque<AsyncPlayerChatEvent> chatPostedQueue = new ArrayDeque<>();
-    private ArrayDeque<ProjectileHitEvent> projectileHitQueue = new ArrayDeque<>();
-    private int maxCommandsPerTick = 9000;
+    private final JuicyRaspberryPie plugin;
+    private final Logger logger;
+    private final ArrayDeque<PlayerInteractEvent> interactEventQueue = new ArrayDeque<>();
+    private final ArrayDeque<AsyncPlayerChatEvent> chatPostedQueue = new ArrayDeque<>();
+    private final ArrayDeque<ProjectileHitEvent> projectileHitQueue = new ArrayDeque<>();
     private Player attachedPlayer = null;
 
     RemoteSession(JuicyRaspberryPie plugin, Socket socket) throws IOException {
         this.socket = socket;
         this.plugin = plugin;
+        this.logger = plugin.getLogger();
         init();
         setPlayerAndOrigin();
     }
@@ -53,7 +57,7 @@ class RemoteSession {
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
         this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         startThreads();
-        plugin.logger.info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
+        logger.log(Level.INFO, "Opened connection to" + socket.getRemoteSocketAddress() + ".");
 
     }
 
@@ -84,21 +88,7 @@ class RemoteSession {
     private void setPlayerAndOrigin(){
         int world_dimension = 0;
         Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-        if(players.size() > 0) {
-            /*
-            Player firstPlayer, opPlayer = null;
-            firstPlayer = players.iterator().next();
-            for (Player player : players) {
-                if (player.isOp()) {
-                    opPlayer = player;
-                }
-            }
-            if(opPlayer != null){
-                attachedPlayer = opPlayer;
-            }else{
-                attachedPlayer = firstPlayer;
-            }
-            */
+        if(!players.isEmpty()) {
             attachedPlayer = players.iterator().next();
             world_dimension = attachedPlayer.getWorld().getEnvironment().ordinal();
         }
@@ -130,14 +120,14 @@ class RemoteSession {
         while ((message = inQueue.poll()) != null) {
             handleLine(message);
             processedCount++;
-            if (processedCount >= maxCommandsPerTick) {
-                plugin.logger.warning("Over " + maxCommandsPerTick +
+            if (processedCount >= MAX_COMMANDS_PER_TICK) {
+                logger.log(Level.WARNING,"Over " + MAX_COMMANDS_PER_TICK +
                     " commands were queued - deferring " + inQueue.size() + " to next tick");
                 break;
             }
         }
 
-        if (!running && inQueue.size() <= 0) {
+        if (!running && inQueue.isEmpty()) {
             pendingRemoval = true;
         }
     }
@@ -150,7 +140,7 @@ class RemoteSession {
         line = line.trim();
         String methodName = line.substring(0, line.indexOf("("));
         String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",\\s*");
-        if(args.length == 1 && args[0].equals("")){
+        if(args.length == 1 && args[0].isEmpty()){
             args = new String[0];
         }
         handleCommand(methodName, args);
@@ -166,18 +156,18 @@ class RemoteSession {
             }
             
             if (c.equals("world.getBlock")) {
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseBlockLocation(args[0], args[1], args[2]);
                 send(world.getBlockAt(loc).getType().name());
             } else if (c.equals("world.getBlocks")) {
-                Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
-                Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
+                Location loc1 = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc2 = parseBlockLocation(args[3], args[4], args[5]);
                 send(getBlocks(loc1, loc2));
             } else if (c.equals("world.getBlockWithData")) {
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseBlockLocation(args[0], args[1], args[2]);
                 Block block = world.getBlockAt(loc);
                 send(block.getType().name() + "," + block.getBlockData());
             } else if (c.equals("world.setBlock")) {
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseBlockLocation(args[0], args[1], args[2]);
                 Material material = Material.matchMaterial(args[3]);
                 if(material == null){
                     material = Material.valueOf("SANDSTONE");
@@ -186,8 +176,8 @@ class RemoteSession {
                 BlockFace blockFace = BlockFace.values()[facing];
                 updateBlock(world, loc, material, blockFace);
             } else if (c.equals("world.setBlocks")) {
-                Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
-                Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
+                Location loc1 = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc2 = parseBlockLocation(args[3], args[4], args[5]);
                 Material material = Material.matchMaterial(args[6]);
                 if(material == null){
                     material = Material.valueOf("SANDSTONE");
@@ -210,7 +200,7 @@ class RemoteSession {
                 if (p != null) {
                     send(p.getUniqueId());
                 } else {
-                    plugin.logger.info("Player [" + args[0] + "] not found.");
+                    logger.log(Level.INFO, "Player [" + args[0] + "] not found.");
                     send("Fail");
                 }
             } else if (c.equals("world.setSign")) {
@@ -229,10 +219,10 @@ class RemoteSession {
                     return;
                 }
 
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseBlockLocation(args[0], args[1], args[2]);
                 Block thisBlock = world.getBlockAt(loc);
                 thisBlock.setType(material);
-                plugin.logger.info(material.toString());
+                logger.log(Level.INFO, material.toString());
 
                 int facing = args.length > 4? Integer.parseInt(args[4]): 0;
                 if(facing >= 4 || facing < 0){
@@ -257,7 +247,7 @@ class RemoteSession {
                 sign.update();
 
             } else if(c.equals("world.getNearbyEntities")) {
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseBlockLocation(args[0], args[1], args[2]);
                 double nearby_distance = 10.0;
                 if(args.length > 3){
                     nearby_distance = Double.parseDouble(args[3]);
@@ -272,7 +262,7 @@ class RemoteSession {
                 }
                 send(sb.toString());
             } else if (c.equals("world.spawnEntity")) {
-                 Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                 Location loc = parseBlockLocation(args[0], args[1], args[2]);
                  EntityType entityType;
                  try{
                      entityType = EntityType.valueOf(args[3].toUpperCase());
@@ -282,7 +272,7 @@ class RemoteSession {
                  Entity entity = world.spawnEntity(loc, entityType);
                  send(entity.getUniqueId());
             } else if (c.equals("world.spawnParticle")) {
-                Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseBlockLocation(args[0], args[1], args[2]);
                 Particle particle;
                 try{
                     particle = Particle.valueOf(args[3].toUpperCase());
@@ -303,7 +293,7 @@ class RemoteSession {
                 }
                 world.spawnParticle(particle, loc, count, 0, 0, 0, speed);
             } else if (c.equals("world.getHeight")) {
-                send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
+                send(world.getHighestBlockYAt(parseBlockLocation(args[0], "0", args[1])));
             } else if (c.equals("chat.post")) {
                 StringBuilder sb = new StringBuilder();
                 for (String arg : args) {
@@ -322,7 +312,7 @@ class RemoteSession {
                     Block block = event.getClickedBlock();
                     if(block != null) {
                         Location loc = block.getLocation();
-                        b.append(blockLocationToRelative(loc));
+                        b.append(loc);
                         b.append(",");
                         b.append(event.getBlockFace().name());
                         b.append(",");
@@ -330,7 +320,7 @@ class RemoteSession {
                     }else{
                         b.append("0,0,0,Fail,0");
                     }
-                    if (interactEventQueue.size() > 0) {
+                    if (!interactEventQueue.isEmpty()) {
                         b.append("|");
                     }
                 }
@@ -344,7 +334,7 @@ class RemoteSession {
                     if(player != null) {
                         Block block = arrow.getLocation().getBlock();
                         Location loc = block.getLocation();
-                        b.append(blockLocationToRelative(loc));
+                        b.append(loc);
                         b.append(",");
                         b.append(player.getUniqueId());
                         b.append(",");
@@ -355,7 +345,7 @@ class RemoteSession {
                     }else{
                         b.append("0,0,0,Fail,0");
                     }
-                    if (projectileHitQueue.size() > 0) {
+                    if (!projectileHitQueue.isEmpty()) {
                         b.append("|");
                     }
                 }
@@ -367,7 +357,7 @@ class RemoteSession {
                     b.append(event.getPlayer().getEntityId());
                     b.append(",");
                     b.append(event.getMessage());
-                    if (chatPostedQueue.size() > 0) {
+                    if (!chatPostedQueue.isEmpty()) {
                         b.append("|");
                     }
                 }
@@ -389,9 +379,7 @@ class RemoteSession {
                 send("Fail");
             }
         } catch (Exception e) {
-            
-            plugin.logger.warning("Error occured handling command");
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Error occurred handling command", e);
             send("Fail");
             
         }
@@ -402,14 +390,8 @@ class RemoteSession {
         Entity entity;
         if(entityIsPlayer) {
             if(args.length > 3 || args.length == 2 || (c.startsWith("get") && args.length == 1)) {
-                //getX(pid)
-                //setX(pid,a1)
-                //setX(pid,a1,a2,a3)
                 entity = getNamedPlayer(args[0]);
             }else {
-                //getX()
-                //setX(a1)
-                //setX(a1,a2,a3)
                 entity = getCurrentPlayer();
             }
         }else{
@@ -423,7 +405,7 @@ class RemoteSession {
 
         switch (c) {
             case "getTile":
-                send(blockLocationToRelative(entity.getLocation()));
+                send(entity.getLocation());
                 break;
             case "setTile": {
                 String x = args[0], y = args[1], z = args[2];
@@ -433,11 +415,11 @@ class RemoteSession {
                     z = args[3];
                 }
                 Location loc = entity.getLocation();
-                entity.teleport(parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                entity.teleport(parseBlockLocation(x, y, z, loc.getPitch(), loc.getYaw()));
                 break;
             }
             case "getPos":
-                send(locationToRelative(entity.getLocation()));
+                send(entity.getLocation());
                 break;
             case "setPos": {
                 String x = args[0], y = args[1], z = args[2];
@@ -447,7 +429,7 @@ class RemoteSession {
                     z = args[3];
                 }
                 Location loc = entity.getLocation();
-                entity.teleport(parseRelativeLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                entity.teleport(parseLocation(x, y, z, loc.getPitch(), loc.getYaw()));
                 break;
             }
             case "getDirection":
@@ -574,42 +556,32 @@ class RemoteSession {
         return attachedPlayer;
     }
 
-    private Location parseRelativeBlockLocation(String xstr, String ystr, String zstr) {
+    private Location parseBlockLocation(String xstr, String ystr, String zstr) {
         int x = (int) Double.parseDouble(xstr);
         int y = (int) Double.parseDouble(ystr);
         int z = (int) Double.parseDouble(zstr);
-        return new Location(origin.getWorld(), origin.getBlockX() + x, origin.getBlockY() + y, origin.getBlockZ() + z);
+        return new Location(origin.getWorld(), x, y, z);
     }
 
-    private Location parseRelativeLocation(String xstr, String ystr, String zstr) {
+    private Location parseLocation(String xstr, String ystr, String zstr) {
         double x = Double.parseDouble(xstr);
         double y = Double.parseDouble(ystr);
         double z = Double.parseDouble(zstr);
         return new Location(origin.getWorld(), origin.getX() + x, origin.getY() + y, origin.getZ() + z);
     }
 
-    private Location parseRelativeBlockLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
-        Location loc = parseRelativeBlockLocation(xstr, ystr, zstr);
+    private Location parseBlockLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
+        Location loc = parseBlockLocation(xstr, ystr, zstr);
         loc.setPitch(pitch);
         loc.setYaw(yaw);
         return loc;
     }
 
-    private Location parseRelativeLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
-        Location loc = parseRelativeLocation(xstr, ystr, zstr);
+    private Location parseLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
+        Location loc = parseLocation(xstr, ystr, zstr);
         loc.setPitch(pitch);
         loc.setYaw(yaw);
         return loc;
-    }
-    
-    private String blockLocationToRelative(Location loc) {
-        return (loc.getBlockX() - origin.getBlockX()) + "," + (loc.getBlockY() - origin.getBlockY()) + "," +
-            (loc.getBlockZ() - origin.getBlockZ());
-    }
-
-    private String locationToRelative(Location loc) {
-        return (loc.getX() - origin.getX()) + "," + (loc.getY() - origin.getY()) + "," +
-            (loc.getZ() - origin.getZ());
     }
 
     private void send(Object a) {
@@ -633,16 +605,15 @@ class RemoteSession {
             outThread.join(2000);
         }
         catch (InterruptedException e) {
-            plugin.logger.warning("Failed to stop in/out thread");
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Failed to stop in/out thread", e);
         }
 
         try {
             socket.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Failed to close socket", e);
         }
-        plugin.logger.info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
+        logger.log(Level.INFO, "Closed connection to" + socket.getRemoteSocketAddress() + ".");
     }
 
     void kick(String reason) {
@@ -657,7 +628,7 @@ class RemoteSession {
     /** socket listening thread */
     private class InputThread implements Runnable {
         public void run() {
-            plugin.logger.info("Starting input thread");
+            logger.log(Level.INFO, "Starting input thread");
             while (running) {
                 try {
                     String newLine = in.readLine();
@@ -668,24 +639,22 @@ class RemoteSession {
                     }
                 } catch (Exception e) {
                     if (running) {
-                        e.printStackTrace();
+                        logger.log(Level.WARNING, "Error occurred in input thread", e);
                         running = false;
                     }
                 }
             }
-            //close in buffer
             try {
                 in.close();
             } catch (Exception e) {
-                plugin.logger.warning("Failed to close in buffer");
-                e.printStackTrace();
+                logger.log(Level.WARNING, "Failed to close in buffer", e);
             }
         }
     }
 
     private class OutputThread implements Runnable {
         public void run() {
-            plugin.logger.info("Starting output thread!");
+            logger.log(Level.INFO, "Starting output thread!");
             while (running) {
                 try {
                     String line;
@@ -699,7 +668,7 @@ class RemoteSession {
                 } catch (Exception e) {
                     // if its running raise an error
                     if (running) {
-                        e.printStackTrace();
+                        logger.log(Level.WARNING, "Error occurred in output thread", e);
                         running = false;
                     }
                 }
@@ -708,8 +677,7 @@ class RemoteSession {
             try {
                 out.close();
             } catch (Exception e) {
-                plugin.logger.warning("Failed to close out buffer");
-                e.printStackTrace();
+                logger.log(Level.WARNING,"Failed to close out buffer", e);
             }
         }
     }
