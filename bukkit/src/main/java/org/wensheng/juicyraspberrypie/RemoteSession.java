@@ -314,7 +314,7 @@ class RemoteSession {
                     Block block = event.getClickedBlock();
                     if(block != null) {
                         Location loc = block.getLocation();
-                        b.append(loc);
+                        b.append(getBlockLocation(loc));
                         b.append(",");
                         b.append(event.getBlockFace().name());
                         b.append(",");
@@ -336,7 +336,7 @@ class RemoteSession {
                     if(player != null) {
                         Block block = arrow.getLocation().getBlock();
                         Location loc = block.getLocation();
-                        b.append(loc);
+                        b.append(getBlockLocation(loc));
                         b.append(",");
                         b.append(player.getUniqueId());
                         b.append(",");
@@ -410,7 +410,7 @@ class RemoteSession {
 
         switch (c) {
             case "getTile":
-                send(entity.getLocation());
+                send(getBlockLocation(entity.getLocation()));
                 break;
             case "setTile": {
                 String x = args[0], y = args[1], z = args[2];
@@ -424,7 +424,7 @@ class RemoteSession {
                 break;
             }
             case "getPos":
-                send(entity.getLocation());
+                send(getLocation(entity.getLocation()));
                 break;
             case "setPos": {
                 String x = args[0], y = args[1], z = args[2];
@@ -591,6 +591,14 @@ class RemoteSession {
         loc.setPitch(pitch);
         loc.setYaw(yaw);
         return loc;
+    }
+    
+    private String getBlockLocation(Location loc) {
+        return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
+    }
+
+    private String getLocation(Location loc) {
+        return loc.getX() + "," + loc.getY() + "," + loc.getZ();
     }
 
     private void send(Object a) {
