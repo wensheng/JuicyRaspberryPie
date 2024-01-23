@@ -156,18 +156,18 @@ class RemoteSession {
             }
             
             if (c.equals("world.getBlock")) {
-                Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseLocation(args[0], args[1], args[2]);
                 send(world.getBlockAt(loc).getType().name());
             } else if (c.equals("world.getBlocks")) {
-                Location loc1 = parseBlockLocation(args[0], args[1], args[2]);
-                Location loc2 = parseBlockLocation(args[3], args[4], args[5]);
+                Location loc1 = parseLocation(args[0], args[1], args[2]);
+                Location loc2 = parseLocation(args[3], args[4], args[5]);
                 send(getBlocks(loc1, loc2));
             } else if (c.equals("world.getBlockWithData")) {
-                Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseLocation(args[0], args[1], args[2]);
                 Block block = world.getBlockAt(loc);
                 send(block.getType().name() + "," + block.getBlockData());
             } else if (c.equals("world.setBlock")) {
-                Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseLocation(args[0], args[1], args[2]);
                 Material material = Material.matchMaterial(args[3]);
                 if(material == null){
                     material = Material.valueOf("SANDSTONE");
@@ -176,8 +176,8 @@ class RemoteSession {
                 BlockFace blockFace = BlockFace.values()[facing];
                 updateBlock(world, loc, material, blockFace);
             } else if (c.equals("world.setBlocks")) {
-                Location loc1 = parseBlockLocation(args[0], args[1], args[2]);
-                Location loc2 = parseBlockLocation(args[3], args[4], args[5]);
+                Location loc1 = parseLocation(args[0], args[1], args[2]);
+                Location loc2 = parseLocation(args[3], args[4], args[5]);
                 Material material = Material.matchMaterial(args[6]);
                 if(material == null){
                     material = Material.valueOf("SANDSTONE");
@@ -221,7 +221,7 @@ class RemoteSession {
                     return;
                 }
 
-                Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseLocation(args[0], args[1], args[2]);
                 Block thisBlock = world.getBlockAt(loc);
                 thisBlock.setType(material);
                 logger.log(Level.INFO, material.toString());
@@ -249,7 +249,7 @@ class RemoteSession {
                 sign.update();
 
             } else if(c.equals("world.getNearbyEntities")) {
-                Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseLocation(args[0], args[1], args[2]);
                 double nearby_distance = 10.0;
                 if(args.length > 3){
                     nearby_distance = Double.parseDouble(args[3]);
@@ -264,7 +264,7 @@ class RemoteSession {
                 }
                 send(sb.toString());
             } else if (c.equals("world.spawnEntity")) {
-                 Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                 Location loc = parseLocation(args[0], args[1], args[2]);
                  EntityType entityType;
                  try{
                      entityType = EntityType.valueOf(args[3].toUpperCase());
@@ -274,7 +274,7 @@ class RemoteSession {
                  Entity entity = world.spawnEntity(loc, entityType);
                  send(entity.getUniqueId());
             } else if (c.equals("world.spawnParticle")) {
-                Location loc = parseBlockLocation(args[0], args[1], args[2]);
+                Location loc = parseLocation(args[0], args[1], args[2]);
                 Particle particle;
                 try{
                     particle = Particle.valueOf(args[3].toUpperCase());
@@ -295,7 +295,7 @@ class RemoteSession {
                 }
                 world.spawnParticle(particle, loc, count, 0, 0, 0, speed);
             } else if (c.equals("world.getHeight")) {
-                send(world.getHighestBlockYAt(parseBlockLocation(args[0], "0", args[1])));
+                send(world.getHighestBlockYAt(parseLocation(args[0], "0", args[1])));
             } else if (c.equals("chat.post")) {
                 StringBuilder sb = new StringBuilder();
                 for (String arg : args) {
@@ -420,7 +420,7 @@ class RemoteSession {
                     z = args[3];
                 }
                 Location loc = entity.getLocation();
-                entity.teleport(parseBlockLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                entity.teleport(parseLocation(x, y, z, loc.getPitch(), loc.getYaw()));
                 break;
             }
             case "getPos":
@@ -565,25 +565,11 @@ class RemoteSession {
         return attachedPlayer;
     }
 
-    private Location parseBlockLocation(String xstr, String ystr, String zstr) {
+    private Location parseLocation(String xstr, String ystr, String zstr) {
         int x = (int) Double.parseDouble(xstr);
         int y = (int) Double.parseDouble(ystr);
         int z = (int) Double.parseDouble(zstr);
         return new Location(origin.getWorld(), x, y, z);
-    }
-
-    private Location parseLocation(String xstr, String ystr, String zstr) {
-        double x = Double.parseDouble(xstr);
-        double y = Double.parseDouble(ystr);
-        double z = Double.parseDouble(zstr);
-        return new Location(origin.getWorld(), origin.getX() + x, origin.getY() + y, origin.getZ() + z);
-    }
-
-    private Location parseBlockLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
-        Location loc = parseBlockLocation(xstr, ystr, zstr);
-        loc.setPitch(pitch);
-        loc.setYaw(yaw);
-        return loc;
     }
 
     private Location parseLocation(String xstr, String ystr, String zstr, float pitch, float yaw) {
@@ -592,7 +578,7 @@ class RemoteSession {
         loc.setYaw(yaw);
         return loc;
     }
-    
+
     private String getBlockLocation(Location loc) {
         return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
     }
