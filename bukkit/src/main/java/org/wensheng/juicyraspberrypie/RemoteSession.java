@@ -181,6 +181,7 @@ class RemoteSession {
                 int facing = args.length > 4? Integer.parseInt(args[4]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 updateBlock(originWorld, loc, material, blockFace);
+                send("ok");
             } else if (c.equals("world.setBlocks")) {
                 Location loc1 = parseLocation(args[0], args[1], args[2]);
                 Location loc2 = parseLocation(args[3], args[4], args[5]);
@@ -191,6 +192,7 @@ class RemoteSession {
                 int facing = args.length > 7 ? Integer.parseInt(args[7]) : 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 setCuboid(loc1, loc2, material, blockFace);
+                send("ok");
             } else if (c.equals("world.isBlockPassable")) {
                 Location loc = parseLocation(args[0], args[1], args[2]);
                 send(originWorld.getBlockAt(loc).isPassable());
@@ -256,7 +258,7 @@ class RemoteSession {
                     sign.setLine(i - 5, args[i]);
                 }
                 sign.update();
-
+                send("ok");
             } else if(c.equals("world.getNearbyEntities")) {
                 Location loc = parseLocation(args[0], args[1], args[2]);
                 double nearby_distance = 10.0;
@@ -303,6 +305,7 @@ class RemoteSession {
                     speed = 1.0;
                 }
                 originWorld.spawnParticle(particle, loc, count, 0, 0, 0, speed);
+                send("ok");
             } else if (c.equals("world.getHeight")) {
                 send(originWorld.getHighestBlockYAt(parseLocation(args[0], "0", args[1])));
             } else if (c.equals("chat.post")) {
@@ -312,10 +315,12 @@ class RemoteSession {
                 }
                 sb.setLength(sb.length() - 1);
                 plugin.getServer().broadcastMessage(sb.toString());
+                send("ok");
             } else if (c.equals("events.clear")) {
                 interactEventQueue.clear();
                 chatPostedQueue.clear();
                 projectileHitQueue.clear();
+                send("ok");
             } else if (c.equals("events.block.hits")) {
                 StringBuilder b = new StringBuilder();
                 PlayerInteractEvent event;
@@ -372,8 +377,6 @@ class RemoteSession {
                         b.append("|");
                     }
                 }
-                //DEBUG
-                //System.out.println(b.toString());
                 send(b.toString());
             } else if(c.startsWith("player.")){
                 handleEntityCommand(c.substring(7), args, true);
@@ -430,6 +433,7 @@ class RemoteSession {
                 }
                 Location loc = entity.getLocation();
                 entity.teleport(parseLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                send("ok");
                 break;
             }
             case "getPos":
@@ -444,6 +448,7 @@ class RemoteSession {
                 }
                 Location loc = entity.getLocation();
                 entity.teleport(parseLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                send("ok");
                 break;
             }
             case "enableControl": {
@@ -459,6 +464,7 @@ class RemoteSession {
                     mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noLookAI", GoalType.LOOK));
                     mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noUnknownBehaviorAI", GoalType.UNKNOWN_BEHAVIOR));
                 }
+                send("ok");
                 break;
             }
             case "disableControl": {
@@ -476,6 +482,7 @@ class RemoteSession {
                         mob.setAI(false);
                     }
                 }
+                send("ok");
                 break;
             }
             case "walkTo": {
@@ -489,6 +496,7 @@ class RemoteSession {
                     final Location loc = parseLocation(x, y, z);
                     mob.getPathfinder().moveTo(loc);
                 }
+                send("ok");
                 break;
             }
             case "getDirection":
@@ -541,6 +549,7 @@ class RemoteSession {
                 if(!(entity instanceof Player)){
                     entity.remove();
                 }
+                send("ok");
                 break;
             default:
                 send("No such entity/player command");
