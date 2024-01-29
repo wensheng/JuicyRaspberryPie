@@ -133,11 +133,11 @@ class RemoteSession {
     }
 
     private void handleLine(String line) {
-        if(!line.contains("(") || !line.contains(")")){
+        line = line.trim();
+        if(!line.contains("(") || !line.endsWith(")")){
             send("Wrong format");
             return;
         }
-        line = line.trim();
         String methodName = line.substring(0, line.indexOf("("));
         String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",\\s*");
         if(args.length == 1 && args[0].isEmpty()){
