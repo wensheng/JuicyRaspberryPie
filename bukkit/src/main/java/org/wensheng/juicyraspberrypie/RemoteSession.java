@@ -1,5 +1,10 @@
 package org.wensheng.juicyraspberrypie;
 
+import com.destroystokyo.paper.entity.ai.Goal;
+import com.destroystokyo.paper.entity.ai.GoalKey;
+import com.destroystokyo.paper.entity.ai.GoalType;
+import com.destroystokyo.paper.entity.ai.MobGoals;
+import com.destroystokyo.paper.entity.ai.VanillaGoal;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -9,16 +14,23 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -169,16 +181,21 @@ class RemoteSession {
                 int facing = args.length > 4? Integer.parseInt(args[4]): 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 updateBlock(originWorld, loc, material, blockFace);
+                send("ok");
             } else if (c.equals("world.setBlocks")) {
                 Location loc1 = parseLocation(args[0], args[1], args[2]);
                 Location loc2 = parseLocation(args[3], args[4], args[5]);
                 Material material = Material.matchMaterial(args[6]);
-                if(material == null){
+                if (material == null) {
                     material = Material.valueOf("SANDSTONE");
                 }
-                int facing = args.length > 7? Integer.parseInt(args[7]): 0;
+                int facing = args.length > 7 ? Integer.parseInt(args[7]) : 0;
                 BlockFace blockFace = BlockFace.values()[facing];
                 setCuboid(loc1, loc2, material, blockFace);
+                send("ok");
+            } else if (c.equals("world.isBlockPassable")) {
+                Location loc = parseLocation(args[0], args[1], args[2]);
+                send(originWorld.getBlockAt(loc).isPassable());
             } else if (c.equals("world.getPlayerIds")) {
                 StringBuilder bdr = new StringBuilder();
                 for (Player p: plugin.getServer().getOnlinePlayers()) {
@@ -241,7 +258,7 @@ class RemoteSession {
                     sign.setLine(i - 5, args[i]);
                 }
                 sign.update();
-
+                send("ok");
             } else if(c.equals("world.getNearbyEntities")) {
                 Location loc = parseLocation(args[0], args[1], args[2]);
                 double nearby_distance = 10.0;
@@ -288,6 +305,7 @@ class RemoteSession {
                     speed = 1.0;
                 }
                 originWorld.spawnParticle(particle, loc, count, 0, 0, 0, speed);
+                send("ok");
             } else if (c.equals("world.getHeight")) {
                 send(originWorld.getHighestBlockYAt(parseLocation(args[0], "0", args[1])));
             } else if (c.equals("chat.post")) {
@@ -297,10 +315,12 @@ class RemoteSession {
                 }
                 sb.setLength(sb.length() - 1);
                 plugin.getServer().broadcastMessage(sb.toString());
+                send("ok");
             } else if (c.equals("events.clear")) {
                 interactEventQueue.clear();
                 chatPostedQueue.clear();
                 projectileHitQueue.clear();
+                send("ok");
             } else if (c.equals("events.block.hits")) {
                 StringBuilder b = new StringBuilder();
                 PlayerInteractEvent event;
@@ -357,8 +377,6 @@ class RemoteSession {
                         b.append("|");
                     }
                 }
-                //DEBUG
-                //System.out.println(b.toString());
                 send(b.toString());
             } else if(c.startsWith("player.")){
                 handleEntityCommand(c.substring(7), args, true);
@@ -415,6 +433,7 @@ class RemoteSession {
                 }
                 Location loc = entity.getLocation();
                 entity.teleport(parseLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                send("ok");
                 break;
             }
             case "getPos":
@@ -429,11 +448,73 @@ class RemoteSession {
                 }
                 Location loc = entity.getLocation();
                 entity.teleport(parseLocation(x, y, z, loc.getPitch(), loc.getYaw()));
+                send("ok");
+                break;
+            }
+            case "enableControl": {
+                if (entity instanceof Mob mob) {
+                    if(!mob.hasAI()) {
+                        mob.getPersistentDataContainer().set(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN, true);
+                        mob.setAI(true);
+                    }
+                    final MobGoals mobGoals = Bukkit.getMobGoals();
+                    mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noMoveAI", GoalType.MOVE));
+                    mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noTargetAI", GoalType.TARGET));
+                    mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noJumpAI", GoalType.JUMP));
+                    mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noLookAI", GoalType.LOOK));
+                    mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(plugin, "noUnknownBehaviorAI", GoalType.UNKNOWN_BEHAVIOR));
+                }
+                send("ok");
+                break;
+            }
+            case "disableControl": {
+                if (entity instanceof Mob mob) {
+                    final MobGoals mobGoals = Bukkit.getMobGoals();
+                    mobGoals.removeGoal(mob, GoalKey.of(Mob.class, new NamespacedKey(plugin, "noMoveAI")));
+                    mobGoals.removeGoal(mob, GoalKey.of(Mob.class, new NamespacedKey(plugin, "noTargetAI")));
+                    mobGoals.removeGoal(mob, GoalKey.of(Mob.class, new NamespacedKey(plugin, "noJumpAI")));
+                    mobGoals.removeGoal(mob, GoalKey.of(Mob.class, new NamespacedKey(plugin, "noLookAI")));
+                    mobGoals.removeGoal(mob, GoalKey.of(Mob.class, new NamespacedKey(plugin, "noUnknownBehaviorAI")));
+                    final PersistentDataContainer persistentDataContainer = mob.getPersistentDataContainer();
+                    final boolean noAI = persistentDataContainer.has(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN);
+                    if (noAI) {
+                        persistentDataContainer.remove(new NamespacedKey(plugin, "noAI"));
+                        mob.setAI(false);
+                    }
+                }
+                send("ok");
+                break;
+            }
+            case "walkTo": {
+                if (entity instanceof Mob mob) {
+                    String x = args[0], y = args[1], z = args[2];
+                    if (args.length > 3) {
+                        x = args[1];
+                        y = args[2];
+                        z = args[3];
+                    }
+                    final Location loc = parseLocation(x, y, z);
+                    mob.getPathfinder().moveTo(loc);
+                }
+                send("ok");
                 break;
             }
             case "getDirection":
                 send(entity.getLocation().getDirection().toString());
                 break;
+            case "setDirection": {
+                String x = args[0], y = args[1], z = args[2];
+                if (args.length > 3) {
+                    x = args[1];
+                    y = args[2];
+                    z = args[3];
+                }
+                final Vector vector = new Vector(Double.parseDouble(x), Double.parseDouble(y), Double.parseDouble(z));
+                Location loc = entity.getLocation().setDirection(vector);
+                entity.teleport(loc);
+                send("ok");
+                break;
+            }
             case "getRotation":
                 send(entity.getLocation().getYaw());
                 break;
@@ -468,6 +549,7 @@ class RemoteSession {
                 if(!(entity instanceof Player)){
                     entity.remove();
                 }
+                send("ok");
                 break;
             default:
                 send("No such entity/player command");
@@ -560,9 +642,9 @@ class RemoteSession {
     }
 
     private Location parseLocation(String xstr, String ystr, String zstr) {
-        int x = (int) Double.parseDouble(xstr);
-        int y = (int) Double.parseDouble(ystr);
-        int z = (int) Double.parseDouble(zstr);
+        double x = Double.parseDouble(xstr);
+        double y = Double.parseDouble(ystr);
+        double z = Double.parseDouble(zstr);
         return new Location(originWorld, x, y, z);
     }
 
@@ -676,6 +758,33 @@ class RemoteSession {
             } catch (Exception e) {
                 logger.log(Level.WARNING,"Failed to close out buffer", e);
             }
+        }
+    }
+
+    private static class EmptyGoal implements Goal<Mob> {
+        private final Plugin plugin;
+        private final String namespacedKey;
+        private final GoalType type;
+
+        public EmptyGoal(Plugin plugin, String namespacedKey, GoalType type) {
+            this.plugin = plugin;
+            this.namespacedKey = namespacedKey;
+            this.type = type;
+        }
+
+        @Override
+        public boolean shouldActivate() {
+            return true;
+        }
+
+        @Override
+        public @NotNull GoalKey<Mob> getKey() {
+            return GoalKey.of(Mob.class, new NamespacedKey(plugin, namespacedKey));
+        }
+
+        @Override
+        public @NotNull EnumSet<GoalType> getTypes() {
+            return EnumSet.of(type);
         }
     }
 }
