@@ -139,14 +139,15 @@ class RemoteSession {
             return;
         }
         String methodName = line.substring(0, line.indexOf("("));
-        String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",\\s*");
+        String methodArgs = line.substring(line.indexOf("(") + 1, line.length() - 1);
+        String[] args = methodArgs.split(",\\s*");
         if(args.length == 1 && args[0].isEmpty()){
             args = new String[0];
         }
-        handleCommand(methodName, args);
+        handleCommand(methodName, methodArgs, args);
     }
 
-    private void handleCommand(String c, String[] args) {
+    private void handleCommand(final String c, final String allArgs, final String[] args) {
         
         try {
             if (c.equals("world.getBlock")) {
@@ -291,12 +292,7 @@ class RemoteSession {
             } else if (c.equals("world.getHeight")) {
                 send(originWorld.getHighestBlockYAt(parseLocation(args[0], "0", args[1])));
             } else if (c.equals("chat.post")) {
-                StringBuilder sb = new StringBuilder();
-                for (String arg : args) {
-                    sb.append(arg).append(",");
-                }
-                sb.setLength(sb.length() - 1);
-                plugin.getServer().broadcastMessage(sb.toString());
+                plugin.getServer().broadcastMessage(allArgs);
             } else if (c.equals("events.clear")) {
                 interactEventQueue.clear();
                 chatPostedQueue.clear();
