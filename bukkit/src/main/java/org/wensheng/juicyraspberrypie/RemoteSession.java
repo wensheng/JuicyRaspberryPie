@@ -508,6 +508,9 @@ class RemoteSession {
                 final Vector vector = new Vector(Double.parseDouble(x), Double.parseDouble(y), Double.parseDouble(z));
                 Location loc = entity.getLocation().setDirection(vector);
                 entity.teleport(loc);
+                if (entity instanceof Mob mob) {
+                    mob.setBodyYaw(loc.getYaw());
+                }
                 send("ok");
                 break;
             }
@@ -523,6 +526,9 @@ class RemoteSession {
                 Location loc = entity.getLocation();
                 loc.setYaw(yaw);
                 entity.teleport(loc);
+                if (entity instanceof Mob mob) {
+                    mob.setBodyYaw(yaw);
+                }
                 send("ok");
                 break;
             }
