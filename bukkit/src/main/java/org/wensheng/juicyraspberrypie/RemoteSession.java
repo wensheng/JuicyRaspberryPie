@@ -269,7 +269,7 @@ class RemoteSession {
                 Collection<Entity> nearbyEntities = originWorld.getNearbyEntities(loc, nearby_distance, 5.0, nearby_distance);
                 StringBuilder sb = new StringBuilder();
                 for(Entity e: nearbyEntities){
-                    sb.append(e.getName()).append(":").append(e.getUniqueId()).append(",");
+                    sb.append(e.getName()).append(":").append(e.getUniqueId()).append("|");
                 }
                 if(sb.length()>1) {
                     sb.setLength(sb.length() - 1);
@@ -366,7 +366,10 @@ class RemoteSession {
                 StringBuilder b = new StringBuilder();
                 AsyncPlayerChatEvent event;
                 while ((event = chatPostedQueue.poll()) != null) {
-                    b.append(event.getPlayer().getEntityId());
+                    final Player p = event.getPlayer();
+                    b.append(p.getName());
+                    b.append(",");
+                    b.append(p.getUniqueId());
                     b.append(",");
                     b.append(event.getMessage());
                     if (!chatPostedQueue.isEmpty()) {
