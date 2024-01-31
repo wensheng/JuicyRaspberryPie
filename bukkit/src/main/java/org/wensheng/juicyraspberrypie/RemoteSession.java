@@ -366,7 +366,10 @@ class RemoteSession {
                 StringBuilder b = new StringBuilder();
                 AsyncPlayerChatEvent event;
                 while ((event = chatPostedQueue.poll()) != null) {
-                    b.append(event.getPlayer().getEntityId());
+                    final Player p = event.getPlayer();
+                    b.append(p.getName());
+                    b.append(",");
+                    b.append(p.getUniqueId());
                     b.append(",");
                     b.append(event.getMessage());
                     if (!chatPostedQueue.isEmpty()) {
