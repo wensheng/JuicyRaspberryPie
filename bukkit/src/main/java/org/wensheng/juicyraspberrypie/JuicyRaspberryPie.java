@@ -39,39 +39,30 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener{
         }
 
         File svrFolder = new File(getDataFolder(), "cmdsvr");
-        if(!svrFolder.exists()) {
-            boolean ok = svrFolder.mkdir();
-            if (ok) {
-                this.saveResource("cmdsvr/pycmdsvr.py", false);
-            } else {
-                logger.warning("Could not create cmdsvr directory in plugin.");
-            }
+        if (svrFolder.exists() || svrFolder.mkdir()) {
+                this.saveResource("cmdsvr/pycmdsvr.py", true);
+        } else {
+            logger.warning("Could not create cmdsvr directory in plugin.");
         }
 
         File mcpiFolder = new File(getDataFolder(), "mcpi");
-        if(!mcpiFolder.exists()) {
-            boolean ok = mcpiFolder.mkdir();
-            if (ok) {
-                this.saveResource("mcpi/__init__.py", false);
-                this.saveResource("mcpi/connection.py", false);
-                this.saveResource("mcpi/event.py", false);
-                this.saveResource("mcpi/minecraft.py", false);
-                this.saveResource("mcpi/util.py", false);
-                this.saveResource("mcpi/vec3.py", false);
-            } else {
-                logger.warning("Could not create mcpi directory in plugin.");
-            }
+        if (mcpiFolder.exists() || mcpiFolder.mkdir()) {
+            this.saveResource("mcpi/__init__.py", true);
+            this.saveResource("mcpi/connection.py", true);
+            this.saveResource("mcpi/event.py", true);
+            this.saveResource("mcpi/minecraft.py", true);
+            this.saveResource("mcpi/util.py", true);
+            this.saveResource("mcpi/vec3.py", true);
+        } else {
+            logger.warning("Could not create mcpi directory in plugin.");
         }
 
         File ppluginsFolder = new File(getDataFolder(), "pplugins");
-        if(!ppluginsFolder.exists()){
-            boolean ok = ppluginsFolder.mkdir();
-            if(ok){
-                this.saveResource("pplugins/README.txt", false);
-                this.saveResource("pplugins/examples.py", false);
-            } else {
-                logger.warning("Could not create pplugins directory in plugin.");
-            }
+        if (ppluginsFolder.exists() || ppluginsFolder.mkdir()){
+            this.saveResource("pplugins/README.txt", true);
+            this.saveResource("pplugins/examples.py", true);
+        } else {
+            logger.warning("Could not create pplugins directory in plugin.");
         }
     }
     
