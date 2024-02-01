@@ -201,7 +201,7 @@ class RemoteSession {
                 StringBuilder bdr = new StringBuilder();
                 for (Player p: plugin.getServer().getOnlinePlayers()) {
                     bdr.append(p.getName());
-                    bdr.append(":");
+                    bdr.append(",");
                     bdr.append(p.getUniqueId());
                     bdr.append("|");
                 }
@@ -269,7 +269,7 @@ class RemoteSession {
                 Collection<Entity> nearbyEntities = originWorld.getNearbyEntities(loc, nearby_distance, 5.0, nearby_distance);
                 StringBuilder sb = new StringBuilder();
                 for(Entity e: nearbyEntities){
-                    sb.append(e.getName()).append(":").append(e.getUniqueId()).append("|");
+                    sb.append(e.getName()).append(",").append(e.getUniqueId()).append("|");
                 }
                 if(sb.length()>1) {
                     sb.setLength(sb.length() - 1);
