@@ -436,14 +436,19 @@ class RemoteSession {
     }
 
     private boolean parsePoweredState(final String arg, final boolean powered) throws IllegalArgumentException {
-        if (arg.equalsIgnoreCase("on")) {
-            return true;
-        } else if (arg.equalsIgnoreCase("off")) {
-            return false;
-        } else if (arg.equalsIgnoreCase("toggle")) {
-            return !powered;
-        } else {
-            throw new IllegalArgumentException("Invalid state type: " + arg);
+        switch (arg) {
+            case "PoweredState.ON" -> {
+                return true;
+            }
+            case "PoweredState.OFF" -> {
+                return false;
+            }
+            case "PoweredState.TOGGLE" -> {
+                return !powered;
+            }
+            default -> {
+                throw new IllegalArgumentException("Invalid state type: " + arg);
+            }
         }
     }
 
