@@ -4,13 +4,15 @@ import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
 import com.destroystokyo.paper.entity.ai.MobGoals;
-import com.destroystokyo.paper.entity.ai.VanillaGoal;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.type.Switch;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -197,6 +199,22 @@ class RemoteSession {
             } else if (c.equals("world.isBlockPassable")) {
                 Location loc = parseLocation(args[0], args[1], args[2]);
                 send(originWorld.getBlockAt(loc).isPassable());
+            } else if (c.equals("world.setPowered")) {
+                Location loc = parseLocation(args[0], args[1], args[2]);
+                final Block block = originWorld.getBlockAt(loc);
+                if(block.getBlockData() instanceof Switch powerableSwitch){
+                    try {
+                        powerableSwitch.setPowered(parsePoweredState(args[3], powerableSwitch.isPowered()));
+                        block.setBlockData(powerableSwitch);
+                        block.getState().update();
+                        updateBlocksAround(block, powerableSwitch);
+                        send("ok");
+                    } catch (IllegalArgumentException e) {
+                        send(e.getMessage());
+                    }
+                    return;
+                }
+                send("No powerable block at " + loc);
             } else if (c.equals("world.getPlayerIds")) {
                 StringBuilder bdr = new StringBuilder();
                 for (Player p: plugin.getServer().getOnlinePlayers()) {
@@ -398,6 +416,34 @@ class RemoteSession {
             logger.log(Level.WARNING, "Error occurred handling command", e);
             send("Fail");
             
+        }
+    }
+
+    private void updateBlocksAround(final Block block, final Switch powerableSwitch) {
+        BlockFace attachedTo = switch (powerableSwitch.getAttachedFace()) {
+            case FLOOR -> BlockFace.DOWN;
+            case CEILING -> BlockFace.UP;
+            default -> powerableSwitch.getFacing().getOppositeFace();
+        };
+        Block relative = block.getRelative(attachedTo);
+
+        BlockState relativeState = relative.getState();
+        if (relativeState instanceof Container container) {
+            container.getInventory().clear();
+        }
+        relative.setType(Material.AIR, false);
+        relativeState.update(true);
+    }
+
+    private boolean parsePoweredState(final String arg, final boolean powered) throws IllegalArgumentException {
+        if (arg.equalsIgnoreCase("on")) {
+            return true;
+        } else if (arg.equalsIgnoreCase("off")) {
+            return false;
+        } else if (arg.equalsIgnoreCase("toggle")) {
+            return !powered;
+        } else {
+            throw new IllegalArgumentException("Invalid state type: " + arg);
         }
     }
 
