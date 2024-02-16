@@ -18,7 +18,10 @@ import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPos;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.GetRotation;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.GetTile;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.Remove;
+import org.wensheng.juicyraspberrypie.command.handlers.entity.SetDirection;
+import org.wensheng.juicyraspberrypie.command.handlers.entity.SetPitch;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.SetPos;
+import org.wensheng.juicyraspberrypie.command.handlers.entity.SetRotation;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.SetTile;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.WalkTo;
 import org.wensheng.juicyraspberrypie.command.handlers.events.Clear;
@@ -84,7 +87,7 @@ class RemoteSession {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         init();
-        registry = new Registry(plugin);
+        registry = new Registry();
 
         final SessionAttachment attachment = new SessionAttachment(plugin);
         attachment.setPlayerAndOrigin();
@@ -147,10 +150,10 @@ class RemoteSession {
         if (args.length == 1 && args[0].isEmpty()) {
             args = new String[0];
         }
-        handleCommand(methodName, methodArgs, args);
+        handleCommand(methodName, args);
     }
 
-    private void handleCommand(final String c, final String allArgs, final String[] args) {
+    private void handleCommand(final String c, final String[] args) {
         final Handler handler = registry.getHandler(c);
         if (handler != null) {
             send(handler.get(new Instruction(args, locationParser)));
@@ -158,10 +161,6 @@ class RemoteSession {
         }
         plugin.getLogger().warning(c + " is not supported.");
         send("Fail");
-    }
-
-    private void send(final Object a) {
-        send(a.toString());
     }
 
     private void send(final String a) {
@@ -176,7 +175,7 @@ class RemoteSession {
         pendingRemoval = true;
 
         teardownRegistry();
-        
+
         //wait for threads to stop
         try {
             inThread.join(2000);
@@ -296,16 +295,16 @@ class RemoteSession {
         registry.register("entity.setPos", new SetPos(entityProvider));
         registry.register("player.getDirection", new GetDirection(playerEntityProvider));
         registry.register("entity.getDirection", new GetDirection(entityProvider));
-        registry.register("player.setDirection", new GetDirection(playerEntityProvider));
-        registry.register("entity.setDirection", new GetDirection(entityProvider));
+        registry.register("player.setDirection", new SetDirection(playerEntityProvider));
+        registry.register("entity.setDirection", new SetDirection(entityProvider));
         registry.register("player.getRotation", new GetRotation(playerEntityProvider));
         registry.register("entity.getRotation", new GetRotation(entityProvider));
-        registry.register("player.setRotation", new GetRotation(playerEntityProvider));
-        registry.register("entity.setRotation", new GetRotation(entityProvider));
+        registry.register("player.setRotation", new SetRotation(playerEntityProvider));
+        registry.register("entity.setRotation", new SetRotation(entityProvider));
         registry.register("player.getPitch", new GetPitch(playerEntityProvider));
         registry.register("entity.getPitch", new GetPitch(entityProvider));
-        registry.register("player.setPitch", new GetPitch(playerEntityProvider));
-        registry.register("entity.setPitch", new GetPitch(entityProvider));
+        registry.register("player.setPitch", new SetPitch(playerEntityProvider));
+        registry.register("entity.setPitch", new SetPitch(entityProvider));
         registry.register("entity.enableControl", new EnableControl(plugin, entityProvider));
         registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
         registry.register("entity.walkTo", new WalkTo(entityProvider));

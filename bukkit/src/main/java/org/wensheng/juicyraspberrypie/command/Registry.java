@@ -1,6 +1,5 @@
 package org.wensheng.juicyraspberrypie.command;
 
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -9,7 +8,7 @@ import java.util.HashMap;
 public class Registry {
     private final HashMap<String, Handler> handlers;
 
-    public Registry(final Plugin plugin) {
+    public Registry() {
         handlers = new HashMap<>();
     }
 

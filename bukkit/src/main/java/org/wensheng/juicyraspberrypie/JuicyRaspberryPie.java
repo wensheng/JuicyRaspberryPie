@@ -4,6 +4,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JuicyRaspberryPie extends JavaPlugin implements Listener {
@@ -71,8 +73,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
             new Thread(serverThread).start();
             logger.info("ThreadListener Started");
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.warning("Failed to start ThreadListener");
+            logger.log(Level.WARNING, "Failed to start ThreadListener", e);
             return;
         }
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new TickHandler(), 1, 1);
@@ -81,13 +82,8 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 
         if (start_pyserver) {
             final String pyexe = getConfig().getString("pyexe", "python.exe");
-            //String pypath = this.getConfig().getString("pypath", "C:\\Python37");
-
-            //logger.info("Starting Python command server using " + pyexe + " in " + pypath);
             logger.info("Starting Python command server using " + pyexe);
             final ProcessBuilder pb = new ProcessBuilder(pyexe, "cmdsvr/pycmdsvr.py");
-            //Map<String, String> envs = pb.environment();
-            //envs.put("Path", pypath);
             try {
                 pb.redirectErrorStream(true);
                 pb.directory(this.getDataFolder());
@@ -127,21 +123,20 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
             try {
                 session.close();
             } catch (Exception e) {
-                logger.warning("Failed to close RemoteSession");
-                e.printStackTrace();
+                logger.log(Level.WARNING, "Failed to close RemoteSession", e);
             }
         }
         serverThread.running = false;
         try {
             serverThread.serverSocket.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Failed to close serverSocket", e);
         }
 
         serverThread = null;
     }
 
-    public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
+    public boolean onCommand(final @NotNull CommandSender sender, final @NotNull Command command, final @NotNull String label, final String[] args) {
         final String cmdString;
         int port = this.getConfig().getInt("cmdsvr_port");
 
