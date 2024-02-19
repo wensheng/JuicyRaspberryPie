@@ -29,18 +29,12 @@ public class SetPowered implements HandlerVoid {
     }
 
     private boolean parsePoweredState(final String arg, final boolean powered) throws IOException {
-        switch (arg) {
-            case "PoweredState.ON" -> {
-                return true;
-            }
-            case "PoweredState.OFF" -> {
-                return false;
-            }
-            case "PoweredState.TOGGLE" -> {
-                return !powered;
-            }
+        return switch (arg) {
+            case "PoweredState.ON" -> true;
+            case "PoweredState.OFF" -> false;
+            case "PoweredState.TOGGLE" -> !powered;
             default -> throw new IOException("Invalid state type: " + arg);
-        }
+        };
     }
 
     private void updateBlocksAround(final Block block, final Switch powerableSwitch) {

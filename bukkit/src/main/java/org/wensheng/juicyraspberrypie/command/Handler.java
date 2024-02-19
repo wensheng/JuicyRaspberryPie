@@ -12,7 +12,7 @@ public interface Handler {
         try {
             return handle(instruction);
         } catch (IOException e) {
-            return e.getMessage();
+            return "Fail: " + e.getMessage();
         }
     }
 

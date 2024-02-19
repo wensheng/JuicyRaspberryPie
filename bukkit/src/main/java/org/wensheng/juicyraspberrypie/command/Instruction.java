@@ -19,26 +19,20 @@ public class Instruction implements Iterator<String> {
         this.courser = 0;
     }
 
-    public String next() {
-        if (courser < args.length) {
-            return args[courser++];
-        }
-        return null;
-    }
-
-    public String peek() {
-        if (courser < args.length) {
-            return args[courser];
-        }
-        return null;
-    }
-
     public boolean hasNext() {
-        return courser < args.length;
+        return hasNext(1);
     }
 
     public boolean hasNext(final int n) {
-        return courser + n < args.length;
+        return courser + n <= args.length;
+    }
+
+    public String next() {
+        return hasNext() ? args[courser++] : null;
+    }
+
+    public String peek() {
+        return hasNext() ? args[courser] : null;
     }
 
     public Location nextLocation() {

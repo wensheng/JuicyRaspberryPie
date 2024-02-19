@@ -12,8 +12,7 @@ public class Registry {
         handlers = new HashMap<>();
     }
 
-    @NotNull
-    public Collection<Handler> getHandlers() {
+    public @NotNull Collection<Handler> getHandlers() {
         return handlers.values();
     }
 
