@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
-import java.io.IOException;
+import java.util.NoSuchElementException;
 
 public class EntityByPlayerNameProvider implements EntityProvider {
 
@@ -15,7 +15,7 @@ public class EntityByPlayerNameProvider implements EntityProvider {
     }
 
     @Override
-    public Player getEntity(final Instruction instruction) throws IOException {
+    public Player getEntity(final Instruction instruction) {
         final Player player;
         if ("".equals(instruction.peek())) {
             instruction.next();
@@ -24,7 +24,7 @@ public class EntityByPlayerNameProvider implements EntityProvider {
             player = instruction.nextNamedPlayer();
         }
         if (player == null) {
-            throw new IOException("No player found");
+            throw new NoSuchElementException("No player found");
         }
         return player;
     }

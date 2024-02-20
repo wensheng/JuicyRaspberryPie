@@ -5,8 +5,6 @@ import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
-import java.io.IOException;
-
 public class GetPitch implements Handler {
     private final EntityProvider entityProvider;
 
@@ -15,7 +13,7 @@ public class GetPitch implements Handler {
     }
 
     @Override
-    public String handle(final Instruction instruction) throws IOException {
+    public String handle(final Instruction instruction) {
         final Entity entity = entityProvider.getEntity(instruction);
         return String.valueOf(entity.getLocation().getPitch());
     }

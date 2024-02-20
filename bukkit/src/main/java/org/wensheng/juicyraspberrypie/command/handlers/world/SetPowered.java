@@ -10,11 +10,11 @@ import org.bukkit.block.data.type.Switch;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
-import java.io.IOException;
+import java.util.NoSuchElementException;
 
 public class SetPowered implements HandlerVoid {
     @Override
-    public void handleVoid(final Instruction instruction) throws IOException {
+    public void handleVoid(final Instruction instruction) {
         final Location loc = instruction.nextLocation();
         final Block block = loc.getBlock();
         if (block.getBlockData() instanceof final Switch powerableSwitch) {
@@ -25,15 +25,15 @@ public class SetPowered implements HandlerVoid {
             return;
         }
 
-        throw new IOException("No powerable block at " + loc);
+        throw new NoSuchElementException("No powerable block at " + loc);
     }
 
-    private boolean parsePoweredState(final String arg, final boolean powered) throws IOException {
+    private boolean parsePoweredState(final String arg, final boolean powered) {
         return switch (arg) {
             case "PoweredState.ON" -> true;
             case "PoweredState.OFF" -> false;
             case "PoweredState.TOGGLE" -> !powered;
-            default -> throw new IOException("Invalid state type: " + arg);
+            default -> throw new IllegalArgumentException("Invalid state type: " + arg);
         };
     }
 

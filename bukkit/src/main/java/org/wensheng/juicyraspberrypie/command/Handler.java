@@ -3,7 +3,6 @@ package org.wensheng.juicyraspberrypie.command;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,12 +10,12 @@ public interface Handler {
     default String get(final Instruction instruction) {
         try {
             return handle(instruction);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return "Fail: " + e.getMessage();
         }
     }
 
-    String handle(Instruction instruction) throws IOException;
+    String handle(Instruction instruction);
 
     default String getLocation(final Location loc) {
         return loc.getX() + "," + loc.getY() + "," + loc.getZ();

@@ -4,8 +4,6 @@ import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.Registry;
 
-import java.io.IOException;
-
 public class Clear implements HandlerVoid {
     private final Registry registry;
 
@@ -14,7 +12,7 @@ public class Clear implements HandlerVoid {
     }
 
     @Override
-    public void handleVoid(final Instruction instruction) throws IOException {
+    public void handleVoid(final Instruction instruction) {
         registry.getHandlers().stream()
                 .filter(handler -> handler instanceof EventQueue<?>)
                 .map(handler -> (EventQueue<?>) handler)

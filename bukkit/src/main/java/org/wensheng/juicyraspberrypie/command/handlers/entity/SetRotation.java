@@ -7,8 +7,6 @@ import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
-import java.io.IOException;
-
 public class SetRotation implements HandlerVoid {
     private final EntityProvider entityProvider;
 
@@ -17,7 +15,7 @@ public class SetRotation implements HandlerVoid {
     }
 
     @Override
-    public void handleVoid(final Instruction instruction) throws IOException {
+    public void handleVoid(final Instruction instruction) {
         final Entity entity = entityProvider.getEntity(instruction);
         final float yaw = Float.parseFloat(instruction.next());
         final Location entityLoc = entity.getLocation();

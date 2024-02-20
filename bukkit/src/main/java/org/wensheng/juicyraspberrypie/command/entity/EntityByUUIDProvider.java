@@ -4,7 +4,7 @@ import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
-import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 public class EntityByUUIDProvider implements EntityProvider {
@@ -15,10 +15,10 @@ public class EntityByUUIDProvider implements EntityProvider {
     }
 
     @Override
-    public Entity getEntity(final Instruction instruction) throws IOException {
+    public Entity getEntity(final Instruction instruction) {
         final Entity entity = server.getEntity(UUID.fromString(instruction.next()));
         if (entity == null) {
-            throw new IOException("No entity found");
+            throw new NoSuchElementException("No entity found");
         }
         return entity;
     }

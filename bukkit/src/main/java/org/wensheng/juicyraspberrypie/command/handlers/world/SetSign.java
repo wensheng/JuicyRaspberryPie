@@ -9,8 +9,6 @@ import org.bukkit.block.data.BlockData;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
-import java.io.IOException;
-
 public class SetSign implements HandlerVoid {
     // in 1.14
     //ACACIA BIRCH OAK DARK_OAK JUNGLE SPRUCE -LEGACY- +_SIGN +_WALL_SIGN
@@ -19,14 +17,14 @@ public class SetSign implements HandlerVoid {
     // SIGN WALL_SIGN, LEGACY
     // note in 1.14.4 LEGACY is deprecated
     @Override
-    public void handleVoid(final Instruction instruction) throws IOException {
+    public void handleVoid(final Instruction instruction) {
         final Location loc = instruction.nextLocation();
         Material material = Material.matchMaterial(instruction.next());
         if (material == null) {
             material = Material.BIRCH_SIGN;
         }
         if (!material.toString().contains("_SIGN")) {
-            throw new IOException("material must be sign");
+            throw new IllegalArgumentException("material must be sign");
         }
 
         final Block thisBlock = loc.getBlock();

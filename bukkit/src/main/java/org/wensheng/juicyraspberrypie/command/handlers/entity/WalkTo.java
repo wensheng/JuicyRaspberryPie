@@ -6,8 +6,6 @@ import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityByUUIDProvider;
 
-import java.io.IOException;
-
 public class WalkTo implements HandlerVoid {
     private final EntityByUUIDProvider entityProvider;
 
@@ -16,7 +14,7 @@ public class WalkTo implements HandlerVoid {
     }
 
     @Override
-    public void handleVoid(final Instruction instruction) throws IOException {
+    public void handleVoid(final Instruction instruction) {
         final Entity entity = entityProvider.getEntity(instruction);
         if (entity instanceof final Mob mob) {
             mob.getPathfinder().moveTo(instruction.nextLocation());
