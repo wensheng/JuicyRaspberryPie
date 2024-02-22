@@ -1,5 +1,6 @@
 package org.wensheng.juicyraspberrypie;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationParser;
@@ -146,9 +147,13 @@ class RemoteSession {
         }
         final String methodName = line.substring(0, line.indexOf("("));
         final String methodArgs = line.substring(line.indexOf("(") + 1, line.length() - 1);
-        String[] args = methodArgs.split(",");
-        if (args.length == 1 && args[0].isEmpty()) {
-            args = new String[0];
+        String[] args = methodArgs.split(",", -1);
+        args = ArrayUtils.remove(args, args.length - 1);
+        for (int i = 0; i < args.length; i++) {
+            final String arg = args[i];
+            if (arg.isEmpty()) {
+                args[i] = null;
+            }
         }
         handleCommand(methodName, args);
     }

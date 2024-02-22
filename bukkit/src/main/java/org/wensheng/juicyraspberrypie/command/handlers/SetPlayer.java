@@ -13,10 +13,6 @@ public class SetPlayer implements Handler {
 
     @Override
     public String handle(final Instruction instruction) {
-        if (attachment.setPlayerAndOrigin(instruction.next())) {
-            return "true";
-        } else {
-            return "false";
-        }
+        return String.valueOf(attachment.setPlayerAndOrigin(instruction.next()));
     }
 }

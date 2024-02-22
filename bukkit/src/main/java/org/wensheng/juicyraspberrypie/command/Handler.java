@@ -11,6 +11,7 @@ public interface Handler {
         try {
             return handle(instruction);
         } catch (Exception e) {
+            e.printStackTrace();
             return "Fail: " + e.getMessage();
         }
     }
