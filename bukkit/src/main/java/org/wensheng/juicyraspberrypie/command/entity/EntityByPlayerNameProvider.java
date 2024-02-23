@@ -17,7 +17,7 @@ public class EntityByPlayerNameProvider implements EntityProvider {
     @Override
     public Player getEntity(final Instruction instruction) {
         final Player player;
-        if ("".equals(instruction.peek())) {
+        if (instruction.peek() == null) {
             instruction.next();
             player = attachment.getPlayer();
         } else {
