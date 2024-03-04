@@ -1,4 +1,4 @@
 [submodule "mcpi"]
-	path = api/python/mcpi
+	path = python/mcpi
 	url = ../mcpi.git
 	branch = .

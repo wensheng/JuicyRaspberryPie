@@ -1,8 +1,6 @@
 __pycache__/
 node_modules/
-bukkit/bin/
-bukkit/target/
-bukkit/lib/*.jar
+target/
 !mcsvr/clean.py
 !mcsvr/start-server-linux.sh
 !mcsvr/start-server-win.bat
