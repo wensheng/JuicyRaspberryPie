@@ -8,21 +8,14 @@
     <packaging>jar</packaging>
 
     <build>
-       <finalName>${project.artifactId}-${project.version}</finalName>
-       <sourceDirectory>src/main/java</sourceDirectory>
        <resources>
            <resource>
-               <targetPath>bukkit</targetPath>
+               <directory>src/main/resources</directory>
                <filtering>true</filtering>
-               <directory>${basedir}/src/main/resources/</directory>
-               <includes>
-                   <include>**/*</include>
-               </includes>
            </resource>
            <resource>
-               <targetPath>bukkit</targetPath>
                <filtering>true</filtering>
-               <directory>${basedir}/../api/python/mcpi</directory>
+               <directory>python/mcpi</directory>
                <includes>
                    <include>mcpi/**.py</include>
                </includes>
