@@ -6,8 +6,6 @@ JuicyRaspberryPie plugin provides a "/p" command. When a player issue a "/p" com
 
 JuicyRaspberryPie ships with an embedded command server, by default, it's not turned on.  To turn it on, edit the file plugins/JuicyRaspberryPie/config.yml.  Changed `start_cmdsvr: false` to `start_cmdsvr: true`; also make sure `pyexe` point to correct python executable in your system.  Reload Spigot, the embedded command server will be turned on. 
 
-(Note JuicyRaspberryPie Forge mod, unlike JuicyRaspberryPie Spigot plugin, does not have a embedded command server).
-
 With the command server turned on, now when you issue "/p list", you should see the functions that can be executed.  These functions are just examples JuicyRaspberryPie provides, they are:
 
     cube, flatten, falling_block, rainbow, sphere

@@ -1,4 +1,0 @@
-port: 4711
-pysvr_port: 32123
-pyexe: "python3.exe"
-pypath: "C:\Python34"
