@@ -2,3 +2,6 @@
 	path = python/mcpi
 	url = ../mcpi.git
 	branch = .
+[submodule "MavenSetup"]
+	path = .mvn
+	url = ../MavenSetup.git
