@@ -11,14 +11,9 @@
 
 	<groupId>org.wensheng</groupId>
 	<artifactId>juicyraspberrypie</artifactId>
-	<packaging>pom</packaging>
 	<version>1.18.1</version>
 	<name>JuicyRaspberryPie</name>
 	<description>Plugin to execute python code</description>
-
-	<modules>
-		<module>.mvn/Base</module>
-	</modules>
 
 	<repositories>
 		<repository>
