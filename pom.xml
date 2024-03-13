@@ -20,18 +20,6 @@
 		<module>.mvn/Base</module>
 	</modules>
 
-	<build>
-		<resources>
-			<resource>
-				<filtering>true</filtering>
-				<directory>python/mcpi</directory>
-				<includes>
-					<include>mcpi/**.py</include>
-				</includes>
-			</resource>
-		</resources>
-	</build>
-
 	<repositories>
 		<repository>
 			<id>spigot</id>
@@ -48,4 +36,15 @@
 		</dependency>
 	</dependencies>
 
+	<build>
+		<resources>
+			<resource>
+				<filtering>true</filtering>
+				<directory>python/mcpi</directory>
+				<includes>
+					<include>mcpi/**.py</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
 </project>
