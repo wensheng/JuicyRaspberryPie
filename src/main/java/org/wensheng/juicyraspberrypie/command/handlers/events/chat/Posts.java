@@ -9,40 +9,40 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 public class Posts extends EventQueue<AsyncPlayerChatEvent> {
-    public Posts(final Plugin plugin) {
-        super(plugin);
-    }
+	public Posts(final Plugin plugin) {
+		super(plugin);
+	}
 
-    @Override
-    public String handle(final Instruction instruction) {
-        final StringBuilder b = new StringBuilder();
-        AsyncPlayerChatEvent event;
-        while ((event = pollEvent()) != null) {
-            final Player p = event.getPlayer();
-            b.append(p.getName());
-            b.append(",");
-            b.append(p.getUniqueId());
-            b.append(",");
-            b.append(event.getMessage());
-            if (!isQueueEmpty()) {
-                b.append("|");
-            }
-        }
-        return b.toString();
-    }
+	@Override
+	public String handle(final Instruction instruction) {
+		final StringBuilder b = new StringBuilder();
+		AsyncPlayerChatEvent event;
+		while ((event = pollEvent()) != null) {
+			final Player p = event.getPlayer();
+			b.append(p.getName());
+			b.append(",");
+			b.append(p.getUniqueId());
+			b.append(",");
+			b.append(event.getMessage());
+			if (!isQueueEmpty()) {
+				b.append("|");
+			}
+		}
+		return b.toString();
+	}
 
-    @EventHandler
-    public void onChatPosted(final AsyncPlayerChatEvent event) {
-        queueEvent(event);
-    }
+	@EventHandler
+	public void onChatPosted(final AsyncPlayerChatEvent event) {
+		queueEvent(event);
+	}
 
-    @Override
-    public void start() {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    }
+	@Override
+	public void start() {
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+	}
 
-    @Override
-    public void stop() {
-        HandlerList.unregisterAll(this);
-    }
+	@Override
+	public void stop() {
+		HandlerList.unregisterAll(this);
+	}
 }

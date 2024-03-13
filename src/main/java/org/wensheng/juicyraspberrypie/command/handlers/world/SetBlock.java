@@ -10,23 +10,23 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 public class SetBlock implements HandlerVoid {
 
-    @Override
-    public void handleVoid(final Instruction instruction) {
-        final Location loc = instruction.nextLocation();
-        Material material = Material.matchMaterial(instruction.next());
-        if (material == null) {
-            material = Material.valueOf("SANDSTONE");
-        }
-        final int facing = instruction.hasNext() ? Integer.parseInt(instruction.next()) : 0;
-        final BlockFace blockFace = BlockFace.values()[facing];
-        updateBlock(loc, material, blockFace);
-    }
+	@Override
+	public void handleVoid(final Instruction instruction) {
+		final Location loc = instruction.nextLocation();
+		Material material = Material.matchMaterial(instruction.next());
+		if (material == null) {
+			material = Material.valueOf("SANDSTONE");
+		}
+		final int facing = instruction.hasNext() ? Integer.parseInt(instruction.next()) : 0;
+		final BlockFace blockFace = BlockFace.values()[facing];
+		updateBlock(loc, material, blockFace);
+	}
 
-    protected void updateBlock(final Location loc, final Material blockType, final BlockFace blockFace) {
-        final BlockData blockData = blockType.createBlockData();
-        if (blockData instanceof Directional) {
-            ((Directional) blockData).setFacing(blockFace);
-        }
-        loc.getBlock().setBlockData(blockData);
-    }
+	protected void updateBlock(final Location loc, final Material blockType, final BlockFace blockFace) {
+		final BlockData blockData = blockType.createBlockData();
+		if (blockData instanceof Directional) {
+			((Directional) blockData).setFacing(blockFace);
+		}
+		loc.getBlock().setBlockData(blockData);
+	}
 }

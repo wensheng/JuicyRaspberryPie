@@ -19,63 +19,63 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ControllableEntity {
-    private final Plugin plugin;
+	private final Plugin plugin;
 
-    private final Entity entity;
+	private final Entity entity;
 
-    public ControllableEntity(final Plugin plugin, final Entity entity) {
-        this.plugin = plugin;
-        this.entity = entity;
-    }
+	public ControllableEntity(final Plugin plugin, final Entity entity) {
+		this.plugin = plugin;
+		this.entity = entity;
+	}
 
-    public void enableControl() {
-        if (entity instanceof final Mob mob) {
-            if (!mob.hasAI()) {
-                mob.getPersistentDataContainer().set(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN, true);
-                mob.setAI(true);
-            }
-            final MobGoals mobGoals = Bukkit.getMobGoals();
-            getGoalKeyNamespacedKeys().forEach((goalType, namespacedKey) -> mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(namespacedKey, goalType)));
-        }
-    }
+	public void enableControl() {
+		if (entity instanceof final Mob mob) {
+			if (!mob.hasAI()) {
+				mob.getPersistentDataContainer().set(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN, true);
+				mob.setAI(true);
+			}
+			final MobGoals mobGoals = Bukkit.getMobGoals();
+			getGoalKeyNamespacedKeys().forEach((goalType, namespacedKey) -> mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(namespacedKey, goalType)));
+		}
+	}
 
-    public void disableControl() {
-        if (entity instanceof final Mob mob) {
-            final MobGoals mobGoals = Bukkit.getMobGoals();
-            getGoalKeyNamespacedKeys().forEach((goalType, namespacedKey) -> mobGoals.removeGoal(mob, GoalKey.of(Mob.class, namespacedKey)));
-            final PersistentDataContainer persistentDataContainer = mob.getPersistentDataContainer();
-            final boolean noAI = persistentDataContainer.has(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN);
-            if (noAI) {
-                persistentDataContainer.remove(new NamespacedKey(plugin, "noAI"));
-                mob.setAI(false);
-            }
-        }
-    }
+	public void disableControl() {
+		if (entity instanceof final Mob mob) {
+			final MobGoals mobGoals = Bukkit.getMobGoals();
+			getGoalKeyNamespacedKeys().forEach((goalType, namespacedKey) -> mobGoals.removeGoal(mob, GoalKey.of(Mob.class, namespacedKey)));
+			final PersistentDataContainer persistentDataContainer = mob.getPersistentDataContainer();
+			final boolean noAI = persistentDataContainer.has(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN);
+			if (noAI) {
+				persistentDataContainer.remove(new NamespacedKey(plugin, "noAI"));
+				mob.setAI(false);
+			}
+		}
+	}
 
-    private Map<GoalType, NamespacedKey> getGoalKeyNamespacedKeys() {
-        return Arrays.stream(GoalType.values())
-                .map(goalType -> {
-                    final String key = "no_" + goalType.name() + "_AI";
-                    return Map.entry(goalType, new NamespacedKey(plugin, key));
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
+	private Map<GoalType, NamespacedKey> getGoalKeyNamespacedKeys() {
+		return Arrays.stream(GoalType.values())
+				.map(goalType -> {
+					final String key = "no_" + goalType.name() + "_AI";
+					return Map.entry(goalType, new NamespacedKey(plugin, key));
+				})
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	}
 
-    private record EmptyGoal(NamespacedKey namespacedKey, GoalType type) implements Goal<Mob> {
+	private record EmptyGoal(NamespacedKey namespacedKey, GoalType type) implements Goal<Mob> {
 
-        @Override
-        public boolean shouldActivate() {
-            return true;
-        }
+		@Override
+		public boolean shouldActivate() {
+			return true;
+		}
 
-        @Override
-        public @NotNull GoalKey<Mob> getKey() {
-            return GoalKey.of(Mob.class, namespacedKey);
-        }
+		@Override
+		public @NotNull GoalKey<Mob> getKey() {
+			return GoalKey.of(Mob.class, namespacedKey);
+		}
 
-        @Override
-        public @NotNull EnumSet<GoalType> getTypes() {
-            return EnumSet.of(type);
-        }
-    }
+		@Override
+		public @NotNull EnumSet<GoalType> getTypes() {
+			return EnumSet.of(type);
+		}
+	}
 }

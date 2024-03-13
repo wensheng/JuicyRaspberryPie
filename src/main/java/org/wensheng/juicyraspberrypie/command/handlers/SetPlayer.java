@@ -5,14 +5,14 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 public class SetPlayer implements Handler {
-    private final SessionAttachment attachment;
+	private final SessionAttachment attachment;
 
-    public SetPlayer(final SessionAttachment attachment) {
-        this.attachment = attachment;
-    }
+	public SetPlayer(final SessionAttachment attachment) {
+		this.attachment = attachment;
+	}
 
-    @Override
-    public String handle(final Instruction instruction) {
-        return String.valueOf(attachment.setPlayerAndOrigin(instruction.next()));
-    }
+	@Override
+	public String handle(final Instruction instruction) {
+		return String.valueOf(attachment.setPlayerAndOrigin(instruction.next()));
+	}
 }

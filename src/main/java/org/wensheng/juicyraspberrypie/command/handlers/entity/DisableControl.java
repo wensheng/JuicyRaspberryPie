@@ -7,18 +7,18 @@ import org.wensheng.juicyraspberrypie.command.entity.ControllableEntity;
 import org.wensheng.juicyraspberrypie.command.entity.EntityByUUIDProvider;
 
 public class DisableControl implements HandlerVoid {
-    private final Plugin plugin;
+	private final Plugin plugin;
 
-    private final EntityByUUIDProvider entityProvider;
+	private final EntityByUUIDProvider entityProvider;
 
-    public DisableControl(final Plugin plugin, final EntityByUUIDProvider entityProvider) {
-        this.plugin = plugin;
-        this.entityProvider = entityProvider;
-    }
+	public DisableControl(final Plugin plugin, final EntityByUUIDProvider entityProvider) {
+		this.plugin = plugin;
+		this.entityProvider = entityProvider;
+	}
 
-    @Override
-    public void handleVoid(final Instruction instruction) {
-        final ControllableEntity entity = new ControllableEntity(plugin, entityProvider.getEntity(instruction));
-        entity.disableControl();
-    }
+	@Override
+	public void handleVoid(final Instruction instruction) {
+		final ControllableEntity entity = new ControllableEntity(plugin, entityProvider.getEntity(instruction));
+		entity.disableControl();
+	}
 }

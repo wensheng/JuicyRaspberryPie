@@ -6,15 +6,15 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
 public class GetPitch implements Handler {
-    private final EntityProvider entityProvider;
+	private final EntityProvider entityProvider;
 
-    public GetPitch(final EntityProvider entityProvider) {
-        this.entityProvider = entityProvider;
-    }
+	public GetPitch(final EntityProvider entityProvider) {
+		this.entityProvider = entityProvider;
+	}
 
-    @Override
-    public String handle(final Instruction instruction) {
-        final Entity entity = entityProvider.getEntity(instruction);
-        return String.valueOf(entity.getLocation().getPitch());
-    }
+	@Override
+	public String handle(final Instruction instruction) {
+		final Entity entity = entityProvider.getEntity(instruction);
+		return String.valueOf(entity.getLocation().getPitch());
+	}
 }

@@ -7,17 +7,17 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityByUUIDProvider;
 
 public class Remove implements HandlerVoid {
-    private final EntityByUUIDProvider entityProvider;
+	private final EntityByUUIDProvider entityProvider;
 
-    public Remove(final EntityByUUIDProvider entityProvider) {
-        this.entityProvider = entityProvider;
-    }
+	public Remove(final EntityByUUIDProvider entityProvider) {
+		this.entityProvider = entityProvider;
+	}
 
-    @Override
-    public void handleVoid(final Instruction instruction) {
-        final Entity entity = entityProvider.getEntity(instruction);
-        if (!(entity instanceof Player)) {
-            entity.remove();
-        }
-    }
+	@Override
+	public void handleVoid(final Instruction instruction) {
+		final Entity entity = entityProvider.getEntity(instruction);
+		if (!(entity instanceof Player)) {
+			entity.remove();
+		}
+	}
 }

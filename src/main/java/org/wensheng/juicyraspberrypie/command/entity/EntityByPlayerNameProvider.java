@@ -8,24 +8,24 @@ import java.util.NoSuchElementException;
 
 public class EntityByPlayerNameProvider implements EntityProvider {
 
-    private final SessionAttachment attachment;
+	private final SessionAttachment attachment;
 
-    public EntityByPlayerNameProvider(final SessionAttachment attachment) {
-        this.attachment = attachment;
-    }
+	public EntityByPlayerNameProvider(final SessionAttachment attachment) {
+		this.attachment = attachment;
+	}
 
-    @Override
-    public Player getEntity(final Instruction instruction) {
-        final Player player;
-        if (instruction.peek() == null) {
-            instruction.next();
-            player = attachment.getPlayer();
-        } else {
-            player = instruction.nextNamedPlayer();
-        }
-        if (player == null) {
-            throw new NoSuchElementException("No player found");
-        }
-        return player;
-    }
+	@Override
+	public Player getEntity(final Instruction instruction) {
+		final Player player;
+		if (instruction.peek() == null) {
+			instruction.next();
+			player = attachment.getPlayer();
+		} else {
+			player = instruction.nextNamedPlayer();
+		}
+		if (player == null) {
+			throw new NoSuchElementException("No player found");
+		}
+		return player;
+	}
 }
