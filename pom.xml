@@ -4,9 +4,8 @@
 
 	<parent>
 		<groupId>works.reload</groupId>
-		<artifactId>base</artifactId>
+		<artifactId>parent</artifactId>
 		<version>1.0.0</version>
-		<relativePath>.mvn/Base/pom.xml</relativePath>
 	</parent>
 
 	<groupId>org.wensheng</groupId>
@@ -17,7 +16,11 @@
 
 	<repositories>
 		<repository>
-			<id>spigot</id>
+			<id>reload-repo</id>
+			<url>https://nexus.reloadkube.managedservices.resilient-teched.com/repository/reload/</url>
+		</repository>
+		<repository>
+			<id>paper</id>
 			<url>https://repo.papermc.io/repository/maven-public/</url>
 		</repository>
 	</repositories>
