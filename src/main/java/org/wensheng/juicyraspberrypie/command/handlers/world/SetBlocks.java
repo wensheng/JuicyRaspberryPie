@@ -6,7 +6,17 @@ import org.bukkit.block.BlockFace;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
+/**
+ * Set blocks between two locations
+ */
 public class SetBlocks extends SetBlock implements HandlerVoid {
+	/**
+	 * Default SetBlocks constructor.
+	 */
+	public SetBlocks() {
+		super();
+	}
+
 	@Override
 	public void handleVoid(final Instruction instruction) {
 		final Location loc1 = instruction.nextLocation();

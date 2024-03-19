@@ -8,29 +8,42 @@ import org.bukkit.plugin.Plugin;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
+/**
+ * Get one chat event from the queue.
+ */
 public class Posts extends EventQueue<AsyncPlayerChatEvent> {
+	/**
+	 * Create a new Posts event handler.
+	 *
+	 * @param plugin The plugin to associate with this handler.
+	 */
 	public Posts(final Plugin plugin) {
 		super(plugin);
 	}
 
 	@Override
 	public String handle(final Instruction instruction) {
-		final StringBuilder b = new StringBuilder();
-		AsyncPlayerChatEvent event;
-		while ((event = pollEvent()) != null) {
-			final Player p = event.getPlayer();
-			b.append(p.getName());
-			b.append(",");
-			b.append(p.getUniqueId());
-			b.append(",");
-			b.append(event.getMessage());
+		final StringBuilder stringBuilder = new StringBuilder();
+		while (isQueueEmpty()) {
+			final AsyncPlayerChatEvent event = pollEvent();
+			final Player player = event.getPlayer();
+			stringBuilder.append(player.getName());
+			stringBuilder.append(',');
+			stringBuilder.append(player.getUniqueId());
+			stringBuilder.append(',');
+			stringBuilder.append(event.getMessage());
 			if (!isQueueEmpty()) {
-				b.append("|");
+				stringBuilder.append('|');
 			}
 		}
-		return b.toString();
+		return stringBuilder.toString();
 	}
 
+	/**
+	 * Handle the AsyncPlayerChatEvent.
+	 *
+	 * @param event The AsyncPlayerChatEvent to handle.
+	 */
 	@EventHandler
 	public void onChatPosted(final AsyncPlayerChatEvent event) {
 		queueEvent(event);

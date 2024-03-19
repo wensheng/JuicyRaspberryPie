@@ -5,9 +5,20 @@ import org.bukkit.entity.Player;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
+/**
+ * Get the names and UUIDs of all online players.
+ */
 public class GetPlayerIds implements Handler {
+	/**
+	 * The server to get the players from.
+	 */
 	private final Server server;
 
+	/**
+	 * Constructor for GetPlayerIds.
+	 *
+	 * @param server The server to get the players from.
+	 */
 	public GetPlayerIds(final Server server) {
 		this.server = server;
 	}
@@ -17,9 +28,9 @@ public class GetPlayerIds implements Handler {
 		final StringBuilder bdr = new StringBuilder();
 		for (final Player p : server.getOnlinePlayers()) {
 			bdr.append(p.getName());
-			bdr.append(",");
+			bdr.append(',');
 			bdr.append(p.getUniqueId());
-			bdr.append("|");
+			bdr.append('|');
 		}
 		if (!bdr.isEmpty()) {
 			bdr.deleteCharAt(bdr.length() - 1);

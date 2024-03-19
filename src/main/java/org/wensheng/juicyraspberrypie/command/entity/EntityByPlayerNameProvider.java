@@ -6,10 +6,20 @@ import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.NoSuchElementException;
 
+/**
+ * Provides entities for use in command handlers by player name.
+ */
 public class EntityByPlayerNameProvider implements EntityProvider {
-
+	/**
+	 * The session attachment associated with this handler.
+	 */
 	private final SessionAttachment attachment;
 
+	/**
+	 * Create a new entity provider by player name.
+	 *
+	 * @param attachment The session attachment to associate with this handler.
+	 */
 	public EntityByPlayerNameProvider(final SessionAttachment attachment) {
 		this.attachment = attachment;
 	}

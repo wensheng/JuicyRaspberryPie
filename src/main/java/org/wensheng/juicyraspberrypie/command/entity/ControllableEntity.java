@@ -18,16 +18,34 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Class to control an entity by enabling and disabling AI.
+ */
 public class ControllableEntity {
+	/**
+	 * The plugin associated with this entity.
+	 */
 	private final Plugin plugin;
 
+	/**
+	 * The entity to control.
+	 */
 	private final Entity entity;
 
+	/**
+	 * Create a new controllable entity.
+	 *
+	 * @param plugin The plugin to associate with this entity.
+	 * @param entity The entity to control.
+	 */
 	public ControllableEntity(final Plugin plugin, final Entity entity) {
 		this.plugin = plugin;
 		this.entity = entity;
 	}
 
+	/**
+	 * Enable control of the entity.
+	 */
 	public void enableControl() {
 		if (entity instanceof final Mob mob) {
 			if (!mob.hasAI()) {
@@ -39,6 +57,9 @@ public class ControllableEntity {
 		}
 	}
 
+	/**
+	 * Disable control of the entity.
+	 */
 	public void disableControl() {
 		if (entity instanceof final Mob mob) {
 			final MobGoals mobGoals = Bukkit.getMobGoals();

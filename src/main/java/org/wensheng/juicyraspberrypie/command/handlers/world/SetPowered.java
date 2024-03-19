@@ -12,7 +12,16 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 import java.util.NoSuchElementException;
 
+/**
+ * Set a {@link Switch}able block to a given power state at a given location
+ */
 public class SetPowered implements HandlerVoid {
+	/**
+	 * Default SetPowered constructor.
+	 */
+	public SetPowered() {
+	}
+
 	@Override
 	public void handleVoid(final Instruction instruction) {
 		final Location loc = instruction.nextLocation();

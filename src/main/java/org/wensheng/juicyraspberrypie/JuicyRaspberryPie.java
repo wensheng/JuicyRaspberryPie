@@ -21,16 +21,21 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.CommentRequired")
 public class JuicyRaspberryPie extends JavaPlugin implements Listener {
-	final Logger logger = Logger.getLogger("Minecraft");
+	private final Logger logger = Logger.getLogger("Minecraft");
 
 	private ServerListenerThread serverThread;
 
 	private final List<RemoteSession> sessions = new ArrayList<>();
 
-	private void save_resources() {
-		final File py_init_file = new File(getDataFolder(), "config.yml");
-		if (!py_init_file.exists()) {
+	public JuicyRaspberryPie() {
+		super();
+	}
+
+	private void saveResources() {
+		final File pyInitFile = new File(getDataFolder(), "config.yml");
+		if (!pyInitFile.exists()) {
 			this.saveResource("config.yml", false);
 		}
 
@@ -62,33 +67,35 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 		}
 	}
 
+	@Override
+	@SuppressWarnings("PMD.DoNotUseThreads")
 	public void onEnable() {
 		this.saveDefaultConfig();
 		final int port = this.getConfig().getInt("api_port");
-		final boolean start_pyserver = this.getConfig().getBoolean("start_cmdsvr");
 
 		//create new tcp listener thread
 		try {
 			serverThread = new ServerListenerThread(this, new InetSocketAddress(port));
 			new Thread(serverThread).start();
 			logger.info("ThreadListener Started");
-		} catch (Exception e) {
+		} catch (final IOException e) {
 			logger.log(Level.WARNING, "Failed to start ThreadListener", e);
 			return;
 		}
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new TickHandler(), 1, 1);
+		final boolean startPyserver = this.getConfig().getBoolean("start_cmdsvr");
 
-		this.save_resources();
+		this.saveResources();
 
-		if (start_pyserver) {
+		if (startPyserver) {
 			final String pyexe = getConfig().getString("pyexe", "python.exe");
 			logger.info("Starting Python command server using " + pyexe);
-			final ProcessBuilder pb = new ProcessBuilder(pyexe, "cmdsvr/pycmdsvr.py");
+			final ProcessBuilder processBuilder = new ProcessBuilder(pyexe, "cmdsvr/pycmdsvr.py");
 			try {
-				pb.redirectErrorStream(true);
-				pb.directory(this.getDataFolder());
-				pb.start();
-			} catch (IOException e) {
+				processBuilder.redirectErrorStream(true);
+				processBuilder.directory(this.getDataFolder());
+				processBuilder.start();
+			} catch (final IOException e) {
 				logger.warning("******************************************************************************");
 				logger.warning("Could not start python command server! Please check your `pyexe` in config.yml");
 				logger.warning("******************************************************************************");
@@ -97,87 +104,77 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 
 	}
 
+	@Override
 	public void onDisable() {
 		int port = this.getConfig().getInt("cmdsvr_port");
 		// cmdsvr_host is not used, always "localhost" for now
-		final boolean start_pyserver = this.getConfig().getBoolean("start_cmdsvr");
+		final boolean startPyserver = this.getConfig().getBoolean("start_cmdsvr");
 		if (port == 0) {
-			port = 32123;
+			port = 32_123;
 		}
 
-		if (start_pyserver) {
-			try {
-				final Socket socket = new Socket("localhost", port);
-				final DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
+		if (startPyserver) {
+			try (Socket socket = new Socket("localhost", port);
+				 DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream())) {
 				toPyServer.writeUTF("BYE");
 				logger.info("ask py server to shut itself down");
-				toPyServer.close();
-				socket.close();
-			} catch (Exception e) {
+			} catch (final IOException e) {
 				logger.warning("Could not send shutdown signal to python command server, please shutdown manually.");
 			}
 		}
 
 		getServer().getScheduler().cancelTasks(this);
 		for (final RemoteSession session : sessions) {
-			try {
-				session.close();
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Failed to close RemoteSession", e);
-			}
+			session.close();
 		}
-		serverThread.running = false;
-		try {
-			serverThread.serverSocket.close();
-		} catch (Exception e) {
-			logger.log(Level.WARNING, "Failed to close serverSocket", e);
-		}
+		serverThread.close();
 
 		serverThread = null;
 	}
 
+	@Override
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	public boolean onCommand(@NotNull final CommandSender sender, @NotNull final Command command, @NotNull final String label, final String[] args) {
-		final String cmdString;
-		int port = this.getConfig().getInt("cmdsvr_port");
-
-		if (args.length < 1) {
+		if (args.length == 0) {
 			return false;
 		}
 
+		int port = this.getConfig().getInt("cmdsvr_port");
 		if (port == 0) {
 			port = 4731;
 		}
 
-		try {
-			final Socket socket = new Socket("localhost", port);
-			final DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
-			final BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+		final String cmdString;
+		try (Socket socket = new Socket("localhost", port);
+			 DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
+			 BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
 			final String cmdLine = String.join(" ", args);
 			toPyServer.writeUTF(cmdLine);
 			cmdString = fromPyServer.readLine();
 			logger.info("the py server send back:|" + cmdString + "|");
-			if (!cmdString.equals("ok")) {
+			if (!"ok".equals(cmdString)) {
 				sender.sendMessage(cmdString);
 			}
-			toPyServer.close();
-			fromPyServer.close();
-			socket.close();
-		} catch (Exception e) {
+		} catch (final IOException e) {
 			sender.sendMessage("command server not available.");
 		}
 		return true;
 	}
 
 	private class TickHandler implements Runnable {
+		public TickHandler() {
+		}
+
+		@Override
 		public void run() {
-			final Iterator<RemoteSession> sI = sessions.iterator();
-			while (sI.hasNext()) {
-				final RemoteSession s = sI.next();
-				if (s.pendingRemoval) {
-					s.close();
-					sI.remove();
+			final Iterator<RemoteSession> remoteSessionIterator = sessions.iterator();
+			while (remoteSessionIterator.hasNext()) {
+				final RemoteSession session = remoteSessionIterator.next();
+				if (session.isPendingRemoval()) {
+					session.close();
+					remoteSessionIterator.remove();
 				} else {
-					s.tick();
+					session.tick();
 				}
 			}
 		}
@@ -186,7 +183,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 	/**
 	 * called when a new session is established.
 	 */
-	void handleConnection(final RemoteSession newSession) {
+	public void handleConnection(final RemoteSession newSession) {
 		if (checkBanned(newSession)) {
 			logger.warning("Kicking " + newSession.getSocket().getRemoteSocketAddress() + " because the IP address has been banned.");
 			newSession.kick("You've been banned from this server!");

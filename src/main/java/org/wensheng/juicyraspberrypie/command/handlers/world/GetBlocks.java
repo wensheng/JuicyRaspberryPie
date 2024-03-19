@@ -8,7 +8,15 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 import java.util.List;
 
+/**
+ * Get the blocks between two locations.
+ */
 public class GetBlocks implements Handler {
+	/**
+	 * Default GetBlocks constructor.
+	 */
+	public GetBlocks() {
+	}
 
 	@Override
 	public String handle(final Instruction instruction) {

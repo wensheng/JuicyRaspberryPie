@@ -54,21 +54,25 @@ import java.util.ArrayDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.CommentRequired")
 class RemoteSession {
 	private static final int MAX_COMMANDS_PER_TICK = 9000;
 
 	private final Registry registry;
 
-	boolean pendingRemoval = false;
+	private boolean pendingRemoval;
 
 	private final Socket socket;
 
+	@SuppressWarnings("PMD.ShortVariable")
 	private BufferedReader in;
 
 	private BufferedWriter out;
 
+	@SuppressWarnings("PMD.DoNotUseThreads")
 	private Thread inThread;
 
+	@SuppressWarnings("PMD.DoNotUseThreads")
 	private Thread outThread;
 
 	private final ArrayDeque<String> inQueue = new ArrayDeque<>();
@@ -81,16 +85,16 @@ class RemoteSession {
 
 	private final Logger logger;
 
-	final LocationParser locationParser;
+	private final LocationParser locationParser;
 
-	RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
+	public RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
 		this.socket = socket;
 		this.plugin = plugin;
 		this.logger = plugin.getLogger();
 		init();
 		registry = new Registry();
 
-		final SessionAttachment attachment = new SessionAttachment(plugin);
+		final SessionAttachment attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
 		setupRegistry(attachment);
@@ -107,6 +111,7 @@ class RemoteSession {
 
 	}
 
+	@SuppressWarnings("PMD.DoNotUseThreads")
 	private void startThreads() {
 		inThread = new Thread(new InputThread());
 		inThread.start();
@@ -114,18 +119,17 @@ class RemoteSession {
 		outThread.start();
 	}
 
-	Socket getSocket() {
+	public Socket getSocket() {
 		return socket;
 	}
 
 	/**
 	 * called from the server main thread
 	 */
-	void tick() {
+	public void tick() {
 		int processedCount = 0;
-		String message;
-		while ((message = inQueue.poll()) != null) {
-			handleLine(message);
+		while (!inQueue.isEmpty()) {
+			handleLine(inQueue.poll());
 			processedCount++;
 			if (processedCount >= MAX_COMMANDS_PER_TICK) {
 				logger.log(Level.WARNING, "Over " + MAX_COMMANDS_PER_TICK
@@ -139,14 +143,14 @@ class RemoteSession {
 		}
 	}
 
-	private void handleLine(String line) {
-		line = line.trim();
-		if (!line.contains("(") || !line.endsWith(")")) {
+	private void handleLine(final String line) {
+		final String trimmedLine = line.trim();
+		if (!trimmedLine.contains("(") || !trimmedLine.endsWith(")")) {
 			send("Wrong format");
 			return;
 		}
-		final String methodName = line.substring(0, line.indexOf("("));
-		final String methodArgs = line.substring(line.indexOf("(") + 1, line.length() - 1);
+		final String methodName = trimmedLine.substring(0, trimmedLine.indexOf('('));
+		final String methodArgs = trimmedLine.substring(trimmedLine.indexOf('(') + 1, trimmedLine.length() - 1);
 		String[] args = methodArgs.split(",", -1);
 		args = ArrayUtils.remove(args, args.length - 1);
 		for (int i = 0; i < args.length; i++) {
@@ -158,26 +162,26 @@ class RemoteSession {
 		handleCommand(methodName, args);
 	}
 
-	private void handleCommand(final String c, final String[] args) {
-		final Handler handler = registry.getHandler(c);
+	private void handleCommand(final String command, final String... args) {
+		final Handler handler = registry.getHandler(command);
 		if (handler != null) {
 			send(handler.get(new Instruction(args, locationParser)));
 			return;
 		}
-		plugin.getLogger().warning(c + " is not supported.");
+		plugin.getLogger().warning(command + " is not supported.");
 		send("Fail");
 	}
 
-	private void send(final String a) {
+	private void send(final String message) {
 		if (pendingRemoval) {
 			return;
 		}
 		synchronized (outQueue) {
-			outQueue.add(a);
+			outQueue.add(message);
 		}
 	}
 
-	void close() {
+	public void close() {
 		running = false;
 		pendingRemoval = true;
 
@@ -187,23 +191,27 @@ class RemoteSession {
 		try {
 			inThread.join(2000);
 			outThread.join(2000);
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 			logger.log(Level.WARNING, "Failed to stop in/out thread", e);
 		}
 
 		try {
 			socket.close();
-		} catch (Exception e) {
+		} catch (final IOException e) {
 			logger.log(Level.WARNING, "Failed to close socket", e);
 		}
 		logger.log(Level.INFO, "Closed connection to" + socket.getRemoteSocketAddress() + ".");
 	}
 
-	void kick(final String reason) {
+	public boolean isPendingRemoval() {
+		return pendingRemoval;
+	}
+
+	public void kick(final String reason) {
 		try {
 			out.write(reason);
 			out.flush();
-		} catch (Exception e) {
+		} catch (final IOException e) {
 			logger.log(Level.FINE, "Failed to send kick reason", e);
 		}
 		close();
@@ -213,6 +221,10 @@ class RemoteSession {
 	 * socket listening thread
 	 */
 	private class InputThread implements Runnable {
+		public InputThread() {
+		}
+
+		@Override
 		public void run() {
 			logger.log(Level.INFO, "Starting input thread");
 			while (running) {
@@ -223,7 +235,7 @@ class RemoteSession {
 					} else {
 						inQueue.add(newLine);
 					}
-				} catch (Exception e) {
+				} catch (final IOException e) {
 					if (running) {
 						logger.log(Level.WARNING, "Error occurred in input thread", e);
 						running = false;
@@ -232,27 +244,29 @@ class RemoteSession {
 			}
 			try {
 				in.close();
-			} catch (Exception e) {
+			} catch (final IOException e) {
 				logger.log(Level.WARNING, "Failed to close in buffer", e);
 			}
 		}
 	}
 
 	private class OutputThread implements Runnable {
+		public OutputThread() {
+		}
+
+		@Override
 		public void run() {
 			logger.log(Level.INFO, "Starting output thread!");
 			while (running) {
 				try {
-					String line;
-					while ((line = outQueue.poll()) != null) {
-						out.write(line);
+					while (!outQueue.isEmpty()) {
+						out.write(outQueue.poll());
 						out.write('\n');
 					}
 					out.flush();
 					Thread.yield();
 					Thread.sleep(1L);
-				} catch (Exception e) {
-					// if its running raise an error
+				} catch (final IOException | InterruptedException e) {
 					if (running) {
 						logger.log(Level.WARNING, "Error occurred in output thread", e);
 						running = false;
@@ -262,7 +276,7 @@ class RemoteSession {
 			//close out buffer
 			try {
 				out.close();
-			} catch (Exception e) {
+			} catch (final IOException e) {
 				logger.log(Level.WARNING, "Failed to close out buffer", e);
 			}
 		}
@@ -324,7 +338,7 @@ class RemoteSession {
 				.forEach(EventQueue::start);
 	}
 
-	void teardownRegistry() {
+	private void teardownRegistry() {
 		registry.getHandlers().stream()
 				.filter(handler -> handler instanceof EventQueue<?>)
 				.map(handler -> (EventQueue<?>) handler)

@@ -6,9 +6,20 @@ import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
+/**
+ * Set the tile of an entity.
+ */
 public class SetTile implements HandlerVoid {
+	/**
+	 * The entity provider associated with this handler.
+	 */
 	private final EntityProvider entityProvider;
 
+	/**
+	 * Create a new SetTile event handler.
+	 *
+	 * @param entityProvider The entity provider to associate with this handler.
+	 */
 	public SetTile(final EntityProvider entityProvider) {
 		this.entityProvider = entityProvider;
 	}

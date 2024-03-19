@@ -6,9 +6,20 @@ import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
+/**
+ * Set the position of an entity.
+ */
 public class SetPos implements HandlerVoid {
+	/**
+	 * The entity provider associated with this handler.
+	 */
 	private final EntityProvider entityProvider;
 
+	/**
+	 * Create a new SetPos event handler.
+	 *
+	 * @param entityProvider The entity provider to associate with this handler.
+	 */
 	public SetPos(final EntityProvider entityProvider) {
 		this.entityProvider = entityProvider;
 	}
