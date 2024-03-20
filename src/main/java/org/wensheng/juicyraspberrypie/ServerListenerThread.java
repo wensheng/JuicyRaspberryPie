@@ -1,5 +1,7 @@
 package org.wensheng.juicyraspberrypie;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -27,6 +29,7 @@ public class ServerListenerThread implements Runnable {
 	 * @param bindAddress The address to bind to.
 	 * @throws IOException If the server socket cannot be created.
 	 */
+	@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
 	public ServerListenerThread(final JuicyRaspberryPie plugin, final SocketAddress bindAddress) throws IOException {
 		this.plugin = plugin;
 		serverSocket = new ServerSocket();

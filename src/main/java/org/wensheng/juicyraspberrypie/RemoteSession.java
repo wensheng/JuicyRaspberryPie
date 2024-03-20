@@ -1,5 +1,6 @@
 package org.wensheng.juicyraspberrypie;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
@@ -87,6 +88,7 @@ class RemoteSession {
 
 	private final LocationParser locationParser;
 
+	@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
 	public RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
 		this.socket = socket;
 		this.plugin = plugin;
@@ -105,7 +107,7 @@ class RemoteSession {
 		socket.setKeepAlive(true);
 		socket.setTrafficClass(0x10);
 		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-		this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+		this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 		startThreads();
 		logger.log(Level.INFO, "Opened connection to" + socket.getRemoteSocketAddress() + ".");
 
