@@ -114,8 +114,9 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 		}
 
 		if (startPyserver) {
-			try (Socket socket = new Socket("localhost", port);
-				 DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream())) {
+			try (
+					Socket socket = new Socket("localhost", port);
+					DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream())) {
 				toPyServer.writeUTF("BYE");
 				logger.info("ask py server to shut itself down");
 			} catch (final IOException e) {
@@ -145,9 +146,10 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 		}
 
 		final String cmdString;
-		try (Socket socket = new Socket("localhost", port);
-			 DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
-			 BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+		try (
+				Socket socket = new Socket("localhost", port);
+				DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
+				BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
 			final String cmdLine = String.join(" ", args);
 			toPyServer.writeUTF(cmdLine);
 			cmdString = fromPyServer.readLine();
