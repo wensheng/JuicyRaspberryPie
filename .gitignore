@@ -1,19 +1,39 @@
-__pycache__/
-node_modules/
-target/
-!mcsvr/clean.py
-!mcsvr/start-server-linux.sh
-!mcsvr/start-server-win.bat
-!mcsvr/build-linux.sh
-mcsvr/*
-# idea
-out
-*.ipr
-*.iws
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# All Windows thumbnails (Custom)
+*.db
+Thumbs.db
+
+# Mac junk
+.DS_Store
+
+# IDE configuration
+.project
+.classpath
+.metadata/
+.settings/
+.idea/
+.vscode/
 *.iml
-.idea
-# gradle
-build
-.gradle
-package-lock.json
-/others/
+
+# Target folder (Custom)
+target/
+
+# Python compiled bytecode
+__pycache__
+*.pyc
+# Python virtual environments
+.venv/

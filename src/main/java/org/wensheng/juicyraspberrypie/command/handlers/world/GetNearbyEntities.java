@@ -7,19 +7,29 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 import java.util.Collection;
 
+/**
+ * Get the entities near a given location.
+ */
 public class GetNearbyEntities implements Handler {
-    @Override
-    public String handle(final Instruction instruction) {
-        final Location loc = instruction.nextLocation();
-        final double nearby_distance = instruction.hasNext() ? Double.parseDouble(instruction.next()) : 10.0;
-        final Collection<Entity> nearbyEntities = loc.getNearbyEntities(nearby_distance, 5.0, nearby_distance);
-        final StringBuilder sb = new StringBuilder();
-        for (final Entity e : nearbyEntities) {
-            sb.append(e.getName()).append(",").append(e.getUniqueId()).append("|");
-        }
-        if (sb.length() > 1) {
-            sb.setLength(sb.length() - 1);
-        }
-        return sb.toString();
-    }
+	/**
+	 * Default GetNearbyEntities constructor.
+	 */
+	public GetNearbyEntities() {
+	}
+
+	@Override
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+	public String handle(final Instruction instruction) {
+		final Location loc = instruction.nextLocation();
+		final double nearbyDistance = instruction.hasNext() ? Double.parseDouble(instruction.next()) : 10.0;
+		final Collection<Entity> nearbyEntities = loc.getNearbyEntities(nearbyDistance, 5.0, nearbyDistance);
+		final StringBuilder stringBuilder = new StringBuilder();
+		for (final Entity entity : nearbyEntities) {
+			stringBuilder.append(entity.getName()).append(',').append(entity.getUniqueId()).append('|');
+		}
+		if (stringBuilder.length() > 1) {
+			stringBuilder.setLength(stringBuilder.length() - 1);
+		}
+		return stringBuilder.toString();
+	}
 }

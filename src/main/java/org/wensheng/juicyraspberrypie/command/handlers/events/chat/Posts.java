@@ -8,41 +8,54 @@ import org.bukkit.plugin.Plugin;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
+/**
+ * Get one chat event from the queue.
+ */
 public class Posts extends EventQueue<AsyncPlayerChatEvent> {
-    public Posts(final Plugin plugin) {
-        super(plugin);
-    }
+	/**
+	 * Create a new Posts event handler.
+	 *
+	 * @param plugin The plugin to associate with this handler.
+	 */
+	public Posts(final Plugin plugin) {
+		super(plugin);
+	}
 
-    @Override
-    public String handle(final Instruction instruction) {
-        final StringBuilder b = new StringBuilder();
-        AsyncPlayerChatEvent event;
-        while ((event = pollEvent()) != null) {
-            final Player p = event.getPlayer();
-            b.append(p.getName());
-            b.append(",");
-            b.append(p.getUniqueId());
-            b.append(",");
-            b.append(event.getMessage());
-            if (!isQueueEmpty()) {
-                b.append("|");
-            }
-        }
-        return b.toString();
-    }
+	@Override
+	public String handle(final Instruction instruction) {
+		final StringBuilder stringBuilder = new StringBuilder();
+		while (isQueueEmpty()) {
+			final AsyncPlayerChatEvent event = pollEvent();
+			final Player player = event.getPlayer();
+			stringBuilder.append(player.getName());
+			stringBuilder.append(',');
+			stringBuilder.append(player.getUniqueId());
+			stringBuilder.append(',');
+			stringBuilder.append(event.getMessage());
+			if (!isQueueEmpty()) {
+				stringBuilder.append('|');
+			}
+		}
+		return stringBuilder.toString();
+	}
 
-    @EventHandler
-    public void onChatPosted(final AsyncPlayerChatEvent event) {
-        queueEvent(event);
-    }
+	/**
+	 * Handle the AsyncPlayerChatEvent.
+	 *
+	 * @param event The AsyncPlayerChatEvent to handle.
+	 */
+	@EventHandler
+	public void onChatPosted(final AsyncPlayerChatEvent event) {
+		queueEvent(event);
+	}
 
-    @Override
-    public void start() {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    }
+	@Override
+	public void start() {
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+	}
 
-    @Override
-    public void stop() {
-        HandlerList.unregisterAll(this);
-    }
+	@Override
+	public void stop() {
+		HandlerList.unregisterAll(this);
+	}
 }

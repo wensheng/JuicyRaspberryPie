@@ -4,23 +4,50 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * A registry of command handlers.
+ */
 public class Registry {
-    private final HashMap<String, Handler> handlers;
+	/**
+	 * The handlers.
+	 */
+	private final Map<String, Handler> handlers;
 
-    public Registry() {
-        handlers = new HashMap<>();
-    }
+	/**
+	 * Create a new registry.
+	 */
+	public Registry() {
+		handlers = new HashMap<>();
+	}
 
-    public @NotNull Collection<Handler> getHandlers() {
-        return handlers.values();
-    }
+	/**
+	 * Get all the handlers.
+	 *
+	 * @return the handlers
+	 */
+	public @NotNull Collection<Handler> getHandlers() {
+		return handlers.values();
+	}
 
-    public void register(final String command, final Handler handler) {
-        handlers.put(command, handler);
-    }
+	/**
+	 * Register a handler for a command.
+	 *
+	 * @param command the command
+	 * @param handler the handler
+	 */
+	public void register(final String command, final Handler handler) {
+		handlers.put(command, handler);
+	}
 
-    public Handler getHandler(final String command) {
-        return handlers.get(command);
-    }
+	/**
+	 * Get the handler for the given command.
+	 *
+	 * @param command the command
+	 * @return the handler
+	 */
+	public Handler getHandler(final String command) {
+		return handlers.get(command);
+	}
 }

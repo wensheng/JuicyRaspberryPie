@@ -4,53 +4,109 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
+/**
+ * An instruction for a command.
+ */
 public class Instruction implements Iterator<String> {
-    private final String[] args;
+	/**
+	 * The arguments.
+	 */
+	private final String[] args;
 
-    private final LocationParser locationParser;
+	/**
+	 * The location parser.
+	 */
+	private final LocationParser locationParser;
 
-    private int courser;
+	/**
+	 * The courser.
+	 */
+	private int courser;
 
-    public Instruction(final String[] args, final LocationParser locationParser) {
-        this.args = args;
-        this.locationParser = locationParser;
-        this.courser = 0;
-    }
+	/**
+	 * Create a new instruction.
+	 *
+	 * @param args           the arguments
+	 * @param locationParser the location parser
+	 */
+	public Instruction(final String[] args, final LocationParser locationParser) {
+		this.args = Arrays.copyOf(args, args.length);
+		this.locationParser = locationParser;
+		this.courser = 0;
+	}
 
-    public boolean hasNext() {
-        return hasNext(1);
-    }
+	/**
+	 * Check if there are more arguments.
+	 *
+	 * @return true if there are more arguments
+	 */
+	@Override
+	public boolean hasNext() {
+		return hasNext(1);
+	}
 
-    public boolean hasNext(final int n) {
-        return courser + n <= args.length;
-    }
+	/**
+	 * Check if there are n more arguments.
+	 *
+	 * @param amount the number of arguments
+	 * @return true if there are n more arguments
+	 */
+	public boolean hasNext(final int amount) {
+		return courser + amount <= args.length;
+	}
 
-    public String next() {
-        return hasNext() ? args[courser++] : null;
-    }
+	/**
+	 * Get the next argument.
+	 *
+	 * @return the next argument
+	 */
+	@Override
+	public String next() {
+		return hasNext() ? args[courser++] : null;
+	}
 
-    public String peek() {
-        return hasNext() ? args[courser] : null;
-    }
+	/**
+	 * Peek at the next argument.
+	 *
+	 * @return the next argument
+	 */
+	public String peek() {
+		return hasNext() ? args[courser] : null;
+	}
 
-    public Location nextLocation() {
-        return locationParser.parse(next(), next(), next());
-    }
+	/**
+	 * Get the next location from the instruction.
+	 *
+	 * @return the location
+	 */
+	public Location nextLocation() {
+		return locationParser.parse(next(), next(), next());
+	}
 
-    public Location nextBlockLocation() {
-        return nextLocation().getBlock().getLocation();
-    }
+	/**
+	 * Get the next block location from the instruction.
+	 *
+	 * @return the location
+	 */
+	public Location nextBlockLocation() {
+		return nextLocation().getBlock().getLocation();
+	}
 
-
-    public Player nextNamedPlayer() {
-        final String name = next();
-        for (final Player p : Bukkit.getOnlinePlayers()) {
-            if (name.equalsIgnoreCase(p.getName())) {
-                return p;
-            }
-        }
-        return null;
-    }
+	/**
+	 * Get the next player from the instruction.
+	 *
+	 * @return the player
+	 */
+	public Player nextNamedPlayer() {
+		final String name = next();
+		for (final Player p : Bukkit.getOnlinePlayers()) {
+			if (name.equalsIgnoreCase(p.getName())) {
+				return p;
+			}
+		}
+		return null;
+	}
 }

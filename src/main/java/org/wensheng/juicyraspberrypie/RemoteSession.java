@@ -1,5 +1,6 @@
 package org.wensheng.juicyraspberrypie;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.ArrayUtils;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
@@ -54,277 +55,295 @@ import java.util.ArrayDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.CommentRequired")
 class RemoteSession {
-    private final static int MAX_COMMANDS_PER_TICK = 9000;
+	private static final int MAX_COMMANDS_PER_TICK = 9000;
 
-    private final Registry registry;
+	private final Registry registry;
 
-    boolean pendingRemoval = false;
+	private boolean pendingRemoval;
 
-    private final Socket socket;
+	private final Socket socket;
 
-    private BufferedReader in;
+	@SuppressWarnings("PMD.ShortVariable")
+	private BufferedReader in;
 
-    private BufferedWriter out;
+	private BufferedWriter out;
 
-    private Thread inThread;
+	@SuppressWarnings("PMD.DoNotUseThreads")
+	private Thread inThread;
 
-    private Thread outThread;
+	@SuppressWarnings("PMD.DoNotUseThreads")
+	private Thread outThread;
 
-    private final ArrayDeque<String> inQueue = new ArrayDeque<>();
+	private final ArrayDeque<String> inQueue = new ArrayDeque<>();
 
-    private final ArrayDeque<String> outQueue = new ArrayDeque<>();
+	private final ArrayDeque<String> outQueue = new ArrayDeque<>();
 
-    private boolean running = true;
+	private boolean running = true;
 
-    private final JuicyRaspberryPie plugin;
+	private final JuicyRaspberryPie plugin;
 
-    private final Logger logger;
+	private final Logger logger;
 
-    final LocationParser locationParser;
+	private final LocationParser locationParser;
 
-    RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
-        this.socket = socket;
-        this.plugin = plugin;
-        this.logger = plugin.getLogger();
-        init();
-        registry = new Registry();
+	@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
+	public RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
+		this.socket = socket;
+		this.plugin = plugin;
+		this.logger = plugin.getLogger();
+		init();
+		registry = new Registry();
 
-        final SessionAttachment attachment = new SessionAttachment(plugin);
-        attachment.setPlayerAndOrigin();
-        locationParser = new LocationParser(attachment);
-        setupRegistry(attachment);
-    }
+		final SessionAttachment attachment = new SessionAttachment(plugin.getServer());
+		attachment.setPlayerAndOrigin();
+		locationParser = new LocationParser(attachment);
+		setupRegistry(attachment);
+	}
 
-    private void init() throws IOException {
-        socket.setTcpNoDelay(true);
-        socket.setKeepAlive(true);
-        socket.setTrafficClass(0x10);
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-        this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        startThreads();
-        logger.log(Level.INFO, "Opened connection to" + socket.getRemoteSocketAddress() + ".");
+	private void init() throws IOException {
+		socket.setTcpNoDelay(true);
+		socket.setKeepAlive(true);
+		socket.setTrafficClass(0x10);
+		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+		this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+		startThreads();
+		logger.log(Level.INFO, "Opened connection to" + socket.getRemoteSocketAddress() + ".");
 
-    }
+	}
 
-    private void startThreads() {
-        inThread = new Thread(new InputThread());
-        inThread.start();
-        outThread = new Thread(new OutputThread());
-        outThread.start();
-    }
+	@SuppressWarnings("PMD.DoNotUseThreads")
+	private void startThreads() {
+		inThread = new Thread(new InputThread());
+		inThread.start();
+		outThread = new Thread(new OutputThread());
+		outThread.start();
+	}
 
-    Socket getSocket() {
-        return socket;
-    }
+	public Socket getSocket() {
+		return socket;
+	}
 
-    /**
-     * called from the server main thread
-     */
-    void tick() {
-        int processedCount = 0;
-        String message;
-        while ((message = inQueue.poll()) != null) {
-            handleLine(message);
-            processedCount++;
-            if (processedCount >= MAX_COMMANDS_PER_TICK) {
-                logger.log(Level.WARNING, "Over " + MAX_COMMANDS_PER_TICK +
-                        " commands were queued - deferring " + inQueue.size() + " to next tick");
-                break;
-            }
-        }
+	/**
+	 * called from the server main thread
+	 */
+	public void tick() {
+		int processedCount = 0;
+		while (!inQueue.isEmpty()) {
+			handleLine(inQueue.poll());
+			processedCount++;
+			if (processedCount >= MAX_COMMANDS_PER_TICK) {
+				logger.log(Level.WARNING, "Over " + MAX_COMMANDS_PER_TICK
+						+ " commands were queued - deferring " + inQueue.size() + " to next tick");
+				break;
+			}
+		}
 
-        if (!running && inQueue.isEmpty()) {
-            pendingRemoval = true;
-        }
-    }
+		if (!running && inQueue.isEmpty()) {
+			pendingRemoval = true;
+		}
+	}
 
-    private void handleLine(String line) {
-        line = line.trim();
-        if (!line.contains("(") || !line.endsWith(")")) {
-            send("Wrong format");
-            return;
-        }
-        final String methodName = line.substring(0, line.indexOf("("));
-        final String methodArgs = line.substring(line.indexOf("(") + 1, line.length() - 1);
-        String[] args = methodArgs.split(",", -1);
-        args = ArrayUtils.remove(args, args.length - 1);
-        for (int i = 0; i < args.length; i++) {
-            final String arg = args[i];
-            if (arg.isEmpty()) {
-                args[i] = null;
-            }
-        }
-        handleCommand(methodName, args);
-    }
+	private void handleLine(final String line) {
+		final String trimmedLine = line.trim();
+		if (!trimmedLine.contains("(") || !trimmedLine.endsWith(")")) {
+			send("Wrong format");
+			return;
+		}
+		final String methodName = trimmedLine.substring(0, trimmedLine.indexOf('('));
+		final String methodArgs = trimmedLine.substring(trimmedLine.indexOf('(') + 1, trimmedLine.length() - 1);
+		String[] args = methodArgs.split(",", -1);
+		args = ArrayUtils.remove(args, args.length - 1);
+		for (int i = 0; i < args.length; i++) {
+			final String arg = args[i];
+			if (arg.isEmpty()) {
+				args[i] = null;
+			}
+		}
+		handleCommand(methodName, args);
+	}
 
-    private void handleCommand(final String c, final String[] args) {
-        final Handler handler = registry.getHandler(c);
-        if (handler != null) {
-            send(handler.get(new Instruction(args, locationParser)));
-            return;
-        }
-        plugin.getLogger().warning(c + " is not supported.");
-        send("Fail");
-    }
+	private void handleCommand(final String command, final String... args) {
+		final Handler handler = registry.getHandler(command);
+		if (handler != null) {
+			send(handler.get(new Instruction(args, locationParser)));
+			return;
+		}
+		plugin.getLogger().warning(command + " is not supported.");
+		send("Fail");
+	}
 
-    private void send(final String a) {
-        if (pendingRemoval) return;
-        synchronized (outQueue) {
-            outQueue.add(a);
-        }
-    }
+	private void send(final String message) {
+		if (pendingRemoval) {
+			return;
+		}
+		synchronized (outQueue) {
+			outQueue.add(message);
+		}
+	}
 
-    void close() {
-        running = false;
-        pendingRemoval = true;
+	public void close() {
+		running = false;
+		pendingRemoval = true;
 
-        teardownRegistry();
+		teardownRegistry();
 
-        //wait for threads to stop
-        try {
-            inThread.join(2000);
-            outThread.join(2000);
-        } catch (InterruptedException e) {
-            logger.log(Level.WARNING, "Failed to stop in/out thread", e);
-        }
+		//wait for threads to stop
+		try {
+			inThread.join(2000);
+			outThread.join(2000);
+		} catch (final InterruptedException e) {
+			logger.log(Level.WARNING, "Failed to stop in/out thread", e);
+		}
 
-        try {
-            socket.close();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to close socket", e);
-        }
-        logger.log(Level.INFO, "Closed connection to" + socket.getRemoteSocketAddress() + ".");
-    }
+		try {
+			socket.close();
+		} catch (final IOException e) {
+			logger.log(Level.WARNING, "Failed to close socket", e);
+		}
+		logger.log(Level.INFO, "Closed connection to" + socket.getRemoteSocketAddress() + ".");
+	}
 
-    void kick(final String reason) {
-        try {
-            out.write(reason);
-            out.flush();
-        } catch (Exception ignored) {
-        }
-        close();
-    }
+	public boolean isPendingRemoval() {
+		return pendingRemoval;
+	}
 
-    /**
-     * socket listening thread
-     */
-    private class InputThread implements Runnable {
-        public void run() {
-            logger.log(Level.INFO, "Starting input thread");
-            while (running) {
-                try {
-                    final String newLine = in.readLine();
-                    if (newLine == null) {
-                        running = false;
-                    } else {
-                        inQueue.add(newLine);
-                    }
-                } catch (Exception e) {
-                    if (running) {
-                        logger.log(Level.WARNING, "Error occurred in input thread", e);
-                        running = false;
-                    }
-                }
-            }
-            try {
-                in.close();
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Failed to close in buffer", e);
-            }
-        }
-    }
+	public void kick(final String reason) {
+		try {
+			out.write(reason);
+			out.flush();
+		} catch (final IOException e) {
+			logger.log(Level.FINE, "Failed to send kick reason", e);
+		}
+		close();
+	}
 
-    private class OutputThread implements Runnable {
-        public void run() {
-            logger.log(Level.INFO, "Starting output thread!");
-            while (running) {
-                try {
-                    String line;
-                    while ((line = outQueue.poll()) != null) {
-                        out.write(line);
-                        out.write('\n');
-                    }
-                    out.flush();
-                    Thread.yield();
-                    Thread.sleep(1L);
-                } catch (Exception e) {
-                    // if its running raise an error
-                    if (running) {
-                        logger.log(Level.WARNING, "Error occurred in output thread", e);
-                        running = false;
-                    }
-                }
-            }
-            //close out buffer
-            try {
-                out.close();
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Failed to close out buffer", e);
-            }
-        }
-    }
+	/**
+	 * socket listening thread
+	 */
+	private class InputThread implements Runnable {
+		public InputThread() {
+		}
 
-    private void setupRegistry(final SessionAttachment attachment) {
-        final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider(attachment);
-        final EntityByUUIDProvider entityProvider = new EntityByUUIDProvider(plugin.getServer());
+		@Override
+		public void run() {
+			logger.log(Level.INFO, "Starting input thread");
+			while (running) {
+				try {
+					final String newLine = in.readLine();
+					if (newLine == null) {
+						running = false;
+					} else {
+						inQueue.add(newLine);
+					}
+				} catch (final IOException e) {
+					if (running) {
+						logger.log(Level.WARNING, "Error occurred in input thread", e);
+						running = false;
+					}
+				}
+			}
+			try {
+				in.close();
+			} catch (final IOException e) {
+				logger.log(Level.WARNING, "Failed to close in buffer", e);
+			}
+		}
+	}
 
-        registry.register("getPlayer", new GetPlayer(attachment));
-        registry.register("setPlayer", new SetPlayer(attachment));
-        registry.register("world.getBlock", new GetBlock());
-        registry.register("world.getBlocks", new GetBlocks());
-        registry.register("world.getBlockWithData", new GetBlockWithData());
-        registry.register("world.setBlock", new SetBlock());
-        registry.register("world.setBlocks", new SetBlocks());
-        registry.register("world.isBlockPassable", new IsBlockPassable());
-        registry.register("world.setPowered", new SetPowered());
-        registry.register("world.getPlayerIds", new GetPlayerIds(plugin.getServer()));
-        registry.register("world.getPlayerId", new GetPlayerId());
-        registry.register("world.setSign", new SetSign());
-        registry.register("world.getNearbyEntities", new GetNearbyEntities());
-        registry.register("world.spawnEntity", new SpawnEntity());
-        registry.register("world.spawnParticle", new SpawnParticle());
-        registry.register("world.getHeight", new GetHeight());
-        registry.register("chat.post", new Post(plugin.getServer()));
-        registry.register("events.block.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.block.Hits(plugin));
-        registry.register("events.projectile.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.projectile.Hits(plugin));
-        registry.register("events.chat.posts", new Posts(plugin));
-        registry.register("events.clear", new Clear(registry));
-        registry.register("player.getTile", new GetTile(playerEntityProvider));
-        registry.register("entity.getTile", new GetTile(entityProvider));
-        registry.register("player.setTile", new SetTile(playerEntityProvider));
-        registry.register("entity.setTile", new SetTile(entityProvider));
-        registry.register("player.getPos", new GetPos(playerEntityProvider));
-        registry.register("entity.getPos", new GetPos(entityProvider));
-        registry.register("player.setPos", new SetPos(playerEntityProvider));
-        registry.register("entity.setPos", new SetPos(entityProvider));
-        registry.register("player.getDirection", new GetDirection(playerEntityProvider));
-        registry.register("entity.getDirection", new GetDirection(entityProvider));
-        registry.register("player.setDirection", new SetDirection(playerEntityProvider));
-        registry.register("entity.setDirection", new SetDirection(entityProvider));
-        registry.register("player.getRotation", new GetRotation(playerEntityProvider));
-        registry.register("entity.getRotation", new GetRotation(entityProvider));
-        registry.register("player.setRotation", new SetRotation(playerEntityProvider));
-        registry.register("entity.setRotation", new SetRotation(entityProvider));
-        registry.register("player.getPitch", new GetPitch(playerEntityProvider));
-        registry.register("entity.getPitch", new GetPitch(entityProvider));
-        registry.register("player.setPitch", new SetPitch(playerEntityProvider));
-        registry.register("entity.setPitch", new SetPitch(entityProvider));
-        registry.register("entity.enableControl", new EnableControl(plugin, entityProvider));
-        registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
-        registry.register("entity.walkTo", new WalkTo(entityProvider));
-        registry.register("entity.remove", new Remove(entityProvider));
+	private class OutputThread implements Runnable {
+		public OutputThread() {
+		}
 
-        registry.getHandlers().stream()
-                .filter(handler -> handler instanceof EventQueue<?>)
-                .map(handler -> (EventQueue<?>) handler)
-                .forEach(EventQueue::start);
-    }
+		@Override
+		public void run() {
+			logger.log(Level.INFO, "Starting output thread!");
+			while (running) {
+				try {
+					while (!outQueue.isEmpty()) {
+						out.write(outQueue.poll());
+						out.write('\n');
+					}
+					out.flush();
+					Thread.yield();
+					Thread.sleep(1L);
+				} catch (final IOException | InterruptedException e) {
+					if (running) {
+						logger.log(Level.WARNING, "Error occurred in output thread", e);
+						running = false;
+					}
+				}
+			}
+			//close out buffer
+			try {
+				out.close();
+			} catch (final IOException e) {
+				logger.log(Level.WARNING, "Failed to close out buffer", e);
+			}
+		}
+	}
 
-    void teardownRegistry() {
-        registry.getHandlers().stream()
-                .filter(handler -> handler instanceof EventQueue<?>)
-                .map(handler -> (EventQueue<?>) handler)
-                .forEach(EventQueue::stop);
-    }
+	private void setupRegistry(final SessionAttachment attachment) {
+		final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider(attachment);
+		final EntityByUUIDProvider entityProvider = new EntityByUUIDProvider(plugin.getServer());
+
+		registry.register("getPlayer", new GetPlayer(attachment));
+		registry.register("setPlayer", new SetPlayer(attachment));
+		registry.register("world.getBlock", new GetBlock());
+		registry.register("world.getBlocks", new GetBlocks());
+		registry.register("world.getBlockWithData", new GetBlockWithData());
+		registry.register("world.setBlock", new SetBlock());
+		registry.register("world.setBlocks", new SetBlocks());
+		registry.register("world.isBlockPassable", new IsBlockPassable());
+		registry.register("world.setPowered", new SetPowered());
+		registry.register("world.getPlayerIds", new GetPlayerIds(plugin.getServer()));
+		registry.register("world.getPlayerId", new GetPlayerId());
+		registry.register("world.setSign", new SetSign());
+		registry.register("world.getNearbyEntities", new GetNearbyEntities());
+		registry.register("world.spawnEntity", new SpawnEntity());
+		registry.register("world.spawnParticle", new SpawnParticle());
+		registry.register("world.getHeight", new GetHeight());
+		registry.register("chat.post", new Post(plugin.getServer()));
+		registry.register("events.block.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.block.Hits(plugin));
+		registry.register("events.projectile.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.projectile.Hits(plugin));
+		registry.register("events.chat.posts", new Posts(plugin));
+		registry.register("events.clear", new Clear(registry));
+		registry.register("player.getTile", new GetTile(playerEntityProvider));
+		registry.register("entity.getTile", new GetTile(entityProvider));
+		registry.register("player.setTile", new SetTile(playerEntityProvider));
+		registry.register("entity.setTile", new SetTile(entityProvider));
+		registry.register("player.getPos", new GetPos(playerEntityProvider));
+		registry.register("entity.getPos", new GetPos(entityProvider));
+		registry.register("player.setPos", new SetPos(playerEntityProvider));
+		registry.register("entity.setPos", new SetPos(entityProvider));
+		registry.register("player.getDirection", new GetDirection(playerEntityProvider));
+		registry.register("entity.getDirection", new GetDirection(entityProvider));
+		registry.register("player.setDirection", new SetDirection(playerEntityProvider));
+		registry.register("entity.setDirection", new SetDirection(entityProvider));
+		registry.register("player.getRotation", new GetRotation(playerEntityProvider));
+		registry.register("entity.getRotation", new GetRotation(entityProvider));
+		registry.register("player.setRotation", new SetRotation(playerEntityProvider));
+		registry.register("entity.setRotation", new SetRotation(entityProvider));
+		registry.register("player.getPitch", new GetPitch(playerEntityProvider));
+		registry.register("entity.getPitch", new GetPitch(entityProvider));
+		registry.register("player.setPitch", new SetPitch(playerEntityProvider));
+		registry.register("entity.setPitch", new SetPitch(entityProvider));
+		registry.register("entity.enableControl", new EnableControl(plugin, entityProvider));
+		registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
+		registry.register("entity.walkTo", new WalkTo(entityProvider));
+		registry.register("entity.remove", new Remove(entityProvider));
+
+		registry.getHandlers().stream()
+				.filter(handler -> handler instanceof EventQueue<?>)
+				.map(handler -> (EventQueue<?>) handler)
+				.forEach(EventQueue::start);
+	}
+
+	private void teardownRegistry() {
+		registry.getHandlers().stream()
+				.filter(handler -> handler instanceof EventQueue<?>)
+				.map(handler -> (EventQueue<?>) handler)
+				.forEach(EventQueue::stop);
+	}
 }

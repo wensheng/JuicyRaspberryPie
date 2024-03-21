@@ -8,13 +8,21 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 import java.util.List;
 
+/**
+ * Get the blocks between two locations.
+ */
 public class GetBlocks implements Handler {
+	/**
+	 * Default GetBlocks constructor.
+	 */
+	public GetBlocks() {
+	}
 
-    @Override
-    public String handle(final Instruction instruction) {
-        final Location pos1 = instruction.nextLocation();
-        final Location pos2 = instruction.nextLocation();
-        final List<Material> list = getLocationsBetween(pos1, pos2).stream().map(loc -> loc.getBlock().getType()).toList();
-        return StringUtils.join(list.iterator(), ",");
-    }
+	@Override
+	public String handle(final Instruction instruction) {
+		final Location pos1 = instruction.nextLocation();
+		final Location pos2 = instruction.nextLocation();
+		final List<Material> list = getLocationsBetween(pos1, pos2).stream().map(loc -> loc.getBlock().getType()).toList();
+		return StringUtils.join(list.iterator(), ",");
+	}
 }

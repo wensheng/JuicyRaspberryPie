@@ -7,32 +7,72 @@ import org.wensheng.juicyraspberrypie.command.Handler;
 
 import java.util.ArrayDeque;
 
+/**
+ * An event queue for handling events.
+ *
+ * @param <T> The type of event to queue.
+ */
 public abstract class EventQueue<T extends Event> implements Handler, Listener {
-    private final ArrayDeque<T> eventQueue = new ArrayDeque<>();
+	/**
+	 * The event queue.
+	 */
+	private final ArrayDeque<T> events = new ArrayDeque<>();
 
-    protected final Plugin plugin;
+	/**
+	 * The plugin to associate with this event queue.
+	 */
+	protected final Plugin plugin;
 
-    public EventQueue(final Plugin plugin) {
-        this.plugin = plugin;
-    }
+	/**
+	 * Create a new event queue.
+	 *
+	 * @param plugin The plugin to associate with this event queue.
+	 */
+	public EventQueue(final Plugin plugin) {
+		this.plugin = plugin;
+	}
 
-    public void queueEvent(final T event) {
-        eventQueue.add(event);
-    }
+	/**
+	 * Queue an event.
+	 *
+	 * @param event The event for queue.
+	 */
+	public void queueEvent(final T event) {
+		events.add(event);
+	}
 
-    public T pollEvent() {
-        return eventQueue.poll();
-    }
+	/**
+	 * Get the next event from the queue.
+	 *
+	 * @return The next event from the queue.
+	 */
+	public T pollEvent() {
+		return events.poll();
+	}
 
-    public boolean isQueueEmpty() {
-        return eventQueue.isEmpty();
-    }
+	/**
+	 * Check if the event queue is empty.
+	 *
+	 * @return True if the event queue is empty, false otherwise.
+	 */
+	public boolean isQueueEmpty() {
+		return events.isEmpty();
+	}
 
-    public void clearQueue() {
-        eventQueue.clear();
-    }
+	/**
+	 * Clear the event queue.
+	 */
+	public void clearQueue() {
+		events.clear();
+	}
 
-    public abstract void start();
+	/**
+	 * Start the event queue.
+	 */
+	public abstract void start();
 
-    public abstract void stop();
+	/**
+	 * Stop the event queue.
+	 */
+	public abstract void stop();
 }

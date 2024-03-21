@@ -1,0 +1,2 @@
+# Auto detect text files and perform LF normalization. Use LF on Windows as well; the Docker build and scripts executed under WSL need this.
+* text=auto eol=lf

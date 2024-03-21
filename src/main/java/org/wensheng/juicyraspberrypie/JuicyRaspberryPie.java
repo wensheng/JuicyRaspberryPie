@@ -21,187 +21,185 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("PMD.CommentRequired")
 public class JuicyRaspberryPie extends JavaPlugin implements Listener {
-    final Logger logger = Logger.getLogger("Minecraft");
+	private final Logger logger = Logger.getLogger("Minecraft");
 
-    private ServerListenerThread serverThread;
+	private ServerListenerThread serverThread;
 
-    private final List<RemoteSession> sessions = new ArrayList<>();
+	private final List<RemoteSession> sessions = new ArrayList<>();
 
-    private void save_resources() {
-        final File py_init_file = new File(getDataFolder(), "config.yml");
-        if (!py_init_file.exists()) {
-            this.saveResource("config.yml", false);
-        }
+	public JuicyRaspberryPie() {
+		super();
+	}
 
-        final File svrFolder = new File(getDataFolder(), "cmdsvr");
-        if (svrFolder.exists() || svrFolder.mkdir()) {
-            this.saveResource("cmdsvr/pycmdsvr.py", true);
-        } else {
-            logger.warning("Could not create cmdsvr directory in plugin.");
-        }
+	private void saveResources() {
+		final File pyInitFile = new File(getDataFolder(), "config.yml");
+		if (!pyInitFile.exists()) {
+			this.saveResource("config.yml", false);
+		}
 
-        final File mcpiFolder = new File(getDataFolder(), "mcpi");
-        if (mcpiFolder.exists() || mcpiFolder.mkdir()) {
-            this.saveResource("mcpi/__init__.py", true);
-            this.saveResource("mcpi/connection.py", true);
-            this.saveResource("mcpi/event.py", true);
-            this.saveResource("mcpi/minecraft.py", true);
-            this.saveResource("mcpi/util.py", true);
-            this.saveResource("mcpi/vec3.py", true);
-        } else {
-            logger.warning("Could not create mcpi directory in plugin.");
-        }
+		final File svrFolder = new File(getDataFolder(), "cmdsvr");
+		if (svrFolder.exists() || svrFolder.mkdir()) {
+			this.saveResource("cmdsvr/pycmdsvr.py", true);
+		} else {
+			logger.warning("Could not create cmdsvr directory in plugin.");
+		}
 
-        final File ppluginsFolder = new File(getDataFolder(), "pplugins");
-        if (ppluginsFolder.exists() || ppluginsFolder.mkdir()) {
-            this.saveResource("pplugins/README.txt", true);
-            this.saveResource("pplugins/examples.py", true);
-        } else {
-            logger.warning("Could not create pplugins directory in plugin.");
-        }
-    }
+		final File mcpiFolder = new File(getDataFolder(), "mcpi");
+		if (mcpiFolder.exists() || mcpiFolder.mkdir()) {
+			this.saveResource("mcpi/__init__.py", true);
+			this.saveResource("mcpi/connection.py", true);
+			this.saveResource("mcpi/event.py", true);
+			this.saveResource("mcpi/minecraft.py", true);
+			this.saveResource("mcpi/util.py", true);
+			this.saveResource("mcpi/vec3.py", true);
+		} else {
+			logger.warning("Could not create mcpi directory in plugin.");
+		}
 
-    public void onEnable() {
-        this.saveDefaultConfig();
-        final int port = this.getConfig().getInt("api_port");
-        final boolean start_pyserver = this.getConfig().getBoolean("start_cmdsvr");
+		final File ppluginsFolder = new File(getDataFolder(), "pplugins");
+		if (ppluginsFolder.exists() || ppluginsFolder.mkdir()) {
+			this.saveResource("pplugins/README.txt", true);
+			this.saveResource("pplugins/examples.py", true);
+		} else {
+			logger.warning("Could not create pplugins directory in plugin.");
+		}
+	}
 
-        //create new tcp listener thread
-        try {
-            serverThread = new ServerListenerThread(this, new InetSocketAddress(port));
-            new Thread(serverThread).start();
-            logger.info("ThreadListener Started");
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to start ThreadListener", e);
-            return;
-        }
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new TickHandler(), 1, 1);
+	@Override
+	@SuppressWarnings("PMD.DoNotUseThreads")
+	public void onEnable() {
+		this.saveDefaultConfig();
+		final int port = this.getConfig().getInt("api_port");
 
-        this.save_resources();
+		//create new tcp listener thread
+		try {
+			serverThread = new ServerListenerThread(this, new InetSocketAddress(port));
+			new Thread(serverThread).start();
+			logger.info("ThreadListener Started");
+		} catch (final IOException e) {
+			logger.log(Level.WARNING, "Failed to start ThreadListener", e);
+			return;
+		}
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new TickHandler(), 1, 1);
+		final boolean startPyserver = this.getConfig().getBoolean("start_cmdsvr");
 
-        if (start_pyserver) {
-            final String pyexe = getConfig().getString("pyexe", "python.exe");
-            logger.info("Starting Python command server using " + pyexe);
-            final ProcessBuilder pb = new ProcessBuilder(pyexe, "cmdsvr/pycmdsvr.py");
-            try {
-                pb.redirectErrorStream(true);
-                pb.directory(this.getDataFolder());
-                pb.start();
-            } catch (IOException e) {
-                logger.warning("******************************************************************************");
-                logger.warning("Could not start python command server! Please check your `pyexe` in config.yml");
-                logger.warning("******************************************************************************");
-            }
-        }
+		this.saveResources();
 
-    }
+		if (startPyserver) {
+			final String pyexe = getConfig().getString("pyexe", "python.exe");
+			logger.info("Starting Python command server using " + pyexe);
+			final ProcessBuilder processBuilder = new ProcessBuilder(pyexe, "cmdsvr/pycmdsvr.py");
+			try {
+				processBuilder.redirectErrorStream(true);
+				processBuilder.directory(this.getDataFolder());
+				processBuilder.start();
+			} catch (final IOException e) {
+				logger.warning("******************************************************************************");
+				logger.warning("Could not start python command server! Please check your `pyexe` in config.yml");
+				logger.warning("******************************************************************************");
+			}
+		}
 
-    public void onDisable() {
-        int port = this.getConfig().getInt("cmdsvr_port");
-        // cmdsvr_host is not used, always "localhost" for now
-        final boolean start_pyserver = this.getConfig().getBoolean("start_cmdsvr");
-        if (port == 0) {
-            port = 32123;
-        }
+	}
 
-        if (start_pyserver) {
-            try {
-                final Socket socket = new Socket("localhost", port);
-                final DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
-                toPyServer.writeUTF("BYE");
-                logger.info("ask py server to shut itself down");
-                toPyServer.close();
-                socket.close();
-            } catch (Exception e) {
-                logger.warning("Could not send shutdown signal to python command server, please shutdown manually.");
-            }
-        }
+	@Override
+	public void onDisable() {
+		int port = this.getConfig().getInt("cmdsvr_port");
+		// cmdsvr_host is not used, always "localhost" for now
+		final boolean startPyserver = this.getConfig().getBoolean("start_cmdsvr");
+		if (port == 0) {
+			port = 32_123;
+		}
 
-        getServer().getScheduler().cancelTasks(this);
-        for (final RemoteSession session : sessions) {
-            try {
-                session.close();
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Failed to close RemoteSession", e);
-            }
-        }
-        serverThread.running = false;
-        try {
-            serverThread.serverSocket.close();
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to close serverSocket", e);
-        }
+		if (startPyserver) {
+			try (
+					Socket socket = new Socket("localhost", port);
+					DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream())) {
+				toPyServer.writeUTF("BYE");
+				logger.info("ask py server to shut itself down");
+			} catch (final IOException e) {
+				logger.warning("Could not send shutdown signal to python command server, please shutdown manually.");
+			}
+		}
 
-        serverThread = null;
-    }
+		getServer().getScheduler().cancelTasks(this);
+		for (final RemoteSession session : sessions) {
+			session.close();
+		}
+		serverThread.close();
 
-    public boolean onCommand(final @NotNull CommandSender sender, final @NotNull Command command, final @NotNull String label, final String[] args) {
-        final String cmdString;
-        int port = this.getConfig().getInt("cmdsvr_port");
+		serverThread = null;
+	}
 
-        if (args.length < 1) {
-            return false;
-        }
+	@Override
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+	public boolean onCommand(@NotNull final CommandSender sender, @NotNull final Command command, @NotNull final String label, final String[] args) {
+		if (args.length == 0) {
+			return false;
+		}
 
-        if (port == 0) {
-            port = 4731;
-        }
+		int port = this.getConfig().getInt("cmdsvr_port");
+		if (port == 0) {
+			port = 4731;
+		}
 
-        try {
-            final Socket socket = new Socket("localhost", port);
-            final DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
-            final BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            final String cmdLine = String.join(" ", args);
-            toPyServer.writeUTF(cmdLine);
-            cmdString = fromPyServer.readLine();
-            logger.info("the py server send back:|" + cmdString + "|");
-            if (!cmdString.equals("ok")) {
-                sender.sendMessage(cmdString);
-            }
-            toPyServer.close();
-            fromPyServer.close();
-            socket.close();
-        } catch (Exception e) {
-            sender.sendMessage("command server not available.");
-        }
-        return true;
-    }
+		final String cmdString;
+		try (
+				Socket socket = new Socket("localhost", port);
+				DataOutputStream toPyServer = new DataOutputStream(socket.getOutputStream());
+				BufferedReader fromPyServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+			final String cmdLine = String.join(" ", args);
+			toPyServer.writeUTF(cmdLine);
+			cmdString = fromPyServer.readLine();
+			logger.info("the py server send back:|" + cmdString + "|");
+			if (!"ok".equals(cmdString)) {
+				sender.sendMessage(cmdString);
+			}
+		} catch (final IOException e) {
+			sender.sendMessage("command server not available.");
+		}
+		return true;
+	}
 
-    private class TickHandler implements Runnable {
-        public void run() {
-            final Iterator<RemoteSession> sI = sessions.iterator();
-            while (sI.hasNext()) {
-                final RemoteSession s = sI.next();
-                if (s.pendingRemoval) {
-                    s.close();
-                    sI.remove();
-                } else {
-                    s.tick();
-                }
-            }
-        }
-    }
+	private class TickHandler implements Runnable {
+		public TickHandler() {
+		}
 
-    /**
-     * called when a new session is established.
-     */
-    void handleConnection(final RemoteSession newSession) {
-        if (checkBanned(newSession)) {
-            logger.warning("Kicking " + newSession.getSocket().getRemoteSocketAddress() + " because the IP address has been banned.");
-            newSession.kick("You've been banned from this server!");
-            return;
-        }
-        synchronized (sessions) {
-            sessions.add(newSession);
-        }
-    }
+		@Override
+		public void run() {
+			final Iterator<RemoteSession> remoteSessionIterator = sessions.iterator();
+			while (remoteSessionIterator.hasNext()) {
+				final RemoteSession session = remoteSessionIterator.next();
+				if (session.isPendingRemoval()) {
+					session.close();
+					remoteSessionIterator.remove();
+				} else {
+					session.tick();
+				}
+			}
+		}
+	}
 
+	/**
+	 * called when a new session is established.
+	 */
+	public void handleConnection(final RemoteSession newSession) {
+		if (checkBanned(newSession)) {
+			logger.warning("Kicking " + newSession.getSocket().getRemoteSocketAddress() + " because the IP address has been banned.");
+			newSession.kick("You've been banned from this server!");
+			return;
+		}
+		synchronized (sessions) {
+			sessions.add(newSession);
+		}
+	}
 
-    private boolean checkBanned(final RemoteSession session) {
-        final Set<String> ipBans = getServer().getIPBans();
-        final String sessionIp = session.getSocket().getInetAddress().getHostAddress();
-        return ipBans.contains(sessionIp);
-    }
+	private boolean checkBanned(final RemoteSession session) {
+		final Set<String> ipBans = getServer().getIPBans();
+		final String sessionIp = session.getSocket().getInetAddress().getHostAddress();
+		return ipBans.contains(sessionIp);
+	}
 
 }

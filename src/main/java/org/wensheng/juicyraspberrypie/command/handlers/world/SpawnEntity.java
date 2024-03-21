@@ -6,17 +6,29 @@ import org.bukkit.entity.EntityType;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
+import java.util.Locale;
+
+/**
+ * Spawns an entity at a given location.
+ */
 public class SpawnEntity implements Handler {
-    @Override
-    public String handle(final Instruction instruction) {
-        final Location loc = instruction.nextLocation();
-        EntityType entityType;
-        try {
-            entityType = EntityType.valueOf(instruction.next().toUpperCase());
-        } catch (Exception exc) {
-            entityType = EntityType.valueOf("COW");
-        }
-        final Entity entity = loc.getWorld().spawnEntity(loc, entityType);
-        return entity.getUniqueId().toString();
-    }
+	/**
+	 * Default SpawnEntity constructor.
+	 */
+	public SpawnEntity() {
+	}
+
+	@Override
+	@SuppressWarnings("PMD.AvoidCatchingGenericException")
+	public String handle(final Instruction instruction) {
+		final Location loc = instruction.nextLocation();
+		EntityType entityType;
+		try {
+			entityType = EntityType.valueOf(instruction.next().toUpperCase(Locale.ROOT));
+		} catch (Exception exc) {
+			entityType = EntityType.valueOf("COW");
+		}
+		final Entity entity = loc.getWorld().spawnEntity(loc, entityType);
+		return entity.getUniqueId().toString();
+	}
 }

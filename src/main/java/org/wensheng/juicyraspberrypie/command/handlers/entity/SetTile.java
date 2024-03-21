@@ -6,20 +6,31 @@ import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
+/**
+ * Set the tile of an entity.
+ */
 public class SetTile implements HandlerVoid {
-    private final EntityProvider entityProvider;
+	/**
+	 * The entity provider associated with this handler.
+	 */
+	private final EntityProvider entityProvider;
 
-    public SetTile(final EntityProvider entityProvider) {
-        this.entityProvider = entityProvider;
-    }
+	/**
+	 * Create a new SetTile event handler.
+	 *
+	 * @param entityProvider The entity provider to associate with this handler.
+	 */
+	public SetTile(final EntityProvider entityProvider) {
+		this.entityProvider = entityProvider;
+	}
 
-    @Override
-    public void handleVoid(final Instruction instruction) {
-        final Entity entity = entityProvider.getEntity(instruction);
-        final Location loc = instruction.nextBlockLocation();
-        final Location entityLoc = entity.getLocation();
-        loc.setPitch(entityLoc.getPitch());
-        loc.setYaw(entityLoc.getYaw());
-        entity.teleport(loc);
-    }
+	@Override
+	public void handleVoid(final Instruction instruction) {
+		final Entity entity = entityProvider.getEntity(instruction);
+		final Location loc = instruction.nextBlockLocation();
+		final Location entityLoc = entity.getLocation();
+		loc.setPitch(entityLoc.getPitch());
+		loc.setYaw(entityLoc.getYaw());
+		entity.teleport(loc);
+	}
 }

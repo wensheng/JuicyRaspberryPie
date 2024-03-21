@@ -4,10 +4,19 @@ import org.bukkit.Location;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
+/**
+ * Checks if a block is passable at a given location.
+ */
 public class IsBlockPassable implements Handler {
-    @Override
-    public String handle(final Instruction instruction) {
-        final Location loc = instruction.nextLocation();
-        return String.valueOf(loc.getBlock().isPassable());
-    }
+	/**
+	 * Default IsBlockPassable constructor.
+	 */
+	public IsBlockPassable() {
+	}
+
+	@Override
+	public String handle(final Instruction instruction) {
+		final Location loc = instruction.nextLocation();
+		return String.valueOf(loc.getBlock().isPassable());
+	}
 }

@@ -12,44 +12,53 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 import java.util.NoSuchElementException;
 
+/**
+ * Set a {@link Switch}able block to a given power state at a given location
+ */
 public class SetPowered implements HandlerVoid {
-    @Override
-    public void handleVoid(final Instruction instruction) {
-        final Location loc = instruction.nextLocation();
-        final Block block = loc.getBlock();
-        if (block.getBlockData() instanceof final Switch powerableSwitch) {
-            powerableSwitch.setPowered(parsePoweredState(instruction.next(), powerableSwitch.isPowered()));
-            block.setBlockData(powerableSwitch);
-            block.getState().update();
-            updateBlocksAround(block, powerableSwitch);
-            return;
-        }
+	/**
+	 * Default SetPowered constructor.
+	 */
+	public SetPowered() {
+	}
 
-        throw new NoSuchElementException("No powerable block at " + loc);
-    }
+	@Override
+	public void handleVoid(final Instruction instruction) {
+		final Location loc = instruction.nextLocation();
+		final Block block = loc.getBlock();
+		if (block.getBlockData() instanceof final Switch powerableSwitch) {
+			powerableSwitch.setPowered(parsePoweredState(instruction.next(), powerableSwitch.isPowered()));
+			block.setBlockData(powerableSwitch);
+			block.getState().update();
+			updateBlocksAround(block, powerableSwitch);
+			return;
+		}
 
-    private boolean parsePoweredState(final String arg, final boolean powered) {
-        return switch (arg) {
-            case "PoweredState.ON" -> true;
-            case "PoweredState.OFF" -> false;
-            case "PoweredState.TOGGLE" -> !powered;
-            default -> throw new IllegalArgumentException("Invalid state type: " + arg);
-        };
-    }
+		throw new NoSuchElementException("No powerable block at " + loc);
+	}
 
-    private void updateBlocksAround(final Block block, final Switch powerableSwitch) {
-        final BlockFace attachedTo = switch (powerableSwitch.getAttachedFace()) {
-            case FLOOR -> BlockFace.DOWN;
-            case CEILING -> BlockFace.UP;
-            default -> powerableSwitch.getFacing().getOppositeFace();
-        };
-        final Block relative = block.getRelative(attachedTo);
+	private boolean parsePoweredState(final String arg, final boolean powered) {
+		return switch (arg) {
+			case "PoweredState.ON" -> true;
+			case "PoweredState.OFF" -> false;
+			case "PoweredState.TOGGLE" -> !powered;
+			default -> throw new IllegalArgumentException("Invalid state type: " + arg);
+		};
+	}
 
-        final BlockState relativeState = relative.getState();
-        if (relativeState instanceof final Container container) {
-            container.getInventory().clear();
-        }
-        relative.setType(Material.AIR, false);
-        relativeState.update(true);
-    }
+	private void updateBlocksAround(final Block block, final Switch powerableSwitch) {
+		final BlockFace attachedTo = switch (powerableSwitch.getAttachedFace()) {
+			case FLOOR -> BlockFace.DOWN;
+			case CEILING -> BlockFace.UP;
+			default -> powerableSwitch.getFacing().getOppositeFace();
+		};
+		final Block relative = block.getRelative(attachedTo);
+
+		final BlockState relativeState = relative.getState();
+		if (relativeState instanceof final Container container) {
+			container.getInventory().clear();
+		}
+		relative.setType(Material.AIR, false);
+		relativeState.update(true);
+	}
 }
