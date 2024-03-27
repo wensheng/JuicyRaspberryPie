@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>works.reload</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.0.4</version>
+		<version>1.0.5</version>
 	</parent>
 
 	<groupId>org.wensheng</groupId>
@@ -35,21 +35,13 @@
 	</dependencies>
 
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<configuration>
-					<resources>
-						<resource>
-							<directory>python/mcpi</directory>
-							<includes>
-								<include>mcpi/**.py</include>
-							</includes>
-						</resource>
-					</resources>
-				</configuration>
-			</plugin>
-		</plugins>
+		<resources>
+			<resource>
+				<directory>python/mcpi</directory>
+				<includes>
+					<include>mcpi/**.py</include>
+				</includes>
+			</resource>
+		</resources>
 	</build>
 </project>
