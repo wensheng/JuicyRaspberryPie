@@ -49,10 +49,11 @@ public class ServerListenerThread implements Runnable {
 	}
 
 	@Override
-	@SuppressWarnings("PMD.PrematureDeclaration")
+	@SuppressWarnings({"PMD.PrematureDeclaration", "PMD.CloseResource"})
 	public void run() {
 		while (!serverSocket.isClosed()) {
-			try (Socket newConnection = serverSocket.accept()) {
+			try {
+				final Socket newConnection = serverSocket.accept();
 				if (serverSocket.isClosed()) {
 					return;
 				}
@@ -62,11 +63,6 @@ public class ServerListenerThread implements Runnable {
 					plugin.getLogger().log(Level.WARNING, "Error creating new connection", e);
 				}
 			}
-		}
-		try {
-			serverSocket.close();
-		} catch (final IOException e) {
-			plugin.getLogger().log(Level.WARNING, "Error closing server socket", e);
 		}
 	}
 }
