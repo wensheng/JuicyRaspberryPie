@@ -36,10 +36,7 @@ public class Hits extends EventQueue<ProjectileHitEvent> {
 			if (player != null) {
 				final Block block = arrow.getLocation().getBlock();
 				final Location loc = block.getLocation();
-				stringBuilder.append(getBlockLocation(loc));
-				stringBuilder.append(',');
-				stringBuilder.append(player.getUniqueId());
-				stringBuilder.append(',');
+				stringBuilder.append(getBlockLocation(loc)).append(',').append(player.getUniqueId()).append(',');
 				final Entity hitEntity = event.getHitEntity();
 				if (hitEntity != null) {
 					stringBuilder.append(hitEntity.getUniqueId());
