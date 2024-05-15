@@ -6,6 +6,7 @@ import org.bukkit.plugin.Plugin;
 import org.wensheng.juicyraspberrypie.command.Handler;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * An event queue for handling events.
@@ -16,7 +17,7 @@ public abstract class EventQueue<T extends Event> implements Handler, Listener {
 	/**
 	 * The event queue.
 	 */
-	private final ArrayDeque<T> events = new ArrayDeque<>();
+	private final Deque<T> events = new ArrayDeque<>();
 
 	/**
 	 * The plugin to associate with this event queue.

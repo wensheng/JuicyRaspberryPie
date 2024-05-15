@@ -27,11 +27,7 @@ public class Posts extends EventQueue<AsyncPlayerChatEvent> {
 		while (isQueueEmpty()) {
 			final AsyncPlayerChatEvent event = pollEvent();
 			final Player player = event.getPlayer();
-			stringBuilder.append(player.getName());
-			stringBuilder.append(',');
-			stringBuilder.append(player.getUniqueId());
-			stringBuilder.append(',');
-			stringBuilder.append(event.getMessage());
+			stringBuilder.append(player.getName()).append(',').append(player.getUniqueId()).append(',').append(event.getMessage());
 			if (!isQueueEmpty()) {
 				stringBuilder.append('|');
 			}
