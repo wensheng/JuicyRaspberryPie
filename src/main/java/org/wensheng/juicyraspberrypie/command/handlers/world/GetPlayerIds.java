@@ -27,10 +27,7 @@ public class GetPlayerIds implements Handler {
 	public String handle(final Instruction instruction) {
 		final StringBuilder bdr = new StringBuilder();
 		for (final Player p : server.getOnlinePlayers()) {
-			bdr.append(p.getName());
-			bdr.append(',');
-			bdr.append(p.getUniqueId());
-			bdr.append('|');
+			bdr.append(p.getName()).append(',').append(p.getUniqueId()).append('|');
 		}
 		if (!bdr.isEmpty()) {
 			bdr.deleteCharAt(bdr.length() - 1);

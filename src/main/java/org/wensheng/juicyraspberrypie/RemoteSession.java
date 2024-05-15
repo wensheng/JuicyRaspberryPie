@@ -52,6 +52,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,9 +77,9 @@ class RemoteSession {
 	@SuppressWarnings("PMD.DoNotUseThreads")
 	private Thread outThread;
 
-	private final ArrayDeque<String> inQueue = new ArrayDeque<>();
+	private final Deque<String> inQueue = new ArrayDeque<>();
 
-	private final ArrayDeque<String> outQueue = new ArrayDeque<>();
+	private final Deque<String> outQueue = new ArrayDeque<>();
 
 	private boolean running = true;
 
@@ -256,6 +257,7 @@ class RemoteSession {
 		public OutputThread() {
 		}
 
+		@SuppressWarnings("PMD.DoNotUseThreads")
 		@Override
 		public void run() {
 			logger.log(Level.INFO, "Starting output thread!");

@@ -47,11 +47,7 @@ public class Hits extends EventQueue<PlayerInteractEvent> {
 			final Block block = event.getClickedBlock();
 			if (block != null) {
 				final Location loc = block.getLocation();
-				stringBuilder.append(getBlockLocation(loc));
-				stringBuilder.append(',');
-				stringBuilder.append(event.getBlockFace().name());
-				stringBuilder.append(',');
-				stringBuilder.append(event.getPlayer().getUniqueId());
+				stringBuilder.append(getBlockLocation(loc)).append(',').append(event.getBlockFace().name()).append(',').append(event.getPlayer().getUniqueId());
 			} else {
 				stringBuilder.append("0,0,0,Fail,0");
 			}
