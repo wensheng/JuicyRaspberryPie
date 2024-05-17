@@ -1,3 +1,4 @@
+<!-- BEGIN Global settings -->
 <!-- TODO: Please describe your changes here. -->
 
 ---
@@ -15,12 +16,14 @@
 - [ ] This is an incomplete feature hidden behind feature flag:
 - [ ] This is proof-of-concept / experimental code not for production / marked `@Deprecated`
 - [ ] No (significant) changes to production code
-<!-- Development -->
-- [ ] The change also works in LogicTestServer (and does not break it)
-- [ ] The change also works in the local Docker Compose environment
-- [ ] The change also works under Bedrock edition
 ---
 <!-- Documentation -->
 - [ ] Classes and public methods have documentation (that doesn't just repeat the technical subject in English)
 - [ ] Logging is implemented to monitor feature usage and troubleshoot problems in production
 - [ ] These ReWiki pages are affected by this change and will be adapted:
+<!-- END Global settings -->
+---
+<!-- Support matrix -->
+- [ ] The change is unrelated to Minecraft
+- [ ] Works in Java edition
+- [ ] Works in Bedrock edition
