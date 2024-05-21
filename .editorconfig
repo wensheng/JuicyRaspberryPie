@@ -27,15 +27,6 @@ max_line_length = unset
 indent_style = space
 indent_size = 4
 
-# Ignore Python virtual environments and Python compiled bytecode.
-[**/{.venv,__pycache__}/**]
-charset = unset
-end_of_line = unset
-indent_size = unset
-indent_style = unset
-insert_final_newline = unset
-max_line_length = unset
-
 [{COMMIT_EDITMSG,MERGE_MSG,ISSUE_EDITMSG,PULLREQ_EDITMSG}]
 max_line_length = unset
 

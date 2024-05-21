@@ -36,6 +36,20 @@
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.ec4j.maven</groupId>
+					<artifactId>editorconfig-maven-plugin</artifactId>
+					<configuration>
+						<excludes>
+							<exclude>**/.venv/**</exclude>
+							<exclude>**/__pycache__/**</exclude>
+						</excludes>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<resources>
 			<resource>
 				<directory>python/mcpi</directory>
