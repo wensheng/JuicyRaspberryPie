@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>works.reload</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.2.0</version>
+		<version>1.2.2</version>
 		<relativePath/>
 	</parent>
 
@@ -30,7 +30,7 @@
 		<dependency>
 			<groupId>io.papermc.paper</groupId>
 			<artifactId>paper-api</artifactId>
-			<version>1.20.2-R0.1-SNAPSHOT</version>
+			<version>1.20.2-R0.1-20231203.034718-122</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
