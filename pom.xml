@@ -11,9 +11,15 @@
 
 	<groupId>org.wensheng</groupId>
 	<artifactId>juicyraspberrypie</artifactId>
-	<version>1.18.1</version>
+	<version>${revision}${changelist}</version>
 	<name>JuicyRaspberryPie</name>
 	<description>Plugin to execute python code</description>
+
+	<properties>
+		<!-- project version -->
+		<revision>2.0.0</revision>
+		<changelist>-SNAPSHOT</changelist>
+	</properties>
 
 	<repositories>
 		<repository>
