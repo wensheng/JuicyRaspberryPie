@@ -17,7 +17,7 @@ Installation video: https://youtu.be/6-bqPcMoZ8M
 reference: https://www.spigotmc.org/wiki/spigot-installation/
 
 ## JuicyRaspberryPie Plugin Installation
-1. Download juicyraspberrypie-1.18.1.jar from https://github.com/wensheng/JuicyRaspberryPie/releases
+1. Download `juicyraspberrypie-VERSION.jar` from https://nexus.reloadkube.managedservices.resilient-teched.com/#browse/browse:reload:org%2Fwensheng%2Fjuicyraspberrypie
 2. Move the file to `plugins` folder, the folder is at the same place where Spigot.jar is.
 3. Start or reload Spigot. (To reload, just type `reload` in Spigot command window)
 4. When juicyraspberrypie.jar is loaded for the 1st time, a folder `JuicyRaspberryPie` will be created under plugins folder.
