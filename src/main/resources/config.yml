@@ -5,3 +5,4 @@ cmdsvr_port: 4731
 pyexe: "/usr/bin/python3"
 # windows pyexe example
 # pyexe: "C:\\Users\\wensheng\\Anaconda3\\python.exe"
+console-command-whitelist:
