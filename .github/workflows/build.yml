@@ -10,5 +10,5 @@ on:
 
 jobs:
   build:
-    uses: ResilientGroup/MavenSetup/.github/workflows/build.yml@1.3.0
+    uses: ResilientGroup/MavenSetup/.github/workflows/build.yml@1.3.1
     secrets: inherit
