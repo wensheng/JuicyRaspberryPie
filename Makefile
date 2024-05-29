@@ -16,6 +16,9 @@ update-dependencies: update-maven-parent update-dependencies update-snapshot-dep
 
 update-maven-parent: ## Update Maven parent POM version
 	$(MAVEN_COMMAND) --non-recursive clean -DgenerateBackupPoms=false versions:update-parent
+	parentVersion=$$($(MAVEN_COMMAND) help:evaluate -Dexpression=project.parent.version --quiet -DforceStdout) \
+		&& echo "Updating reusable GitHub workflow version to $${parentVersion}" \
+		&& sed -i -e "s#\\(    uses: ResilientGroup/MavenSetup/.github/workflows/build.yml@\\).*\$$#\\1$${parentVersion}#" -- .github/workflows/build.yml
 
 update-dependencies: ## Update Maven dependencies and plugins which have versions defined in properties
 	$(MAVEN_COMMAND) --non-recursive clean -DgenerateBackupPoms=false versions:update-properties
