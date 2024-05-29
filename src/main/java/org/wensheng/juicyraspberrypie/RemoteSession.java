@@ -29,7 +29,6 @@ import org.wensheng.juicyraspberrypie.command.handlers.entity.WalkTo;
 import org.wensheng.juicyraspberrypie.command.handlers.events.Clear;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 import org.wensheng.juicyraspberrypie.command.handlers.events.chat.Posts;
-import org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand;
 import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlock;
 import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlockWithData;
 import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlocks;
@@ -336,7 +335,8 @@ class RemoteSession {
 		registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
 		registry.register("entity.walkTo", new WalkTo(entityProvider));
 		registry.register("entity.remove", new Remove(entityProvider));
-		registry.register("player.performCommand", new PerformCommand(attachment));
+		registry.register("player.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand(attachment));
+		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand());
 
 		registry.getHandlers().stream()
 				.filter(handler -> handler instanceof EventQueue<?>)
