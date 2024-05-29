@@ -336,7 +336,8 @@ class RemoteSession {
 		registry.register("entity.walkTo", new WalkTo(entityProvider));
 		registry.register("entity.remove", new Remove(entityProvider));
 		registry.register("player.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand(attachment));
-		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand(plugin.getConfig().getStringList("console-command-whitelist")));
+		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand(
+				plugin.getLogger(), plugin.getConfig().getStringList("console-command-whitelist")));
 
 		registry.getHandlers().stream()
 				.filter(handler -> handler instanceof EventQueue<?>)

@@ -7,6 +7,7 @@ import org.wensheng.juicyraspberrypie.command.Instruction;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -20,12 +21,17 @@ public class PerformCommand implements Handler {
 	@NotNull
 	private final List<Pattern> whitelistPatterns;
 
+	/** The logger. */
+	private final Logger logger;
+
 	/**
 	 * Create a new PerformCommand event handler.
 	 *
+	 * @param logger The logger.
 	 * @param whitelistPattern The whitelist patterns to associate with this handler.
 	 */
-	public PerformCommand(@NotNull final List<String> whitelistPattern) {
+	public PerformCommand(@NotNull final Logger logger, @NotNull final List<String> whitelistPattern) {
+		this.logger = Objects.requireNonNull(logger);
 		this.whitelistPatterns = Objects.requireNonNull(whitelistPattern).stream().map(Pattern::compile).toList();
 	}
 
@@ -33,6 +39,7 @@ public class PerformCommand implements Handler {
 	public String handle(@NotNull final Instruction instruction) {
 		final String command = instruction.next();
 		if (whitelistPatterns.stream().noneMatch(pattern -> pattern.matcher(command).matches())) {
+			logger.warning("Rejected command because it is not matched by the whitelist: " + command);
 			return "Fail: Command rejected: " + command;
 		}
 
