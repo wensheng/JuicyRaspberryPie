@@ -3,6 +3,7 @@ package org.wensheng.juicyraspberrypie.command;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.codehaus.plexus.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -108,5 +109,14 @@ public class Instruction implements Iterator<String> {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Get all (remaining) arguments as a single String.
+	 *
+	 * @return all arguments joined together
+	 */
+	public String allArguments() {
+		return StringUtils.join(this, ",");
 	}
 }

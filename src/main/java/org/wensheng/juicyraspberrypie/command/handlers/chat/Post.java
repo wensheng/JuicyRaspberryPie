@@ -1,7 +1,6 @@
 package org.wensheng.juicyraspberrypie.command.handlers.chat;
 
 import org.bukkit.Server;
-import org.codehaus.plexus.util.StringUtils;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 
@@ -26,7 +25,7 @@ public class Post implements HandlerVoid {
 
 	@Override
 	public void handleVoid(final Instruction instruction) {
-		final String message = StringUtils.join(instruction, ",");
+		final String message = instruction.allArguments();
 		server.broadcastMessage(message);
 	}
 }
