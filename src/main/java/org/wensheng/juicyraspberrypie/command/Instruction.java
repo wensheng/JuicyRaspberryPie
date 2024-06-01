@@ -3,10 +3,13 @@ package org.wensheng.juicyraspberrypie.command;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.codehaus.plexus.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * An instruction for a command.
@@ -117,6 +120,8 @@ public class Instruction implements Iterator<String> {
 	 * @return all arguments joined together
 	 */
 	public String allArguments() {
-		return StringUtils.join(this, ",");
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this, Spliterator.ORDERED), false)
+				.map(arg -> arg == null ? "" : arg)
+				.collect(Collectors.joining(","));
 	}
 }
