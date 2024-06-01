@@ -37,7 +37,7 @@ public class PerformCommand implements Handler {
 
 	@Override
 	public String handle(@NotNull final Instruction instruction) {
-		final String command = instruction.next();
+		final String command = instruction.allArguments();
 		if (whitelistPatterns.stream().noneMatch(pattern -> pattern.matcher(command).matches())) {
 			logger.warning("Rejected command because it is not matched by the whitelist: " + command);
 			return "Fail: Command rejected: " + command;
