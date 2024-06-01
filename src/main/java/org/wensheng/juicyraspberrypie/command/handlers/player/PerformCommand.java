@@ -24,6 +24,6 @@ public class PerformCommand implements Handler {
 
 	@Override
 	public String handle(final Instruction instruction) {
-		return String.valueOf(attachment.getPlayer().performCommand(instruction.next()));
+		return String.valueOf(attachment.getPlayer().performCommand(instruction.allArguments()));
 	}
 }
