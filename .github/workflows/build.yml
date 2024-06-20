@@ -12,3 +12,27 @@ jobs:
   build:
     uses: ResilientGroup/MavenSetup/.github/workflows/build.yml@1.3.2
     secrets: inherit
+  build-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pip
+      - name: Setup Python venv
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --requirement ./requirements.txt
+        working-directory: ./python/mcpi
+        shell: bash
+      - name: Build documentation
+        run: |
+          source .venv/bin/activate
+          pdoc --html --output-dir target mcpi
+        working-directory: ./python/mcpi
+        shell: bash
