@@ -32,6 +32,13 @@
 		</repository>
 	</repositories>
 
+	<distributionManagement>
+		<site>
+			<id>${project.artifactId}-site</id>
+			<url>file:///tmp/dummy-site</url> <!-- Needs to be defined here to avoid that "juicyraspberrypie" is appended to the staging directory. -->
+		</site>
+	</distributionManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.papermc.paper</groupId>
