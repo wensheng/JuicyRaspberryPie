@@ -26,6 +26,7 @@ update-dependencies: ## Update Maven dependencies and plugins which have version
 update-snapshot-dependencies: ## Update locked snapshot versions with the latest available one in the POM
 	$(MAVEN_COMMAND) --non-recursive -DgenerateBackupPoms=false versions:unlock-snapshots versions:lock-snapshots
 
-bump-version: ## Bump the version of the project
-	@if [ -z "$(NEW_VERSION)" ]; then echo 'ERROR: NEW_VERSION is not set.'; exit 2; fi
-	$(MAVEN_COMMAND) versions:set-property -DgenerateBackupPoms=false -Dproperty=revision -DnewVersion=$(NEW_VERSION)
+bump-version: $(eval SHELL := /bin/bash) ## Bump the version of the project
+	@if [ -z "$(NEW_VERSION)" ]; then read -e -i "$$($(MAVEN_COMMAND) help:evaluate -Dexpression=project.parent.version --quiet -DforceStdout)" -p 'new version: ' -r NEW_VERSION; fi; \
+		if [ -z "$$NEW_VERSION" ]; then echo 'ERROR: NEW_VERSION is not set.'; exit 2; fi; \
+		$(MAVEN_COMMAND) versions:set-property -DgenerateBackupPoms=false -Dproperty=revision -DnewVersion=$$NEW_VERSION
