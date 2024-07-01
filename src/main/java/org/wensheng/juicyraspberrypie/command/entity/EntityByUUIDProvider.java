@@ -27,9 +27,10 @@ public class EntityByUUIDProvider implements EntityProvider {
 
 	@Override
 	public Entity getEntity(final Instruction instruction) {
-		final Entity entity = server.getEntity(UUID.fromString(instruction.next()));
+		final UUID entityUuid = UUID.fromString(instruction.next());
+		final Entity entity = server.getEntity(entityUuid);
 		if (entity == null) {
-			throw new NoSuchElementException("No entity found");
+			throw new NoSuchElementException("No entity found for UUID " + entityUuid);
 		}
 		return entity;
 	}
