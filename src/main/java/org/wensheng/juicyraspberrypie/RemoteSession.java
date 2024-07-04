@@ -2,8 +2,6 @@ package org.wensheng.juicyraspberrypie;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.ArrayUtils;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationParser;
@@ -21,7 +19,7 @@ import java.util.Deque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings({"PMD.CommentRequired", "PMD.TooManyMethods"})
+@SuppressWarnings("PMD.CommentRequired")
 class RemoteSession {
 	private static final int MAX_COMMANDS_PER_TICK = 9000;
 
@@ -64,7 +62,7 @@ class RemoteSession {
 		attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		startEventQueues(attachment);
+		this.plugin.getRegistry().startEventQueues(this.plugin, attachment);
 	}
 
 	private void init() throws IOException {
@@ -152,7 +150,7 @@ class RemoteSession {
 		running = false;
 		pendingRemoval = true;
 
-		stopEventQueues(attachment);
+		plugin.getRegistry().stopEventQueues(attachment);
 
 		//wait for threads to stop
 		try {
@@ -248,24 +246,5 @@ class RemoteSession {
 				logger.log(Level.WARNING, "Failed to close out buffer", e);
 			}
 		}
-	}
-
-	private void startEventQueues(@NotNull final SessionAttachment sessionAttachment) {
-		plugin.getRegistry().getHandlers().forEach(handler -> startEventQueue(sessionAttachment, handler));
-	}
-
-	private void startEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
-		handler.createEventQueue().ifPresent(eventQueue -> {
-			plugin.getServer().getPluginManager().registerEvents(eventQueue, plugin);
-			sessionAttachment.setEventQueue(handler, eventQueue);
-		});
-	}
-
-	private void stopEventQueues(@NotNull final SessionAttachment sessionAttachment) {
-		plugin.getRegistry().getHandlers().forEach(handler -> stopEventQueue(sessionAttachment, handler));
-	}
-
-	private void stopEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
-		sessionAttachment.getEventQueue(handler).ifPresent(HandlerList::unregisterAll);
 	}
 }
