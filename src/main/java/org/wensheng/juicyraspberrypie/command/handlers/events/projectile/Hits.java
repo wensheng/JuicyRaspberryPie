@@ -10,6 +10,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
@@ -19,7 +20,7 @@ import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
  * Get one projectile hit event from the queue.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Hits extends EventQueue<ProjectileHitEvent> {
+public class Hits extends EventQueue<ProjectileHitEvent> implements Handler {
 	/**
 	 * Create a new Hits event handler.
 	 *

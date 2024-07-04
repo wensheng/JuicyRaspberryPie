@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
@@ -22,7 +23,7 @@ import java.util.Set;
  * Get one block hit event from the queue.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Hits extends EventQueue<PlayerInteractEvent> {
+public class Hits extends EventQueue<PlayerInteractEvent> implements Handler {
 	/**
 	 * The set of tools that can detect block breaks.
 	 */
