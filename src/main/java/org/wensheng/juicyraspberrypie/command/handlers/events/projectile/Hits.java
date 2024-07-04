@@ -10,6 +10,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.plugin.Plugin;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 /**
@@ -36,7 +37,7 @@ public class Hits extends EventQueue<ProjectileHitEvent> {
 			if (player != null) {
 				final Block block = arrow.getLocation().getBlock();
 				final Location loc = block.getLocation();
-				stringBuilder.append(getBlockLocation(loc)).append(',').append(player.getUniqueId()).append(',');
+				stringBuilder.append(LocationRenderer.getBlockLocation(loc)).append(',').append(player.getUniqueId()).append(',');
 				final Entity hitEntity = event.getHitEntity();
 				if (hitEntity != null) {
 					stringBuilder.append(hitEntity.getUniqueId());

@@ -36,26 +36,6 @@ public interface Handler {
 	String handle(Instruction instruction);
 
 	/**
-	 * Get the location as a string from the given location.
-	 *
-	 * @param loc the location
-	 * @return the location as a string
-	 */
-	default String getLocation(final Location loc) {
-		return loc.getX() + "," + loc.getY() + "," + loc.getZ();
-	}
-
-	/**
-	 * Get the block location as a string from the given location.
-	 *
-	 * @param loc the location
-	 * @return the block location as a string
-	 */
-	default String getBlockLocation(final Location loc) {
-		return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
-	}
-
-	/**
 	 * Get the locations between the given locations.
 	 *
 	 * @param loc1 the first location

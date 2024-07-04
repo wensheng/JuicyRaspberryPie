@@ -3,6 +3,7 @@ package org.wensheng.juicyraspberrypie.command.handlers.entity;
 import org.bukkit.entity.Entity;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
 /**
@@ -26,6 +27,6 @@ public class GetPos implements Handler {
 	@Override
 	public String handle(final Instruction instruction) {
 		final Entity entity = entityProvider.getEntity(instruction);
-		return getLocation(entity.getLocation());
+		return LocationRenderer.getLocation(entity.getLocation());
 	}
 }

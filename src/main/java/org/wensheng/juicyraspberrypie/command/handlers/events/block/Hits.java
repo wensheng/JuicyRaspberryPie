@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 import java.util.EnumSet;
@@ -47,7 +48,7 @@ public class Hits extends EventQueue<PlayerInteractEvent> {
 			final Block block = event.getClickedBlock();
 			if (block != null) {
 				final Location loc = block.getLocation();
-				stringBuilder.append(getBlockLocation(loc)).append(',').append(event.getBlockFace().name()).append(',').append(event.getPlayer().getUniqueId());
+				stringBuilder.append(LocationRenderer.getBlockLocation(loc)).append(',').append(event.getBlockFace().name()).append(',').append(event.getPlayer().getUniqueId());
 			} else {
 				stringBuilder.append("0,0,0,Fail,0");
 			}
