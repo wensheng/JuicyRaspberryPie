@@ -27,6 +27,10 @@ public class Clear implements HandlerVoid {
 
 	@Override
 	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
+		clearEventQueues(sessionAttachment);
+	}
+
+	private void clearEventQueues(@NotNull final SessionAttachment sessionAttachment) {
 		registry.getHandlers().forEach(handler -> clearEventQueue(sessionAttachment, handler));
 	}
 

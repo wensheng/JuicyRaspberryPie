@@ -7,43 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationParser;
-import org.wensheng.juicyraspberrypie.command.Registry;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
-import org.wensheng.juicyraspberrypie.command.entity.EntityByPlayerNameProvider;
-import org.wensheng.juicyraspberrypie.command.entity.EntityByUUIDProvider;
-import org.wensheng.juicyraspberrypie.command.handlers.GetPlayer;
-import org.wensheng.juicyraspberrypie.command.handlers.SetPlayer;
-import org.wensheng.juicyraspberrypie.command.handlers.chat.Post;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.DisableControl;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.EnableControl;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetDirection;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPitch;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPos;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetRotation;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetTile;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.Remove;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetDirection;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetPitch;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetPos;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetRotation;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetTile;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.WalkTo;
-import org.wensheng.juicyraspberrypie.command.handlers.events.Clear;
-import org.wensheng.juicyraspberrypie.command.handlers.events.chat.Posts;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlock;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlockWithData;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlocks;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetHeight;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetNearbyEntities;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetPlayerId;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetPlayerIds;
-import org.wensheng.juicyraspberrypie.command.handlers.world.IsBlockPassable;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetBlock;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetBlocks;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetPowered;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetSign;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SpawnEntity;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SpawnParticle;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -60,8 +24,6 @@ import java.util.logging.Logger;
 @SuppressWarnings({"PMD.CommentRequired", "PMD.TooManyMethods"})
 class RemoteSession {
 	private static final int MAX_COMMANDS_PER_TICK = 9000;
-
-	private final Registry registry;
 
 	private boolean pendingRemoval;
 
@@ -98,12 +60,11 @@ class RemoteSession {
 		this.plugin = plugin;
 		this.logger = plugin.getLogger();
 		init();
-		registry = new Registry();
 
 		attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		setupRegistry(attachment);
+		startEventQueues(attachment);
 	}
 
 	private void init() throws IOException {
@@ -169,7 +130,7 @@ class RemoteSession {
 	}
 
 	private void handleCommand(final String command, final String... args) {
-		final Handler handler = registry.getHandler(command);
+		final Handler handler = plugin.getRegistry().getHandler(command);
 		if (handler != null) {
 			send(handler.get(attachment, new Instruction(args, locationParser)));
 			return;
@@ -191,7 +152,7 @@ class RemoteSession {
 		running = false;
 		pendingRemoval = true;
 
-		teardownRegistry(attachment);
+		stopEventQueues(attachment);
 
 		//wait for threads to stop
 		try {
@@ -289,64 +250,8 @@ class RemoteSession {
 		}
 	}
 
-	private void setupRegistry(@NotNull final SessionAttachment sessionAttachment) {
-		final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider();
-		final EntityByUUIDProvider entityProvider = new EntityByUUIDProvider(plugin.getServer());
-
-		registry.register("getPlayer", new GetPlayer());
-		registry.register("setPlayer", new SetPlayer());
-		registry.register("world.getBlock", new GetBlock());
-		registry.register("world.getBlocks", new GetBlocks());
-		registry.register("world.getBlockWithData", new GetBlockWithData());
-		registry.register("world.setBlock", new SetBlock());
-		registry.register("world.setBlocks", new SetBlocks());
-		registry.register("world.isBlockPassable", new IsBlockPassable());
-		registry.register("world.setPowered", new SetPowered());
-		registry.register("world.getPlayerIds", new GetPlayerIds(plugin.getServer()));
-		registry.register("world.getPlayerId", new GetPlayerId());
-		registry.register("world.setSign", new SetSign());
-		registry.register("world.getNearbyEntities", new GetNearbyEntities());
-		registry.register("world.spawnEntity", new SpawnEntity());
-		registry.register("world.spawnParticle", new SpawnParticle());
-		registry.register("world.getHeight", new GetHeight());
-		registry.register("chat.post", new Post(plugin.getServer()));
-		registry.register("events.block.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.block.Hits());
-		registry.register("events.projectile.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.projectile.Hits());
-		registry.register("events.chat.posts", new Posts());
-		registry.register("events.clear", new Clear(registry));
-		registry.register("player.getTile", new GetTile(playerEntityProvider));
-		registry.register("entity.getTile", new GetTile(entityProvider));
-		registry.register("player.setTile", new SetTile(playerEntityProvider));
-		registry.register("entity.setTile", new SetTile(entityProvider));
-		registry.register("player.getPos", new GetPos(playerEntityProvider));
-		registry.register("entity.getPos", new GetPos(entityProvider));
-		registry.register("player.setPos", new SetPos(playerEntityProvider));
-		registry.register("entity.setPos", new SetPos(entityProvider));
-		registry.register("player.getDirection", new GetDirection(playerEntityProvider));
-		registry.register("entity.getDirection", new GetDirection(entityProvider));
-		registry.register("player.setDirection", new SetDirection(playerEntityProvider));
-		registry.register("entity.setDirection", new SetDirection(entityProvider));
-		registry.register("player.getRotation", new GetRotation(playerEntityProvider));
-		registry.register("entity.getRotation", new GetRotation(entityProvider));
-		registry.register("player.setRotation", new SetRotation(playerEntityProvider));
-		registry.register("entity.setRotation", new SetRotation(entityProvider));
-		registry.register("player.getPitch", new GetPitch(playerEntityProvider));
-		registry.register("entity.getPitch", new GetPitch(entityProvider));
-		registry.register("player.setPitch", new SetPitch(playerEntityProvider));
-		registry.register("entity.setPitch", new SetPitch(entityProvider));
-		registry.register("entity.enableControl", new EnableControl(plugin, entityProvider));
-		registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
-		registry.register("entity.walkTo", new WalkTo(entityProvider));
-		registry.register("entity.remove", new Remove(entityProvider));
-		registry.register("player.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand());
-		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand(
-				plugin.getLogger(), plugin.getConfig().getStringList("console-command-whitelist")));
-
-		registry.getHandlers().forEach(handler -> startEventQueue(sessionAttachment, handler));
-	}
-
-	private void teardownRegistry(@NotNull final SessionAttachment sessionAttachment) {
-		registry.getHandlers().forEach(handler -> stopEventQueue(sessionAttachment, handler));
+	private void startEventQueues(@NotNull final SessionAttachment sessionAttachment) {
+		plugin.getRegistry().getHandlers().forEach(handler -> startEventQueue(sessionAttachment, handler));
 	}
 
 	private void startEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
@@ -354,6 +259,10 @@ class RemoteSession {
 			plugin.getServer().getPluginManager().registerEvents(eventQueue, plugin);
 			sessionAttachment.setEventQueue(handler, eventQueue);
 		});
+	}
+
+	private void stopEventQueues(@NotNull final SessionAttachment sessionAttachment) {
+		plugin.getRegistry().getHandlers().forEach(handler -> stopEventQueue(sessionAttachment, handler));
 	}
 
 	private void stopEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
