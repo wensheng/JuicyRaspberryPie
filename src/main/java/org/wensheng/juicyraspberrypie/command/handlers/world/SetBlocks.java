@@ -3,8 +3,10 @@ package org.wensheng.juicyraspberrypie.command.handlers.world;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.List;
 
@@ -20,7 +22,7 @@ public class SetBlocks extends SetBlock implements HandlerVoid {
 	}
 
 	@Override
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final List<Location> locations = instruction.nextLocationsBetween();
 		final Material mat = Material.matchMaterial(instruction.next());
 		final Material material = mat == null ? Material.valueOf("SANDSTONE") : mat;

@@ -5,8 +5,10 @@ import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 /**
  * Set a block at a location.
@@ -19,7 +21,7 @@ public class SetBlock implements HandlerVoid {
 	}
 
 	@Override
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		Material material = Material.matchMaterial(instruction.next());
 		if (material == null) {

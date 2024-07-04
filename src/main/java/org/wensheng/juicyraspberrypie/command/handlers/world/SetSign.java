@@ -6,8 +6,10 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 /**
  * Sets a sign at the specified location with specified data.
@@ -28,7 +30,7 @@ public class SetSign implements HandlerVoid {
 
 	@Override
 	@SuppressWarnings("PMD.PrematureDeclaration")
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		Material material = Material.matchMaterial(instruction.next());
 		if (material == null) {

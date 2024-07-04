@@ -2,8 +2,10 @@ package org.wensheng.juicyraspberrypie.command.handlers.world;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.Locale;
 
@@ -20,7 +22,7 @@ public class SpawnParticle implements HandlerVoid {
 
 	@Override
 	@SuppressWarnings("PMD.AvoidCatchingGenericException")
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		Particle particle;
 		try {

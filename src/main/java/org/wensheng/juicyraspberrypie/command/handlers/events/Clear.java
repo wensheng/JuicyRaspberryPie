@@ -1,8 +1,10 @@
 package org.wensheng.juicyraspberrypie.command.handlers.events;
 
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.Registry;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 /**
  * Clear all event queues.
@@ -23,7 +25,7 @@ public class Clear implements HandlerVoid {
 	}
 
 	@Override
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		registry.getHandlers().stream()
 				.filter(handler -> handler instanceof EventQueue<?>)
 				.map(handler -> (EventQueue<?>) handler)

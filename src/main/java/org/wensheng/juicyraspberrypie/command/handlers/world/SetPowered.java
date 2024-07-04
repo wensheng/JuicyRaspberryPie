@@ -7,8 +7,10 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.type.Switch;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.NoSuchElementException;
 
@@ -23,7 +25,7 @@ public class SetPowered implements HandlerVoid {
 	}
 
 	@Override
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		final Block block = loc.getBlock();
 		if (block.getBlockData() instanceof final Switch powerableSwitch) {

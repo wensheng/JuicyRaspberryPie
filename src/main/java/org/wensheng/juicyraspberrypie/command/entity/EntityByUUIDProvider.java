@@ -2,7 +2,9 @@ package org.wensheng.juicyraspberrypie.command.entity;
 
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -26,7 +28,7 @@ public class EntityByUUIDProvider implements EntityProvider {
 	}
 
 	@Override
-	public Entity getEntity(final Instruction instruction) {
+	public Entity getEntity(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final UUID entityUuid = UUID.fromString(instruction.next());
 		final Entity entity = server.getEntity(entityUuid);
 		if (entity == null) {

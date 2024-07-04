@@ -2,8 +2,10 @@ package org.wensheng.juicyraspberrypie.command.handlers.world;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.Collection;
 
@@ -19,7 +21,7 @@ public class GetNearbyEntities implements Handler {
 
 	@Override
 	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-	public String handle(final Instruction instruction) {
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		final double nearbyDistance = instruction.hasNext() ? Double.parseDouble(instruction.next()) : 10.0;
 		final Collection<Entity> nearbyEntities = loc.getNearbyEntities(nearbyDistance, 5.0, nearbyDistance);
