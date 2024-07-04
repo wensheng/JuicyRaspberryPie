@@ -33,7 +33,7 @@ public class Hits extends EventQueue<ProjectileHitEvent> implements Handler {
 	@Override
 	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final StringBuilder stringBuilder = new StringBuilder();
-		while (isQueueEmpty()) {
+		while (!isQueueEmpty()) {
 			final ProjectileHitEvent event = pollEvent();
 			final Arrow arrow = (Arrow) event.getEntity();
 			final Player player = (Player) arrow.getShooter();

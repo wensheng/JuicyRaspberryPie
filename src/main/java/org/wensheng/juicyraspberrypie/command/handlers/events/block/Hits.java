@@ -46,7 +46,7 @@ public class Hits extends EventQueue<PlayerInteractEvent> implements Handler {
 	@Override
 	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final StringBuilder stringBuilder = new StringBuilder();
-		while (isQueueEmpty()) {
+		while (!isQueueEmpty()) {
 			final PlayerInteractEvent event = pollEvent();
 			final Block block = event.getClickedBlock();
 			if (block != null) {
