@@ -2,6 +2,8 @@ package org.wensheng.juicyraspberrypie;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.ArrayUtils;
+import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationParser;
@@ -27,7 +29,6 @@ import org.wensheng.juicyraspberrypie.command.handlers.entity.SetRotation;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.SetTile;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.WalkTo;
 import org.wensheng.juicyraspberrypie.command.handlers.events.Clear;
-import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 import org.wensheng.juicyraspberrypie.command.handlers.events.chat.Posts;
 import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlock;
 import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlockWithData;
@@ -56,7 +57,7 @@ import java.util.Deque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("PMD.CommentRequired")
+@SuppressWarnings({"PMD.CommentRequired", "PMD.TooManyMethods"})
 class RemoteSession {
 	private static final int MAX_COMMANDS_PER_TICK = 9000;
 
@@ -102,7 +103,7 @@ class RemoteSession {
 		attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		setupRegistry();
+		setupRegistry(attachment);
 	}
 
 	private void init() throws IOException {
@@ -190,7 +191,7 @@ class RemoteSession {
 		running = false;
 		pendingRemoval = true;
 
-		teardownRegistry();
+		teardownRegistry(attachment);
 
 		//wait for threads to stop
 		try {
@@ -288,7 +289,7 @@ class RemoteSession {
 		}
 	}
 
-	private void setupRegistry() {
+	private void setupRegistry(@NotNull final SessionAttachment sessionAttachment) {
 		final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider();
 		final EntityByUUIDProvider entityProvider = new EntityByUUIDProvider(plugin.getServer());
 
@@ -309,9 +310,9 @@ class RemoteSession {
 		registry.register("world.spawnParticle", new SpawnParticle());
 		registry.register("world.getHeight", new GetHeight());
 		registry.register("chat.post", new Post(plugin.getServer()));
-		registry.register("events.block.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.block.Hits(plugin));
-		registry.register("events.projectile.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.projectile.Hits(plugin));
-		registry.register("events.chat.posts", new Posts(plugin));
+		registry.register("events.block.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.block.Hits());
+		registry.register("events.projectile.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.projectile.Hits());
+		registry.register("events.chat.posts", new Posts());
 		registry.register("events.clear", new Clear(registry));
 		registry.register("player.getTile", new GetTile(playerEntityProvider));
 		registry.register("entity.getTile", new GetTile(entityProvider));
@@ -341,16 +342,21 @@ class RemoteSession {
 		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand(
 				plugin.getLogger(), plugin.getConfig().getStringList("console-command-whitelist")));
 
-		registry.getHandlers().stream()
-				.filter(handler -> handler instanceof EventQueue<?>)
-				.map(handler -> (EventQueue<?>) handler)
-				.forEach(EventQueue::start);
+		registry.getHandlers().forEach(handler -> startEventQueue(sessionAttachment, handler));
 	}
 
-	private void teardownRegistry() {
-		registry.getHandlers().stream()
-				.filter(handler -> handler instanceof EventQueue<?>)
-				.map(handler -> (EventQueue<?>) handler)
-				.forEach(EventQueue::stop);
+	private void teardownRegistry(@NotNull final SessionAttachment sessionAttachment) {
+		registry.getHandlers().forEach(handler -> stopEventQueue(sessionAttachment, handler));
+	}
+
+	private void startEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
+		handler.createEventQueue().ifPresent(eventQueue -> {
+			plugin.getServer().getPluginManager().registerEvents(eventQueue, plugin);
+			sessionAttachment.setEventQueue(handler, eventQueue);
+		});
+	}
+
+	private void stopEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
+		sessionAttachment.getEventQueue(handler).ifPresent(HandlerList::unregisterAll);
 	}
 }

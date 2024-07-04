@@ -5,10 +5,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
@@ -16,25 +15,26 @@ import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
+import java.util.Optional;
+
 /**
  * Get one projectile hit event from the queue.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Hits extends EventQueue<ProjectileHitEvent> implements Handler {
+public class Hits implements Handler {
 	/**
 	 * Create a new Hits event handler.
-	 *
-	 * @param plugin The plugin to associate with this handler.
 	 */
-	public Hits(final Plugin plugin) {
-		super(plugin);
+	public Hits() {
+		super();
 	}
 
 	@Override
 	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
+		final EventQueue<? extends Event> eventQueue = sessionAttachment.getEventQueue(this).orElseThrow();
 		final StringBuilder stringBuilder = new StringBuilder();
-		while (!isQueueEmpty()) {
-			final ProjectileHitEvent event = pollEvent();
+		while (!eventQueue.isQueueEmpty()) {
+			final ProjectileHitEvent event = (ProjectileHitEvent) eventQueue.pollEvent();
 			final Arrow arrow = (Arrow) event.getEntity();
 			final Player player = (Player) arrow.getShooter();
 			if (player != null) {
@@ -48,30 +48,35 @@ public class Hits extends EventQueue<ProjectileHitEvent> implements Handler {
 			} else {
 				stringBuilder.append("0,0,0,Fail,0");
 			}
-			if (!isQueueEmpty()) {
+			if (!eventQueue.isQueueEmpty()) {
 				stringBuilder.append('|');
 			}
 		}
 		return stringBuilder.toString();
 	}
 
+	@Override
+	public @NotNull Optional<EventQueue<? extends Event>> createEventQueue() {
+		return Optional.of(new HitEventQueue());
+	}
+
 	/**
-	 * Handle the ProjectileHitEvent.
-	 *
-	 * @param event The ProjectileHitEvent to handle.
+	 * Event queue for projectile hit events.
 	 */
-	@EventHandler
-	public void onProjectileHit(final ProjectileHitEvent event) {
-		queueEvent(event);
-	}
+	private static class HitEventQueue extends EventQueue<ProjectileHitEvent> {
+		/** Constructor. */
+		public HitEventQueue() {
+			super();
+		}
 
-	@Override
-	public void start() {
-		plugin.getServer().getPluginManager().registerEvents(this, plugin);
-	}
-
-	@Override
-	public void stop() {
-		HandlerList.unregisterAll(this);
+		/**
+		 * Handle the ProjectileHitEvent.
+		 *
+		 * @param event The ProjectileHitEvent to handle.
+		 */
+		@EventHandler
+		public void onProjectileHit(final ProjectileHitEvent event) {
+			queueEvent(event);
+		}
 	}
 }

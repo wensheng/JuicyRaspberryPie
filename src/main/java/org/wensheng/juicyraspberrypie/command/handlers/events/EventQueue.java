@@ -2,7 +2,6 @@ package org.wensheng.juicyraspberrypie.command.handlers.events;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -19,17 +18,10 @@ public abstract class EventQueue<T extends Event> implements Listener {
 	private final Deque<T> events = new ArrayDeque<>();
 
 	/**
-	 * The plugin to associate with this event queue.
-	 */
-	protected final Plugin plugin;
-
-	/**
 	 * Create a new event queue.
 	 *
-	 * @param plugin The plugin to associate with this event queue.
 	 */
-	public EventQueue(final Plugin plugin) {
-		this.plugin = plugin;
+	public EventQueue() {
 	}
 
 	/**
@@ -65,14 +57,4 @@ public abstract class EventQueue<T extends Event> implements Listener {
 	public void clearQueue() {
 		events.clear();
 	}
-
-	/**
-	 * Start the event queue.
-	 */
-	public abstract void start();
-
-	/**
-	 * Stop the event queue.
-	 */
-	public abstract void stop();
 }

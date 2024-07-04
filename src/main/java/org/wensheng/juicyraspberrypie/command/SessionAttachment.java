@@ -3,11 +3,17 @@ package org.wensheng.juicyraspberrypie.command;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
- * A class to hold the player and world for commands.
+ * A class to hold the player, world, and event queues for commands.
  */
 public class SessionAttachment {
 	/**
@@ -24,6 +30,12 @@ public class SessionAttachment {
 	 * The player to use for commands.
 	 */
 	private Player player;
+
+	/**
+	 * The event queues submitted by command handlers.
+	 */
+	@NotNull
+	private final Map<@NotNull Handler, @NotNull EventQueue<? extends Event>> eventQueues = new HashMap<>();
 
 	/**
 	 * Create a new session attachment.
@@ -83,4 +95,23 @@ public class SessionAttachment {
 		setPlayerAndOrigin();
 		return player;
 	}
+
+	/**
+	 * Set an event queue for the given handler.
+	 * @param handler The handler who the event queue belongs to.
+	 * @param eventQueue The event queue to associate with the handler.
+	 */
+	public void setEventQueue(@NotNull final Handler handler, @NotNull final EventQueue<? extends Event> eventQueue) {
+		if (eventQueues.put(handler, eventQueue) != null) {
+			throw new IllegalStateException("Handler " + handler + " already has an event queue.");
+		}
+	}
+
+	/**
+	 * Get the event queue for the given handler.
+	 */
+	public @NotNull Optional<EventQueue<? extends Event>> getEventQueue(@NotNull final Handler handler) {
+		return Optional.ofNullable(eventQueues.get(handler));
+	}
+
 }

@@ -1,6 +1,10 @@
 package org.wensheng.juicyraspberrypie.command;
 
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
+
+import java.util.Optional;
 
 /**
  * A handler for a command.
@@ -31,4 +35,12 @@ public interface Handler {
 	 * @return the result
 	 */
 	String handle(@NotNull SessionAttachment sessionAttachment, @NotNull Instruction instruction);
+
+	/**
+	 * Return an event queue that is attached to the current session (and available to the Handler via
+	 * {@link SessionAttachment#getEventQueue(Handler)}) if the handler listens for events.
+	 */
+	default @NotNull Optional<EventQueue<? extends Event>> createEventQueue() {
+		return Optional.empty();
+	}
 }
