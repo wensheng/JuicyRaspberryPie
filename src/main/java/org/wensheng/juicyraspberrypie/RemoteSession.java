@@ -2,9 +2,11 @@ package org.wensheng.juicyraspberrypie;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationParser;
+import org.wensheng.juicyraspberrypie.command.Registry;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.io.BufferedReader;
@@ -16,6 +18,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,8 +47,10 @@ class RemoteSession {
 
 	private boolean running = true;
 
-	private final JuicyRaspberryPie plugin;
+	@NotNull
+	private final Registry registry;
 
+	@NotNull
 	private final Logger logger;
 
 	private final LocationParser locationParser;
@@ -53,16 +58,16 @@ class RemoteSession {
 	private final SessionAttachment attachment;
 
 	@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
-	public RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
-		this.socket = socket;
-		this.plugin = plugin;
-		this.logger = plugin.getLogger();
+	public RemoteSession(@NotNull final JuicyRaspberryPie plugin, @NotNull final Socket socket) throws IOException {
+		this.socket = Objects.requireNonNull(socket);
+		this.registry = Objects.requireNonNull(plugin.getRegistry());
+		this.logger = Objects.requireNonNull(plugin.getLogger());
 		init();
 
 		attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		this.plugin.getRegistry().startEventQueues(this.plugin, attachment);
+		registry.startEventQueues(plugin, attachment);
 	}
 
 	private void init() throws IOException {
@@ -128,12 +133,12 @@ class RemoteSession {
 	}
 
 	private void handleCommand(final String command, final String... args) {
-		final Handler handler = plugin.getRegistry().getHandler(command);
+		final Handler handler = registry.getHandler(command);
 		if (handler != null) {
 			send(handler.get(attachment, new Instruction(args, locationParser)));
 			return;
 		}
-		plugin.getLogger().warning(command + " is not supported.");
+		logger.warning(command + " is not supported.");
 		send("Fail");
 	}
 
@@ -150,7 +155,7 @@ class RemoteSession {
 		running = false;
 		pendingRemoval = true;
 
-		plugin.getRegistry().stopEventQueues(attachment);
+		registry.stopEventQueues(attachment);
 
 		//wait for threads to stop
 		try {
