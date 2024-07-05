@@ -1,7 +1,10 @@
 package org.wensheng.juicyraspberrypie.command.handlers.events;
 
 import org.bukkit.event.Event;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -11,17 +14,23 @@ import java.util.Deque;
  *
  * @param <T> The type of event to queue.
  */
-public abstract class EventQueue<T extends Event> implements Listener {
+public abstract class EventQueue<T extends Event> implements AutoCloseable, Listener {
 	/**
 	 * The event queue.
 	 */
 	private final Deque<T> events = new ArrayDeque<>();
 
 	/**
-	 * Create a new event queue.
+	 * Create a new event queue and register for events.
 	 *
 	 */
-	public EventQueue() {
+	public EventQueue(@NotNull final JavaPlugin plugin) {
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+	}
+
+	@Override
+	public void close() throws Exception {
+		HandlerList.unregisterAll(this);
 	}
 
 	/**

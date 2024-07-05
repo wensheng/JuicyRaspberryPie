@@ -1,6 +1,5 @@
 package org.wensheng.juicyraspberrypie.command;
 
-import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,27 +53,15 @@ public class Registry {
 	}
 
 	/**
-	 * Start all event queues for the passed session.
+	 * Create all contexts for the passed session.
 	 */
-	public void startEventQueues(@NotNull final JavaPlugin plugin, @NotNull final SessionAttachment sessionAttachment) {
-		getHandlers().forEach(handler -> startEventQueue(plugin, sessionAttachment, handler));
+	public void createContexts(@NotNull final JavaPlugin plugin, @NotNull final SessionAttachment sessionAttachment) {
+		getHandlers().forEach(handler -> createContext(plugin, sessionAttachment, handler));
 	}
 
-	private void startEventQueue(@NotNull final JavaPlugin plugin, @NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
-		handler.createEventQueue().ifPresent(eventQueue -> {
-			plugin.getServer().getPluginManager().registerEvents(eventQueue, plugin);
-			sessionAttachment.setEventQueue(handler, eventQueue);
+	private void createContext(@NotNull final JavaPlugin plugin, @NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
+		handler.createContext(plugin, sessionAttachment).ifPresent(context -> {
+			sessionAttachment.setContext(handler, context);
 		});
-	}
-
-	/**
-	 * Stop all event queues for the passed session.
-	 */
-	public void stopEventQueues(@NotNull final SessionAttachment sessionAttachment) {
-		getHandlers().forEach(handler -> stopEventQueue(sessionAttachment, handler));
-	}
-
-	private void stopEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
-		sessionAttachment.getEventQueue(handler).ifPresent(HandlerList::unregisterAll);
 	}
 }

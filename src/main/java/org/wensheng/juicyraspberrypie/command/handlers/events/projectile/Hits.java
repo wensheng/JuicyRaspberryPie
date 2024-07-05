@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
@@ -15,6 +16,7 @@ import org.wensheng.juicyraspberrypie.command.LocationRenderer;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -30,8 +32,9 @@ public class Hits implements Handler {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.CloseResource") // Closing is done by {@link EventQueue#close()} through {@link SessionAttachment#close()}.
 	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
-		final EventQueue<? extends Event> eventQueue = sessionAttachment.getEventQueue(this).orElseThrow();
+		final EventQueue<? extends Event> eventQueue = (EventQueue<? extends Event>) sessionAttachment.getContext(this).orElseThrow();
 		final StringBuilder stringBuilder = new StringBuilder();
 		while (!eventQueue.isQueueEmpty()) {
 			final ProjectileHitEvent event = (ProjectileHitEvent) eventQueue.pollEvent();
@@ -56,8 +59,8 @@ public class Hits implements Handler {
 	}
 
 	@Override
-	public @NotNull Optional<EventQueue<? extends Event>> createEventQueue() {
-		return Optional.of(new HitEventQueue());
+	public @NotNull Optional<Object> createContext(@NotNull final JavaPlugin plugin, @NotNull final SessionAttachment sessionAttachment) {
+		return Optional.of(new HitEventQueue(Objects.requireNonNull(plugin)));
 	}
 
 	/**
@@ -65,8 +68,8 @@ public class Hits implements Handler {
 	 */
 	private static class HitEventQueue extends EventQueue<ProjectileHitEvent> {
 		/** Constructor. */
-		public HitEventQueue() {
-			super();
+		public HitEventQueue(@NotNull final JavaPlugin plugin) {
+			super(Objects.requireNonNull(plugin));
 		}
 
 		/**

@@ -64,10 +64,10 @@ class RemoteSession {
 		this.logger = Objects.requireNonNull(plugin.getLogger());
 		init();
 
-		attachment = new SessionAttachment(plugin.getServer());
+		attachment = new SessionAttachment(logger, plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		registry.startEventQueues(plugin, attachment);
+		registry.createContexts(plugin, attachment);
 	}
 
 	private void init() throws IOException {
@@ -155,7 +155,7 @@ class RemoteSession {
 		running = false;
 		pendingRemoval = true;
 
-		registry.stopEventQueues(attachment);
+		attachment.close();
 
 		//wait for threads to stop
 		try {
