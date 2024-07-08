@@ -1,5 +1,6 @@
 package org.wensheng.juicyraspberrypie.command.handlers.player;
 
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
@@ -9,21 +10,13 @@ import org.wensheng.juicyraspberrypie.command.SessionAttachment;
  */
 public class PerformCommand implements Handler {
 	/**
-	 * The session attachment associated with this handler.
-	 */
-	private final SessionAttachment attachment;
-
-	/**
 	 * Create a new PerformCommand event handler.
-	 *
-	 * @param attachment The session attachment to associate with this handler.
 	 */
-	public PerformCommand(final SessionAttachment attachment) {
-		this.attachment = attachment;
+	public PerformCommand() {
 	}
 
 	@Override
-	public String handle(final Instruction instruction) {
-		return String.valueOf(attachment.getPlayer().performCommand(instruction.allArguments()));
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
+		return String.valueOf(sessionAttachment.getPlayer().performCommand(instruction.allArguments()));
 	}
 }

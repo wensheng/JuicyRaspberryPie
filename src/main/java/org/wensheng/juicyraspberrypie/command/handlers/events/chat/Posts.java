@@ -5,13 +5,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 /**
  * Get one chat event from the queue.
  */
-public class Posts extends EventQueue<AsyncPlayerChatEvent> {
+public class Posts extends EventQueue<AsyncPlayerChatEvent> implements Handler {
 	/**
 	 * Create a new Posts event handler.
 	 *
@@ -22,9 +25,9 @@ public class Posts extends EventQueue<AsyncPlayerChatEvent> {
 	}
 
 	@Override
-	public String handle(final Instruction instruction) {
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final StringBuilder stringBuilder = new StringBuilder();
-		while (isQueueEmpty()) {
+		while (!isQueueEmpty()) {
 			final AsyncPlayerChatEvent event = pollEvent();
 			final Player player = event.getPlayer();
 			stringBuilder.append(player.getName()).append(',').append(player.getUniqueId()).append(',').append(event.getMessage());

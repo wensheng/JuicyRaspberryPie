@@ -89,6 +89,8 @@ class RemoteSession {
 
 	private final LocationParser locationParser;
 
+	private final SessionAttachment attachment;
+
 	@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
 	public RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
 		this.socket = socket;
@@ -97,10 +99,10 @@ class RemoteSession {
 		init();
 		registry = new Registry();
 
-		final SessionAttachment attachment = new SessionAttachment(plugin.getServer());
+		attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		setupRegistry(attachment);
+		setupRegistry();
 	}
 
 	private void init() throws IOException {
@@ -168,7 +170,7 @@ class RemoteSession {
 	private void handleCommand(final String command, final String... args) {
 		final Handler handler = registry.getHandler(command);
 		if (handler != null) {
-			send(handler.get(new Instruction(args, locationParser)));
+			send(handler.get(attachment, new Instruction(args, locationParser)));
 			return;
 		}
 		plugin.getLogger().warning(command + " is not supported.");
@@ -286,12 +288,12 @@ class RemoteSession {
 		}
 	}
 
-	private void setupRegistry(final SessionAttachment attachment) {
-		final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider(attachment);
+	private void setupRegistry() {
+		final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider();
 		final EntityByUUIDProvider entityProvider = new EntityByUUIDProvider(plugin.getServer());
 
-		registry.register("getPlayer", new GetPlayer(attachment));
-		registry.register("setPlayer", new SetPlayer(attachment));
+		registry.register("getPlayer", new GetPlayer());
+		registry.register("setPlayer", new SetPlayer());
 		registry.register("world.getBlock", new GetBlock());
 		registry.register("world.getBlocks", new GetBlocks());
 		registry.register("world.getBlockWithData", new GetBlockWithData());
@@ -335,7 +337,7 @@ class RemoteSession {
 		registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
 		registry.register("entity.walkTo", new WalkTo(entityProvider));
 		registry.register("entity.remove", new Remove(entityProvider));
-		registry.register("player.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand(attachment));
+		registry.register("player.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand());
 		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand(
 				plugin.getLogger(), plugin.getConfig().getStringList("console-command-whitelist")));
 

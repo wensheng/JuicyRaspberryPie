@@ -1,8 +1,11 @@
 package org.wensheng.juicyraspberrypie.command.handlers.entity;
 
 import org.bukkit.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.LocationRenderer;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 import org.wensheng.juicyraspberrypie.command.entity.EntityProvider;
 
 /**
@@ -24,8 +27,8 @@ public class GetTile implements Handler {
 	}
 
 	@Override
-	public String handle(final Instruction instruction) {
-		final Entity entity = entityProvider.getEntity(instruction);
-		return getBlockLocation(entity.getLocation());
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
+		final Entity entity = entityProvider.getEntity(sessionAttachment, instruction);
+		return LocationRenderer.getBlockLocation(entity.getLocation());
 	}
 }

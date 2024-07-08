@@ -1,8 +1,10 @@
 package org.wensheng.juicyraspberrypie.command.handlers.chat;
 
 import org.bukkit.Server;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 /**
  * Post a message to the chat.
@@ -24,7 +26,7 @@ public class Post implements HandlerVoid {
 	}
 
 	@Override
-	public void handleVoid(final Instruction instruction) {
+	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final String message = instruction.allArguments();
 		server.broadcastMessage(message);
 	}

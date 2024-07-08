@@ -3,7 +3,6 @@ package org.wensheng.juicyraspberrypie.command.handlers.events;
 import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
-import org.wensheng.juicyraspberrypie.command.Handler;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -13,7 +12,7 @@ import java.util.Deque;
  *
  * @param <T> The type of event to queue.
  */
-public abstract class EventQueue<T extends Event> implements Handler, Listener {
+public abstract class EventQueue<T extends Event> implements Listener {
 	/**
 	 * The event queue.
 	 */

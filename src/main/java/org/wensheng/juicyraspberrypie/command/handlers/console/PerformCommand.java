@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +37,7 @@ public class PerformCommand implements Handler {
 	}
 
 	@Override
-	public String handle(@NotNull final Instruction instruction) {
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final String command = instruction.allArguments();
 		if (whitelistPatterns.stream().noneMatch(pattern -> pattern.matcher(command).matches())) {
 			logger.warning("Rejected command because it is not matched by the whitelist: " + command);

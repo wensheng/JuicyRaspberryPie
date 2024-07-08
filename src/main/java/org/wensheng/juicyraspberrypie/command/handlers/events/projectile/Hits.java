@@ -9,14 +9,18 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.LocationRenderer;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 /**
  * Get one projectile hit event from the queue.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Hits extends EventQueue<ProjectileHitEvent> {
+public class Hits extends EventQueue<ProjectileHitEvent> implements Handler {
 	/**
 	 * Create a new Hits event handler.
 	 *
@@ -27,16 +31,16 @@ public class Hits extends EventQueue<ProjectileHitEvent> {
 	}
 
 	@Override
-	public String handle(final Instruction instruction) {
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final StringBuilder stringBuilder = new StringBuilder();
-		while (isQueueEmpty()) {
+		while (!isQueueEmpty()) {
 			final ProjectileHitEvent event = pollEvent();
 			final Arrow arrow = (Arrow) event.getEntity();
 			final Player player = (Player) arrow.getShooter();
 			if (player != null) {
 				final Block block = arrow.getLocation().getBlock();
 				final Location loc = block.getLocation();
-				stringBuilder.append(getBlockLocation(loc)).append(',').append(player.getUniqueId()).append(',');
+				stringBuilder.append(LocationRenderer.getBlockLocation(loc)).append(',').append(player.getUniqueId()).append(',');
 				final Entity hitEntity = event.getHitEntity();
 				if (hitEntity != null) {
 					stringBuilder.append(hitEntity.getUniqueId());

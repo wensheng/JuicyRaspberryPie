@@ -9,7 +9,11 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
+import org.wensheng.juicyraspberrypie.command.LocationRenderer;
+import org.wensheng.juicyraspberrypie.command.SessionAttachment;
 import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 import java.util.EnumSet;
@@ -19,7 +23,7 @@ import java.util.Set;
  * Get one block hit event from the queue.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Hits extends EventQueue<PlayerInteractEvent> {
+public class Hits extends EventQueue<PlayerInteractEvent> implements Handler {
 	/**
 	 * The set of tools that can detect block breaks.
 	 */
@@ -40,14 +44,14 @@ public class Hits extends EventQueue<PlayerInteractEvent> {
 	}
 
 	@Override
-	public String handle(final Instruction instruction) {
+	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final StringBuilder stringBuilder = new StringBuilder();
-		while (isQueueEmpty()) {
+		while (!isQueueEmpty()) {
 			final PlayerInteractEvent event = pollEvent();
 			final Block block = event.getClickedBlock();
 			if (block != null) {
 				final Location loc = block.getLocation();
-				stringBuilder.append(getBlockLocation(loc)).append(',').append(event.getBlockFace().name()).append(',').append(event.getPlayer().getUniqueId());
+				stringBuilder.append(LocationRenderer.getBlockLocation(loc)).append(',').append(event.getBlockFace().name()).append(',').append(event.getPlayer().getUniqueId());
 			} else {
 				stringBuilder.append("0,0,0,Fail,0");
 			}
