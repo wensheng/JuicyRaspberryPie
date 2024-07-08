@@ -168,9 +168,11 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 		for (final RemoteSession session : sessions) {
 			session.close();
 		}
-		serverThread.close();
 
-		serverThread = null;
+		if (serverThread != null) {
+			serverThread.close();
+			serverThread = null;
+		}
 	}
 
 	@Override

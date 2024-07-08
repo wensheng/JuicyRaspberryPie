@@ -1,5 +1,6 @@
 package org.wensheng.juicyraspberrypie.command.handlers.events;
 
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.HandlerVoid;
@@ -35,6 +36,10 @@ public class Clear implements HandlerVoid {
 	}
 
 	private void clearEventQueue(@NotNull final SessionAttachment sessionAttachment, @NotNull final Handler handler) {
-		sessionAttachment.getEventQueue(handler).ifPresent(EventQueue::clearQueue);
+		sessionAttachment.getContext(handler).ifPresent(context -> {
+			if (context instanceof EventQueue<? extends Event> eventQueue) {
+				eventQueue.clearQueue();
+			}
+		});
 	}
 }

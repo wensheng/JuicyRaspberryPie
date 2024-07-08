@@ -1,8 +1,7 @@
 package org.wensheng.juicyraspberrypie.command;
 
-import org.bukkit.event.Event;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
 
 import java.util.Optional;
 
@@ -37,10 +36,10 @@ public interface Handler {
 	String handle(@NotNull SessionAttachment sessionAttachment, @NotNull Instruction instruction);
 
 	/**
-	 * Return an event queue that is attached to the current session (and available to the Handler via
-	 * {@link SessionAttachment#getEventQueue(Handler)}) if the handler listens for events.
+	 * Return a context object that is attached to the current session (and available to the Handler via
+	 * {@link SessionAttachment#getContext(Handler)}) if the handler needs session-scoped information.
 	 */
-	default @NotNull Optional<EventQueue<? extends Event>> createEventQueue() {
+	default @NotNull Optional<Object> createContext(@NotNull final JavaPlugin plugin, @NotNull final SessionAttachment sessionAttachment) {
 		return Optional.empty();
 	}
 }
