@@ -2,47 +2,12 @@ package org.wensheng.juicyraspberrypie;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 import org.wensheng.juicyraspberrypie.command.Handler;
 import org.wensheng.juicyraspberrypie.command.Instruction;
 import org.wensheng.juicyraspberrypie.command.LocationParser;
 import org.wensheng.juicyraspberrypie.command.Registry;
 import org.wensheng.juicyraspberrypie.command.SessionAttachment;
-import org.wensheng.juicyraspberrypie.command.entity.EntityByPlayerNameProvider;
-import org.wensheng.juicyraspberrypie.command.entity.EntityByUUIDProvider;
-import org.wensheng.juicyraspberrypie.command.handlers.GetPlayer;
-import org.wensheng.juicyraspberrypie.command.handlers.SetPlayer;
-import org.wensheng.juicyraspberrypie.command.handlers.chat.Post;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.DisableControl;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.EnableControl;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetDirection;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPitch;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPos;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetRotation;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.GetTile;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.Remove;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetDirection;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetPitch;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetPos;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetRotation;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.SetTile;
-import org.wensheng.juicyraspberrypie.command.handlers.entity.WalkTo;
-import org.wensheng.juicyraspberrypie.command.handlers.events.Clear;
-import org.wensheng.juicyraspberrypie.command.handlers.events.EventQueue;
-import org.wensheng.juicyraspberrypie.command.handlers.events.chat.Posts;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlock;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlockWithData;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetBlocks;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetHeight;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetNearbyEntities;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetPlayerId;
-import org.wensheng.juicyraspberrypie.command.handlers.world.GetPlayerIds;
-import org.wensheng.juicyraspberrypie.command.handlers.world.IsBlockPassable;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetBlock;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetBlocks;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetPowered;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SetSign;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SpawnEntity;
-import org.wensheng.juicyraspberrypie.command.handlers.world.SpawnParticle;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -53,14 +18,13 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings("PMD.CommentRequired")
 class RemoteSession {
 	private static final int MAX_COMMANDS_PER_TICK = 9000;
-
-	private final Registry registry;
 
 	private boolean pendingRemoval;
 
@@ -83,8 +47,10 @@ class RemoteSession {
 
 	private boolean running = true;
 
-	private final JuicyRaspberryPie plugin;
+	@NotNull
+	private final Registry registry;
 
+	@NotNull
 	private final Logger logger;
 
 	private final LocationParser locationParser;
@@ -92,17 +58,16 @@ class RemoteSession {
 	private final SessionAttachment attachment;
 
 	@SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
-	public RemoteSession(final JuicyRaspberryPie plugin, final Socket socket) throws IOException {
-		this.socket = socket;
-		this.plugin = plugin;
-		this.logger = plugin.getLogger();
+	public RemoteSession(@NotNull final JuicyRaspberryPie plugin, @NotNull final Socket socket) throws IOException {
+		this.socket = Objects.requireNonNull(socket);
+		this.registry = Objects.requireNonNull(plugin.getRegistry());
+		this.logger = Objects.requireNonNull(plugin.getLogger());
 		init();
-		registry = new Registry();
 
 		attachment = new SessionAttachment(plugin.getServer());
 		attachment.setPlayerAndOrigin();
 		locationParser = new LocationParser(attachment);
-		setupRegistry();
+		registry.startEventQueues(plugin, attachment);
 	}
 
 	private void init() throws IOException {
@@ -173,7 +138,7 @@ class RemoteSession {
 			send(handler.get(attachment, new Instruction(args, locationParser)));
 			return;
 		}
-		plugin.getLogger().warning(command + " is not supported.");
+		logger.warning(command + " is not supported.");
 		send("Fail");
 	}
 
@@ -190,7 +155,7 @@ class RemoteSession {
 		running = false;
 		pendingRemoval = true;
 
-		teardownRegistry();
+		registry.stopEventQueues(attachment);
 
 		//wait for threads to stop
 		try {
@@ -286,71 +251,5 @@ class RemoteSession {
 				logger.log(Level.WARNING, "Failed to close out buffer", e);
 			}
 		}
-	}
-
-	private void setupRegistry() {
-		final EntityByPlayerNameProvider playerEntityProvider = new EntityByPlayerNameProvider();
-		final EntityByUUIDProvider entityProvider = new EntityByUUIDProvider(plugin.getServer());
-
-		registry.register("getPlayer", new GetPlayer());
-		registry.register("setPlayer", new SetPlayer());
-		registry.register("world.getBlock", new GetBlock());
-		registry.register("world.getBlocks", new GetBlocks());
-		registry.register("world.getBlockWithData", new GetBlockWithData());
-		registry.register("world.setBlock", new SetBlock());
-		registry.register("world.setBlocks", new SetBlocks());
-		registry.register("world.isBlockPassable", new IsBlockPassable());
-		registry.register("world.setPowered", new SetPowered());
-		registry.register("world.getPlayerIds", new GetPlayerIds(plugin.getServer()));
-		registry.register("world.getPlayerId", new GetPlayerId());
-		registry.register("world.setSign", new SetSign());
-		registry.register("world.getNearbyEntities", new GetNearbyEntities());
-		registry.register("world.spawnEntity", new SpawnEntity());
-		registry.register("world.spawnParticle", new SpawnParticle());
-		registry.register("world.getHeight", new GetHeight());
-		registry.register("chat.post", new Post(plugin.getServer()));
-		registry.register("events.block.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.block.Hits(plugin));
-		registry.register("events.projectile.hits", new org.wensheng.juicyraspberrypie.command.handlers.events.projectile.Hits(plugin));
-		registry.register("events.chat.posts", new Posts(plugin));
-		registry.register("events.clear", new Clear(registry));
-		registry.register("player.getTile", new GetTile(playerEntityProvider));
-		registry.register("entity.getTile", new GetTile(entityProvider));
-		registry.register("player.setTile", new SetTile(playerEntityProvider));
-		registry.register("entity.setTile", new SetTile(entityProvider));
-		registry.register("player.getPos", new GetPos(playerEntityProvider));
-		registry.register("entity.getPos", new GetPos(entityProvider));
-		registry.register("player.setPos", new SetPos(playerEntityProvider));
-		registry.register("entity.setPos", new SetPos(entityProvider));
-		registry.register("player.getDirection", new GetDirection(playerEntityProvider));
-		registry.register("entity.getDirection", new GetDirection(entityProvider));
-		registry.register("player.setDirection", new SetDirection(playerEntityProvider));
-		registry.register("entity.setDirection", new SetDirection(entityProvider));
-		registry.register("player.getRotation", new GetRotation(playerEntityProvider));
-		registry.register("entity.getRotation", new GetRotation(entityProvider));
-		registry.register("player.setRotation", new SetRotation(playerEntityProvider));
-		registry.register("entity.setRotation", new SetRotation(entityProvider));
-		registry.register("player.getPitch", new GetPitch(playerEntityProvider));
-		registry.register("entity.getPitch", new GetPitch(entityProvider));
-		registry.register("player.setPitch", new SetPitch(playerEntityProvider));
-		registry.register("entity.setPitch", new SetPitch(entityProvider));
-		registry.register("entity.enableControl", new EnableControl(plugin, entityProvider));
-		registry.register("entity.disableControl", new DisableControl(plugin, entityProvider));
-		registry.register("entity.walkTo", new WalkTo(entityProvider));
-		registry.register("entity.remove", new Remove(entityProvider));
-		registry.register("player.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.player.PerformCommand());
-		registry.register("console.performCommand", new org.wensheng.juicyraspberrypie.command.handlers.console.PerformCommand(
-				plugin.getLogger(), plugin.getConfig().getStringList("console-command-whitelist")));
-
-		registry.getHandlers().stream()
-				.filter(handler -> handler instanceof EventQueue<?>)
-				.map(handler -> (EventQueue<?>) handler)
-				.forEach(EventQueue::start);
-	}
-
-	private void teardownRegistry() {
-		registry.getHandlers().stream()
-				.filter(handler -> handler instanceof EventQueue<?>)
-				.map(handler -> (EventQueue<?>) handler)
-				.forEach(EventQueue::stop);
 	}
 }
