@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>works.reload</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.7.2</version>
+		<version>1.7.3</version>
 		<relativePath/>
 	</parent>
 

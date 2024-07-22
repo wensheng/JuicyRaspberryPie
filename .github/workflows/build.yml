@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: ResilientGroup/MavenSetup/.github/workflows/build.yml@1.7.1
+    uses: ResilientGroup/MavenSetup/.github/workflows/build.yml@1.7.3
     with:
       javadoc-project-name: JuicyRaspberryPie
     secrets: inherit
