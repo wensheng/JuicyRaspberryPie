@@ -1,0 +1,49 @@
+name: Alert about superproject↔submodule reference differences
+
+on:
+  schedule:
+    - cron: '37 3 * * 1-5'   # UTC! every weekday at 04:37 (winter) / 05:37 (summer) in the morning
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  SLACK_CHANNEL: reload-cd-pipelines
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.SUBMODULE_CHECKOUT_TOKEN }}
+      - uses: inkarkat/git-supersubinout@v3
+        id: supersubinout
+        with:
+          message: >
+            :deciduous_tree: :arrows_counterclockwise: Found *pending submodule changes* to be incorporated into JuicyRaspberryPie:
+      - name: Check summary
+        if: fromJSON(steps.supersubinout.outputs.differences-found)
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ${{ steps.supersubinout.outputs.markdown-logs }}
+          EOF
+        shell: bash
+      - name: Post to Slack
+        if: fromJSON(steps.supersubinout.outputs.differences-found)
+        uses: slackapi/slack-github-action@v1
+        with:
+          channel-id: ${{ env.SLACK_CHANNEL }}
+          payload: |
+            {
+              "text": ${{ toJSON(steps.supersubinout.outputs.logs) }}
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - name: Fail check
+        if: fromJSON(steps.supersubinout.outputs.differences-found)
+        run: exit 1
+        shell: bash
