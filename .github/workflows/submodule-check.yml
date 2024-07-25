@@ -19,7 +19,6 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
           submodules: recursive
           fetch-depth: 0
-          token: ${{ secrets.SUBMODULE_CHECKOUT_TOKEN }}
       - uses: inkarkat/git-supersubinout@v3
         id: supersubinout
         with:
