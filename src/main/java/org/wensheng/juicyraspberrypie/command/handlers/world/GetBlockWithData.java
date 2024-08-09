@@ -19,6 +19,16 @@ public class GetBlockWithData implements Handler {
 	@Override
 	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Block block = instruction.nextLocation().getBlock();
-		return block.getType().name() + "," + block.getBlockData();
+		return block.getType().name() + "," + getBlockDataStripped(block);
+	}
+
+	private static @NotNull String getBlockDataStripped(final Block block) {
+		final String data = block.getBlockData().getAsString();
+		final int start = data.indexOf('[');
+		final int end = data.indexOf(']');
+		if (start == -1 || end == -1) {
+			return "";
+		}
+		return data.substring(start + 1, end);
 	}
 }
