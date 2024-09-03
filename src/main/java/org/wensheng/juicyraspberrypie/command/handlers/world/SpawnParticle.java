@@ -21,13 +21,13 @@ public class SpawnParticle implements HandlerVoid {
 	}
 
 	@Override
-	@SuppressWarnings("PMD.AvoidCatchingGenericException")
+	@SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.LocalVariableCouldBeFinal"})
 	public void handleVoid(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		Particle particle;
 		try {
 			particle = Particle.valueOf(instruction.next().toUpperCase(Locale.ROOT));
-		} catch (Exception exc) {
+		} catch (final Exception exc) {
 			particle = Particle.valueOf("EXPLOSION_NORMAL");
 		}
 		final int count;
