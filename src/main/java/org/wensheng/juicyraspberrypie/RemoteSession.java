@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("PMD.CommentRequired")
+@SuppressWarnings({"PMD.CommentRequired", "PMD.AvoidSynchronizedStatement"})
 class RemoteSession {
 	private static final int MAX_COMMANDS_PER_TICK = 9000;
 

@@ -57,7 +57,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("PMD.CommentRequired")
+@SuppressWarnings({"PMD.CommentRequired", "PMD.AvoidSynchronizedStatement"})
 public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 	private final Logger logger = Logger.getLogger("Minecraft");
 

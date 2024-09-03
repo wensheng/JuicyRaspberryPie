@@ -21,13 +21,13 @@ public class SpawnEntity implements Handler {
 	}
 
 	@Override
-	@SuppressWarnings("PMD.AvoidCatchingGenericException")
+	@SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.LocalVariableCouldBeFinal"})
 	public String handle(@NotNull final SessionAttachment sessionAttachment, @NotNull final Instruction instruction) {
 		final Location loc = instruction.nextLocation();
 		EntityType entityType;
 		try {
 			entityType = EntityType.valueOf(instruction.next().toUpperCase(Locale.ROOT));
-		} catch (Exception exc) {
+		} catch (final Exception exc) {
 			entityType = EntityType.valueOf("COW");
 		}
 		final Entity entity = loc.getWorld().spawnEntity(loc, entityType);
