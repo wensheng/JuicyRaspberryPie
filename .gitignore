@@ -16,6 +16,7 @@ out
 .idea
 # gradle
 build
+run
 .gradle
 package-lock.json
 /others/
