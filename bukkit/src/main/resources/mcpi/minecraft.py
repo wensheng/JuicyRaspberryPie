@@ -1,5 +1,6 @@
 import os
 import math
+import re
 
 from .connection import Connection
 from .vec3 import Vec3
@@ -40,7 +41,8 @@ class CmdPositioner:
     def getPos(self, id):
         """Get entity position (entityId:int) => Vec3"""
         s = self.conn.sendReceive(self.pkg + b".getPos", id)
-        return Vec3(*list(map(float, s.split(","))))
+        loc = [float(item.split("=")[1]) for item in s.split(",")[1:4]]
+        return Vec3(*loc)
 
     def setPos(self, id, *args):
         """Set entity position (entityId:int, x,y,z)"""
@@ -49,7 +51,8 @@ class CmdPositioner:
     def getTilePos(self, id):
         """Get entity tile position (entityId:int) => Vec3"""
         s = self.conn.sendReceive(self.pkg + b".getTile", id)
-        return Vec3(*list(map(int, s.split(","))))
+        loc = [int(float(item.split("=")[1])) for item in s.split(",")[1:4]]
+        return Vec3(*loc)
 
     def setTilePos(self, id, *args):
         """Set entity tile position (entityId:int) => Vec3"""
@@ -88,10 +91,10 @@ class CmdEntity(CmdPositioner):
     """Methods for entities"""
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, b"entity")
-    
+
     def getName(self, id):
         """Get the list name of the player with entity id => [name:str]
-        
+
         Also can be used to find name of entity if entity is not a player."""
         return self.conn.sendReceive(b"entity.getName", id)
 
