@@ -243,7 +243,7 @@ class Minecraft:
         """Set a sign (x,y,z,sign_type,direction,line1,line2,line3,line4)
         direction: 0-north, 1-east, 2-south 3-west
         """
-        self.conn.send(b"world.setSign", args)
+        self.conn.send(b"world.setSign", *args)
 
     def spawnEntity(self, *args):
         """Spawn entity (x,y,z,id,[data])"""
@@ -269,6 +269,11 @@ class Minecraft:
         """Get the height of the world (x,z) => int"""
         return int(self.conn.sendReceive(b"world.getHeight", intFloor(args)))
 
+    def getPlayer(self, name):
+        """Get player entity (name)"""
+        entityId =self.conn.sendReceive(b"world.getPlayerId", name)
+        return Entity(self.conn, entityId, name)
+    
     def getPlayerEntityIds(self):
         """Get the entity ids of the connected players => [id:int]"""
         ids = self.conn.sendReceive(b"world.getPlayerIds")
