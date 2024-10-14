@@ -15,7 +15,9 @@ out
 *.iml
 .idea
 # gradle
-build
+forge/bin/
+forge/build/
+forge/run/
 .gradle
 package-lock.json
 /others/

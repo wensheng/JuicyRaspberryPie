@@ -5,7 +5,7 @@
     <groupId>org.wensheng</groupId>
     <artifactId>juicyraspberrypie</artifactId>
     <!--version>${SpigotVersion}</version-->
-    <version>1.18.1</version>
+    <version>1.18.2</version>
     <packaging>jar</packaging>
 
     <build>
@@ -34,7 +34,7 @@
    </build>
 
    <properties>
-       <SpigotVersion>1.18.1</SpigotVersion>
+       <SpigotVersion>1.18.2</SpigotVersion>
        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
    </properties>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
-            <version>1.18.1-R0.1-SNAPSHOT</version>
+            <version>1.18.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
