@@ -33,7 +33,7 @@ jobs:
         shell: bash
       - name: Post to Slack
         if: fromJSON(steps.supersubinout.outputs.differences-found)
-        uses: slackapi/slack-github-action@v1
+        uses: slackapi/slack-github-action@v2
         with:
           channel-id: ${{ env.SLACK_CHANNEL }}
           payload: |
