@@ -14,6 +14,7 @@ import org.wensheng.juicyraspberrypie.command.handlers.chat.Post;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.DisableControl;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.EnableControl;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.GetDirection;
+import org.wensheng.juicyraspberrypie.command.handlers.entity.GetHeldItem;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPitch;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.GetPos;
 import org.wensheng.juicyraspberrypie.command.handlers.entity.GetRotation;
@@ -288,6 +289,8 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 		registry.register("entity.setPos", new SetPos(entityProvider));
 		registry.register("player.getDirection", new GetDirection(playerEntityProvider));
 		registry.register("entity.getDirection", new GetDirection(entityProvider));
+		registry.register("player.getHeldItem", new GetHeldItem(playerEntityProvider));
+		registry.register("entity.getHeldItem", new GetHeldItem(entityProvider));
 		registry.register("player.setDirection", new SetDirection(playerEntityProvider));
 		registry.register("entity.setDirection", new SetDirection(entityProvider));
 		registry.register("player.getRotation", new GetRotation(playerEntityProvider));
