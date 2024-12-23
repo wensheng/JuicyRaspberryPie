@@ -48,12 +48,27 @@ public class ControllableEntity {
 	 */
 	public void enableControl() {
 		if (entity instanceof final Mob mob) {
+			final PersistentDataContainer persistentDataContainer = mob.getPersistentDataContainer();
+			persistentDataContainer.set(new NamespacedKey(plugin, "controlled"), PersistentDataType.BOOLEAN, true);
 			if (!mob.hasAI()) {
-				mob.getPersistentDataContainer().set(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN, true);
+				persistentDataContainer.set(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN, true);
 				mob.setAI(true);
 			}
 			final MobGoals mobGoals = Bukkit.getMobGoals();
 			getGoalKeyNamespacedKeys().forEach((goalType, namespacedKey) -> mobGoals.addGoal(mob, Integer.MIN_VALUE, new EmptyGoal(namespacedKey, goalType)));
+		}
+	}
+
+	/**
+	 * Reactivate control of the entity.
+	 */
+	public void reactivateControl() {
+		if (entity instanceof final Mob mob) {
+			final PersistentDataContainer persistentDataContainer = mob.getPersistentDataContainer();
+			final Boolean controlled = persistentDataContainer.getOrDefault(new NamespacedKey(plugin, "controlled"), PersistentDataType.BOOLEAN, false);
+			if (controlled) {
+				enableControl();
+			}
 		}
 	}
 
@@ -65,6 +80,7 @@ public class ControllableEntity {
 			final MobGoals mobGoals = Bukkit.getMobGoals();
 			getGoalKeyNamespacedKeys().forEach((goalType, namespacedKey) -> mobGoals.removeGoal(mob, GoalKey.of(Mob.class, namespacedKey)));
 			final PersistentDataContainer persistentDataContainer = mob.getPersistentDataContainer();
+			persistentDataContainer.remove(new NamespacedKey(plugin, "controlled"));
 			final boolean noAI = persistentDataContainer.has(new NamespacedKey(plugin, "noAI"), PersistentDataType.BOOLEAN);
 			if (noAI) {
 				persistentDataContainer.remove(new NamespacedKey(plugin, "noAI"));

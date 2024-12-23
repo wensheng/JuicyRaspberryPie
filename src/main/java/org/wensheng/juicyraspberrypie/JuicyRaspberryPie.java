@@ -42,6 +42,7 @@ import org.wensheng.juicyraspberrypie.command.handlers.world.SetPowered;
 import org.wensheng.juicyraspberrypie.command.handlers.world.SetSign;
 import org.wensheng.juicyraspberrypie.command.handlers.world.SpawnEntity;
 import org.wensheng.juicyraspberrypie.command.handlers.world.SpawnParticle;
+import org.wensheng.juicyraspberrypie.listener.EntityListener;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -113,6 +114,7 @@ public class JuicyRaspberryPie extends JavaPlugin implements Listener {
 		this.saveDefaultConfig();
 		final int port = this.getConfig().getInt("api_port");
 		setupRegistry();
+		getServer().getPluginManager().registerEvents(new EntityListener(this), this);
 
 		//create new tcp listener thread
 		try {
